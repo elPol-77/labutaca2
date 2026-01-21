@@ -15,7 +15,14 @@ class ContenidoModel extends Model
     ];
 
     // Función auxiliar para sacar solo películas (tipo_id = 1)
-    public function getPeliculas() {
-        return $this->where('tipo_id', 1)->findAll();
+    public function getPeliculas($planUsuario = 1) {
+        if ($planUsuario == 2) {
+            // Premium ve todo
+            return $this->where('tipo_id', 1)->findAll();
+        } else {
+            // Free solo ve contenido nivel 1
+            return $this->where('tipo_id', 1)->where('nivel_acceso', 1)->findAll();
+        }
+
     }
 }

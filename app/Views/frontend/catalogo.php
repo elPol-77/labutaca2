@@ -1,3 +1,4 @@
+
 <section id="view-splash" class="view-section active">
         <div class="splash-logo">LA BUTACA</div>
         <div style="width: 200px;">
