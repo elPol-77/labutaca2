@@ -3,10 +3,8 @@
     --glass-border: rgba(255, 255, 255, 0.1);
     --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     --accent: #00d2ff;
-    /* Cyan Neon */
     --accent-gradient: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%);
     --premium: #ffd700;
-    /* Gold */
     --text-main: #ffffff;
     --text-muted: #a0a0a0;
 }
@@ -19,14 +17,11 @@ body {
     margin: 0;
     font-family: 'Outfit', sans-serif;
     background: #0f0c29;
-    /* fallback */
     background: linear-gradient(to right, #0f0c29, #302b63, #24243e);
     color: var(--text-main);
-    height: 100vh;
-    overflow: hidden;
-    transition: background-image 0.5s ease-in-out;
-    background-size: cover;
-    background-position: center;
+    min-height: 100vh;
+    /* He quitado el padding-top de aquí para no afectar al login */
+    overflow-x: hidden;
 }
 
 /* --- FONDO DINÁMICO --- */
@@ -41,7 +36,7 @@ body {
     background-position: center;
     opacity: 0.4;
     transition: opacity 0.5s, background-image 0.5s;
-    filter: blur(20px);
+    filter: blur(25px);
     transform: scale(1.1);
 }
 
@@ -49,23 +44,56 @@ body {
 .view-section {
     display: none;
     width: 100%;
-    height: 100%;
-    position: absolute;
+    height: 100vh;
+    position: fixed;
     top: 0;
     left: 0;
+    overflow-y: auto;
 }
 
 .view-section.active {
-    display: flex;
+    display: block;
+    animation: fadeIn 0.5s ease;
 }
 
-/* --- 1. SPLASH SCREEN (Cinematic) --- */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --- 1. LOGIN / AUTH / PERFILES (Centrado Perfecto) --- */
+/* Forzamos FLEX para que estas pantallas estén centradas */
+#view-splash,
+#view-profiles,
+#view-login,
+#view-auth {
+    display: none;
+    /* Se activa con JS */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+/* Cuando están activas, usamos flex */
+#view-splash.active,
+#view-profiles.active,
+#view-login.active,
+#view-auth.active {
+    display: flex !important;
+}
+
+/* Estilos específicos del Splash */
 #view-splash {
     background: #000;
     z-index: 9999;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
 }
 
 .splash-logo {
@@ -74,7 +102,6 @@ body {
     background: -webkit-linear-gradient(#eee, #333);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    position: relative;
 }
 
 .loader-line {
@@ -86,29 +113,24 @@ body {
     box-shadow: 0 0 10px var(--accent);
 }
 
-/* --- 2. USER SELECT (Glass Cards) --- */
-#view-profiles {
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(10px);
-}
-
+/* Estilos de Paneles de Cristal (Login/Perfiles) */
 .glass-panel {
     background: var(--glass-bg);
     backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--glass-border);
     border-radius: 24px;
     padding: 3rem;
     box-shadow: var(--glass-shadow);
     text-align: center;
+    max-width: 400px;
+    width: 90%;
 }
 
 .profile-container {
     display: flex;
     gap: 2rem;
     margin-top: 2rem;
+    justify-content: center;
 }
 
 .profile-item {
@@ -116,7 +138,7 @@ body {
     flex-direction: column;
     align-items: center;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition: 0.3s;
 }
 
 .profile-item:hover {
@@ -140,114 +162,82 @@ body {
     box-shadow: 0 0 15px var(--accent);
 }
 
-/* --- 3. MAIN INTERFACE (Dashboard Layout) --- */
-#view-home {
-    flex-direction: row;
-}
-
-/* SIDEBAR */
-.sidebar {
-    width: 100px;
-    /* Colapsada por defecto */
-    height: 100%;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(20px);
-    border-right: 1px solid var(--glass-border);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-top: 2rem;
-    transition: width 0.3s;
-    z-index: 100;
-}
-
-.sidebar:hover {
-    width: 240px;
-    align-items: flex-start;
-    padding-left: 20px;
-}
-
-.sidebar-logo {
-    font-family: 'Playfair Display';
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-bottom: 3rem;
-    color: #fff;
-    white-space: nowrap;
-    overflow: hidden;
-}
-
-.menu-item {
+/* --- 2. HEADER NEÓN (Solo visible en Home) --- */
+.neon-header {
+    background: rgba(15, 12, 41, 0.85);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid var(--glass-border);
+    height: 75px;
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    padding: 0 4%;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.logo-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: white;
+    text-decoration: none;
+    letter-spacing: 1px;
+}
+
+.logo-text span {
+    color: var(--accent);
+}
+
+.nav-center {
+    display: flex;
+    gap: 20px;
+}
+
+.nav-link {
     color: var(--text-muted);
     text-decoration: none;
-    font-size: 1.1rem;
-    margin-bottom: 2rem;
-    width: 100%;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 8px 16px;
+    border-radius: 20px;
     transition: 0.3s;
-    white-space: nowrap;
 }
 
-.menu-item i {
-    width: 40px;
-    font-size: 1.3rem;
-    text-align: center;
-    margin-right: 10px;
-}
-
-.menu-item span {
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-
-.sidebar:hover .menu-item span {
-    opacity: 1;
-}
-
-.menu-item:hover,
-.menu-item.active {
-    color: var(--accent);
-    border-right: 3px solid var(--accent);
-}
-
-/* CONTENT AREA */
-.content {
-    flex: 1;
-    padding: 2rem 3rem;
-    overflow-y: auto;
-    position: relative;
-}
-
-/* SEARCH BAR (JQUERY UI) */
-.top-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.search-container {
-    position: relative;
-    width: 300px;
-}
-
-.search-input {
-    width: 100%;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 30px;
-    padding: 10px 20px 10px 45px;
+.nav-link:hover,
+.nav-link.active {
     color: white;
-    font-family: 'Outfit';
-    outline: none;
-    transition: 0.3s;
+    background: var(--glass-bg);
+    box-shadow: 0 0 10px rgba(0, 210, 255, 0.1);
+    border: 1px solid var(--glass-border);
 }
 
-.search-input:focus {
-    background: rgba(0, 0, 0, 0.5);
+/* Buscador Header */
+.search-wrapper {
+    position: relative;
+    margin-right: 20px;
+}
+
+.search-input-neon {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--glass-border);
+    border-radius: 30px;
+    color: white;
+    padding: 10px 15px 10px 40px;
+    width: 220px;
+    transition: 0.3s;
+    font-family: 'Outfit';
+}
+
+.search-input-neon:focus {
+    background: rgba(0, 0, 0, 0.6);
     border-color: var(--accent);
-    box-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
+    box-shadow: 0 0 15px rgba(0, 210, 255, 0.2);
+    outline: none;
+    width: 300px;
 }
 
 .search-icon {
@@ -256,41 +246,47 @@ body {
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-muted);
+    font-size: 0.9rem;
 }
 
-/* FEATURED CARD (HERO) */
+/* --- 3. CONTENIDO HOME --- */
+#view-home {
+    padding-top: 80px;
+    /* AQUÍ está el espacio para la barra, solo en Home */
+}
+
 .hero-card {
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.4);
     border-radius: 20px;
     padding: 3rem;
     display: flex;
     align-items: center;
-    gap: 2rem;
-    margin-bottom: 3rem;
-    backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    gap: 3rem;
+    margin: 2rem 4% 3rem 4%;
+    border: 1px solid var(--glass-border);
     position: relative;
     overflow: hidden;
+    backdrop-filter: blur(5px);
 }
 
 .hero-info h1 {
     font-family: 'Playfair Display';
-    font-size: 3rem;
+    font-size: 3.5rem;
     margin: 0 0 1rem 0;
-    line-height: 1;
+    line-height: 1.1;
 }
 
 .hero-badges {
     display: flex;
     gap: 10px;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
 }
 
 .badge {
-    padding: 5px 12px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
     text-transform: uppercase;
 }
 
@@ -304,32 +300,38 @@ body {
     color: white;
 }
 
-.btn-action {
-    padding: 12px 30px;
+.btn-primary {
+    background: var(--accent-gradient);
+    color: white;
+    padding: 12px 35px;
     border-radius: 30px;
     border: none;
     font-weight: 700;
+    font-size: 1rem;
     cursor: pointer;
     transition: 0.3s;
     display: inline-flex;
     align-items: center;
     gap: 10px;
-}
-
-.btn-primary {
-    background: var(--accent-gradient);
-    color: white;
     box-shadow: 0 4px 15px rgba(0, 210, 255, 0.4);
 }
 
 .btn-primary:hover {
     transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 210, 255, 0.6);
 }
 
-/* MOVIE GRID (VERTICAL POSTERS) */
+/* GRID */
+.movie-grid {
+    padding: 0 4% 60px 4%;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 2rem;
+}
+
 .section-title {
     font-size: 1.5rem;
-    margin-bottom: 1.5rem;
+    margin: 0 4% 1.5rem 4%;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -344,20 +346,13 @@ body {
     border-radius: 2px;
 }
 
-.movie-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 2rem;
-    padding-bottom: 4rem;
-}
-
 .movie-poster {
     border-radius: 16px;
     overflow: hidden;
     position: relative;
     aspect-ratio: 2/3;
     cursor: pointer;
-    transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: 0.3s;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 }
 
@@ -367,25 +362,11 @@ body {
     object-fit: cover;
 }
 
-.movie-poster::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
-    opacity: 0;
-    transition: 0.3s;
-}
-
-/* Efecto Hover Avanzado */
 .movie-poster:hover {
-    transform: scale(1.1) translateY(-10px);
+    transform: scale(1.05) translateY(-5px);
     z-index: 10;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 15px 30px rgba(0, 210, 255, 0.2);
     outline: 2px solid var(--accent);
-}
-
-.movie-poster:hover::after {
-    opacity: 1;
 }
 
 .poster-info {
@@ -393,40 +374,82 @@ body {
     bottom: 0;
     left: 0;
     width: 100%;
-    padding: 15px;
+    padding: 40px 10px 15px 10px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
     opacity: 0;
-    transform: translateY(20px);
     transition: 0.3s;
-    z-index: 2;
+    color: white;
 }
 
 .movie-poster:hover .poster-info {
     opacity: 1;
-    transform: translateY(0);
 }
 
-/* jQuery UI Autocomplete Customization */
+/* AUTOCOMPLETE */
 .ui-autocomplete {
     background: rgba(15, 12, 41, 0.95);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(15px);
+    border: 1px solid var(--accent);
     color: white;
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 10px;
+    z-index: 9999 !important;
 }
 
-.ui-menu-item {
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
+.ui-menu-item-wrapper {
+    padding: 10px 15px;
     font-family: 'Outfit';
+    font-size: 0.95rem;
+    border-radius: 8px;
 }
 
-.ui-state-active,
-.ui-widget-content .ui-state-active {
-    background: var(--accent);
-    border: none;
-    color: white;
+.ui-state-active {
+    background: var(--accent) !important;
+    color: black !important;
+    font-weight: bold;
+}
+/* --- BOTÓN ICONO (CORAZÓN MI LISTA) --- */
+.header-icon-btn {
+    color: var(--text-muted); /* Gris por defecto */
+    font-size: 1.2rem;
+    margin-right: 15px; /* Separación con el perfil */
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%; /* Redondo */
+    border: 1px solid transparent;
 }
 
->
+.header-icon-btn:hover {
+    color: #ff4757; /* Rojo corazón al pasar el mouse */
+    background: rgba(255, 71, 87, 0.1);
+    border-color: rgba(255, 71, 87, 0.3);
+    box-shadow: 0 0 10px rgba(255, 71, 87, 0.2);
+    transform: scale(1.1);
+}
+
+.header-icon-btn.active {
+    color: #ff4757; /* Rojo si estás dentro de Mi Lista */
+    background: rgba(255, 71, 87, 0.1);
+    font-weight: bold;
+}
+.hero-item {
+    height: 70vh;
+    background-size: cover;
+    background-position: center;
+    display: flex !important; /* Slick usa flex */
+    align-items: center;
+    padding: 0 4%;
+}
+
+.hero-carousel .slick-dots {
+    bottom: 30px;
+}
+
+.hero-carousel .slick-dots li button:before {
+    color: var(--accent);
+}

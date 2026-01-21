@@ -1,29 +1,36 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+    
+    <script>
+        const BASE_URL = "<?= base_url() ?>/";
+        const SHOW_SPLASH = <?= json_encode($splash ?? false) ?>;
+    </script>
     
     <script src="<?= base_url('assets/js/front.js') ?>"></script>
 
     <script>
-        
-        // PUENTE DE DATOS: PHP (Base de Datos) -> JavaScript (Frontend)
-        const baseUrl = '<?= base_url() ?>';
-        const rawData = <?= json_encode($peliculas) ?>;
+        const rawData = <?= isset($peliculas) ? json_encode($peliculas) : '[]' ?>;
 
-        // Adaptamos los datos para que tu JS los entienda
-        const moviesFormatted = rawData.map(item => ({
-            id: item.id,
-            title: item.titulo,
-            // Si la imagen empieza por http es url, si no es local en assets
-            img: item.imagen.startsWith('http') ? item.imagen : '<?= base_url("assets/img/") ?>' + item.imagen,
-            bg: item.imagen_bg,
-            premium: item.nivel_acceso == '2', // Si es 2 es premium
-            link: '<?= base_url("ver/") ?>' + item.id
-        }));
+        if (rawData.length > 0) {
+            const moviesFormatted = rawData.map(item => ({
+                id: item.id,
+                title: item.titulo,
+                img: item.imagen.startsWith('http') ? item.imagen : '<?= base_url("assets/img/") ?>' + item.imagen,
+                bg: item.imagen_bg.startsWith('http') ? item.imagen_bg : '<?= base_url("assets/img/") ?>' + item.imagen_bg,
+                premium: item.nivel_acceso == '2',
+                link: '<?= base_url("detalle/") ?>' + item.id
+            }));
 
-        // Cuando la página esté lista, renderizamos el grid
-        $(document).ready(function() {
-            renderGrid(moviesFormatted);
-        });
+            $(document).ready(function() {
+                // Solo renderizamos si la función existe en front.js
+                if(typeof renderGrid === 'function') {
+                    renderGrid(moviesFormatted);
+                }
+            });
+        }
     </script>
 </body>
 </html>
