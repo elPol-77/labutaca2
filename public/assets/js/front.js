@@ -255,7 +255,7 @@ window.toggleMiLista = function (idContenido) {
     });
 };
 
-window.logout = function () { window.location.href = BASE_URL + 'auth/logout'; }
+window.logout = function () { window.location.href = BASE_URL + 'logout'; }
 
 // =========================================================
 // 7. LÓGICA DE CAMBIO DE PERFIL
