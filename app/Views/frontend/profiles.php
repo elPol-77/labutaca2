@@ -67,7 +67,7 @@
     </section>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>const BASE_URL = "<?= base_url() ?>/";</script>
+    <script>const BASE_URL = "<?= base_url() ?>";</script>
     <script src="<?= base_url('assets/js/auth.js') ?>"></script>
 
 </body>

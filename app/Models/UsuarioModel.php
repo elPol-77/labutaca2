@@ -7,7 +7,7 @@ class UsuarioModel extends Model
     protected $table            = 'usuarios';
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
-    protected $returnType       = 'array'; // Devuelve los resultados como array asociativo
+    protected $returnType       = 'array'; 
 
     /* * 1. ALLOWED FIELDS (Campos Permitidos)
      * Aquí definimos qué columnas se pueden guardar/editar.
@@ -15,12 +15,12 @@ class UsuarioModel extends Model
      */
     protected $allowedFields = [
         'username', 
-        'email',           // <-- FALTABA ESTE
+        'email',          
         'password', 
         'rol', 
         'plan_id', 
         'avatar', 
-        'fecha_registro'   // <-- FALTABA ESTE
+        'fecha_registro'   
     ];
 
     /*
@@ -42,4 +42,18 @@ class UsuarioModel extends Model
         'password' => 'required|min_length[4]',
         'plan_id'  => 'required|integer'
     ];
+    public function getListaIds($usuarioId)
+{
+    // Asumiendo que tu tabla se llama 'listas' o 'usuario_listas'
+    // y tiene los campos 'usuario_id' y 'contenido_id'
+    $db = \Config\Database::connect();
+    $builder = $db->table('mi_lista'); // <--- CAMBIA 'listas' POR EL NOMBRE REAL DE TU TABLA
+    $builder->select('contenido_id');
+    $builder->where('usuario_id', $usuarioId);
+    
+    $query = $builder->get();
+    
+    // Devolvemos un array simple de IDs: [1, 5, 8...]
+    return array_column($query->getResultArray(), 'contenido_id');
+}
 }

@@ -440,3 +440,426 @@ body {
 .slick-dots li.slick-active button:before {
   opacity: 1;
 }
+/* =========================================
+   EFECTO HOVER CARD (ESTILO PRIME/NETFLIX)
+   ========================================= */
+
+/* Quitamos el overflow hidden del poster anterior para permitir que salga la tarjeta */
+.movie-poster {
+    overflow: visible !important; 
+    box-shadow: none !important; /* Quitamos sombra base para que no ensucie */
+    background: transparent;
+    transform: none !important; /* Quitamos el scale anterior del grid simple */
+}
+
+/* 1. Contenedor de la carta */
+.movie-card {
+    position: relative;
+    aspect-ratio: 2 / 3;
+    border-radius: 8px;
+    transition: z-index 0s 0.3s; /* Truco: baja el z-index con retraso */
+    cursor: pointer;
+}
+
+.movie-card:hover {
+    z-index: 100; /* Al hacer hover, subimos capa inmediatamente */
+    transition: z-index 0s 0s;
+}
+
+/* 2. El Póster Visible (Lo que se ve siempre) */
+.poster-visible {
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: 0.3s;
+}
+
+.poster-visible img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 3. La Tarjeta Oculta (Detalles) */
+.hover-details-card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    /* Se expande un 50% más ancho que el poster original */
+    width: 150%; 
+    /* Fondo oscuro sólido para que no se trasparenten las de abajo */
+    background-color: #1a1a1a; 
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+    
+    /* ESTADO INICIAL: Invisible */
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    
+    /* Transformación inicial (pequeña) */
+    transform: translate(-50%, -50%) scale(0.9);
+    
+    /* Animación suave */
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition-delay: 0.2s; /* RETRASO IMPORTANTE: Evita parpadeos al pasar rápido */
+}
+
+/* --- ACCIÓN AL HACER HOVER --- */
+.movie-card:hover .hover-details-card {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* Ocultamos el poster original al expandir para que no se vea por los bordes si hay redondeo */
+.movie-card:hover .poster-visible {
+    opacity: 0.3;
+}
+
+/* --- ESTILOS INTERNOS DE LA TARJETA --- */
+.hover-backdrop {
+    height: 140px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.hover-backdrop::after {
+    content: '';
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(to top, #1a1a1a 10%, transparent 100%);
+}
+
+.hover-info {
+    padding: 15px;
+    position: relative;
+    margin-top: -10px;
+    z-index: 2;
+}
+
+.hover-info h4 {
+    margin: 0 0 10px 0;
+    font-size: 1rem;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hover-buttons {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.btn-mini-play {
+    background: white; color: black; border: none;
+    border-radius: 50%; width: 35px; height: 35px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.2s;
+}
+.btn-mini-play:hover { transform: scale(1.1); background: var(--accent); }
+
+.btn-mini-icon {
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.5);
+    color: white; border-radius: 50%; width: 35px; height: 35px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.2s;
+}
+.btn-mini-icon:hover { border-color: white; background: rgba(255,255,255,0.2); }
+
+.hover-meta {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.75rem; color: #ccc; margin-bottom: 8px;
+}
+.btn-mini-icon:hover .fa-heart {
+    color: #ff4757; /* Rojo corazón */
+}
+/* =========================================
+   MEGA MENÚ FINAL (ESTILO PRIME VIDEO)
+   ========================================= */
+
+.category-menu-wrapper {
+    position: relative;
+    /* Quitamos márgenes laterales porque ahora usamos 'gap' en el HTML padre */
+    height: 40px; 
+    display: flex;
+    align-items: center;
+    z-index: 2000;
+}
+
+.btn-grid-menu {
+    width: 40px; 
+    height: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: #ccc;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.category-menu-wrapper:hover .btn-grid-menu {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+    border-color: white;
+}
+
+/* EL PANEL DESPLEGABLE */
+.mega-menu {
+    position: absolute;
+    top: 100%; /* Justo debajo del botón */
+    right: 0; /* Alineado a la derecha del botón (o usa left:0 si prefieres) */
+    
+    margin-top: 10px; /* Separación visual del botón */
+    width: 550px;
+    
+    /* ESTILO VISUAL */
+    background: rgba(20, 20, 20, 0.95);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.9);
+    
+    display: flex;
+    gap: 30px;
+    
+    /* ANIMACIÓN */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none; /* Ignora clicks cuando está oculto */
+}
+
+/* EL PUENTE INVISIBLE (CRUCIAL PARA QUE NO SE CIERRE) */
+/* Crea una zona invisible entre el botón y el menú */
+.category-menu-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 100%; /* Empieza al final del botón */
+    left: -20px; /* Un poco más ancho para seguridad */
+    width: 140%; 
+    height: 20px; /* Altura suficiente para cubrir el hueco */
+    background: transparent; 
+    display: block;
+}
+
+/* MOSTRAR MENÚ AL HOVER */
+.category-menu-wrapper:hover .mega-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* TRIÁNGULO SUPERIOR */
+.mega-menu::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 14px; /* Ajustado para que apunte al centro del botón si usas right:0 */
+    width: 12px;
+    height: 12px;
+    background: rgba(20, 20, 20, 0.95);
+    border-left: 1px solid rgba(255, 255, 255, 0.15);
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    transform: rotate(45deg);
+    z-index: 2;
+}
+
+/* ESTILOS DE TEXTO INTERNO */
+.mega-column h4 { margin-top: 0; color: #888; font-size: 0.75rem; font-weight: 700; margin-bottom: 15px; }
+.genre-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.genre-link { color: #e0e0e0; text-decoration: none; font-size: 0.9rem; display: block; transition:0.2s; }
+.genre-link:hover { color: var(--accent); transform: translateX(5px); }
+.mega-column.border-left { border-left: 1px solid rgba(255,255,255,0.1); padding-left: 30px; flex: 0.7; }
+.featured-list { list-style: none; padding: 0; margin: 0; }
+.featured-list li a { color: #fff; font-weight: 600; text-decoration: none; display: block; padding: 8px 0; font-size: 1rem; }
+.featured-list li a:hover { color: var(--accent); }
+/* =========================================
+   MENÚ DE PERFIL (ESTILO NETFLIX/PRIME)
+   ========================================= */
+
+.profile-menu-wrapper {
+    position: relative;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    margin-left: 15px; /* Separación del corazón */
+}
+
+/* El avatar que se ve siempre */
+.avatar-trigger img {
+    transition: 0.3s;
+}
+.profile-menu-wrapper:hover .avatar-trigger img {
+    transform: scale(1.1);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+/* EL DESPLEGABLE */
+.profile-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0; /* ALINEADO A LA DERECHA */
+    
+    margin-top: 10px;
+    width: 400px; /* Un poco más estrecho que el de géneros */
+    
+    background: rgba(20, 20, 20, 0.95);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.9);
+    
+    display: flex;
+    gap: 20px;
+    
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    z-index: 3000;
+}
+
+/* PUENTE INVISIBLE (Para que no se cierre) */
+.profile-menu-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 150%; 
+    height: 20px;
+    background: transparent;
+    display: block;
+}
+
+/* MOSTRAR AL HOVER */
+.profile-menu-wrapper:hover .profile-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* TRIÁNGULO SUPERIOR (Alineado al avatar) */
+.profile-dropdown::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 14px; /* Apunta al centro del avatar */
+    width: 12px;
+    height: 12px;
+    background: rgba(20, 20, 20, 0.95);
+    border-left: 1px solid rgba(255, 255, 255, 0.15);
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    transform: rotate(45deg);
+}
+
+/* --- ESTILOS INTERNOS --- */
+
+.profile-column { flex: 1; }
+.profile-column.border-right { 
+    border-right: 1px solid rgba(255,255,255,0.1); 
+    padding-right: 20px; 
+}
+
+.profile-column h4 {
+    margin-top: 0; color: #888; font-size: 0.7rem; 
+    font-weight: 700; margin-bottom: 15px; letter-spacing: 1px;
+}
+
+/* Enlaces de texto (Izq) */
+.profile-links { list-style: none; padding: 0; margin: 0; }
+.profile-links li { margin-bottom: 10px; }
+.profile-links li a { 
+    color: #e0e0e0; text-decoration: none; font-size: 0.9rem; transition: 0.2s; 
+}
+.profile-links li a:hover { text-decoration: underline; }
+
+/* Lista de perfiles (Der) */
+.mini-profile-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px; border-radius: 6px;
+    cursor: pointer; transition: 0.2s;
+    margin-bottom: 5px;
+}
+.mini-profile-item:hover {
+    background: rgba(255,255,255,0.1);
+}
+.mini-profile-item img {
+    width: 32px; height: 32px; border-radius: 4px; /* Cuadrados redondeados estilo Netflix */
+}
+.mini-profile-item span {
+    font-size: 0.9rem; color: #fff;
+}
+
+/* Iconos especiales (Añadir/Editar) */
+.add-profile-icon, .edit-profile-icon {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 1px solid #888; color: #888;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem;
+}
+.mini-profile-item:hover .add-profile-icon {
+    border-color: white; color: white; background: rgba(255,255,255,0.1);
+}
+/* --- ESTILO CARRUSELES NETFLIX --- */
+.slick-list {
+    overflow: visible; /* Permite que el hover no se corte */
+    z-index: 1;
+}
+.slick-slide-item {
+    transition: transform 0.3s;
+}
+/* Al hacer hover en el contenedor, las flechas aparecen */
+.category-row:hover .custom-arrow {
+    opacity: 1;
+}
+
+/* Flechas Personalizadas */
+.custom-arrow {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    width: 50px;
+    background: rgba(0,0,0,0.5); /* Fondo oscuro semitransparente */
+    border: none;
+    color: white;
+    font-size: 2rem;
+    z-index: 10;
+    cursor: pointer;
+    opacity: 0; /* Ocultas por defecto */
+    transition: opacity 0.3s, background 0.3s;
+    height: 100%; /* Ocupa toda la altura de la fila */
+}
+.custom-arrow:hover {
+    background: rgba(0,0,0,0.8);
+    color: var(--accent);
+}
+.slick-prev { left: -40px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; }
+.slick-next { right: 0; border-top-left-radius: 5px; border-bottom-left-radius: 5px; }
+
+/* Ajuste para que la tarjeta hover no quede tapada por el slider */
+.slick-row {
+    position: relative;
+    z-index: 2;
+}
+/* Al hacer hover en una tarjeta, esa tarjeta debe subir Z-index */
+.slick-slide-item:hover {
+    z-index: 20;
+}

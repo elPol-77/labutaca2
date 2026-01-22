@@ -1,4 +1,5 @@
-<?php namespace App\Models;
+<?php
+namespace App\Models;
 
 use CodeIgniter\Model;
 
@@ -6,98 +7,134 @@ class ContenidoModel extends Model
 {
     protected $table = 'contenidos';
     protected $primaryKey = 'id';
-    
-    // Campos que permitimos leer/escribir
+
     protected $allowedFields = [
-        'tipo_id', 'titulo', 'descripcion', 'anio', 
-        'duracion', 'imagen', 'imagen_bg', 'url_video', 
-        'nivel_acceso', 'vistas', 'destacada','edad_recomendada'
+        'tipo_id', 'titulo', 'descripcion', 'anio', 'duracion',
+        'imagen', 'imagen_bg', 'url_video', 'nivel_acceso',
+        'vistas', 'destacada', 'edad_recomendada'
     ];
 
-    // Función auxiliar (Mantiene nombre original, pero trae todo)
-    public function getPeliculas($planUsuario = 1) {
-        if ($planUsuario == 2) {
-            // Premium ve todo
-            return $this->findAll();
-        } else {
-            // Free solo ve contenido nivel 1
-            return $this->where('nivel_acceso', 1)->findAll();
+    // =========================================================
+    // HELPER PRIVADO: LÓGICA CENTRALIZADA DE SEGURIDAD
+    // =========================================================
+    // Esta función aplica los filtros WHERE automáticamente según el plan
+    protected function _aplicarFiltrosPlan($builder, $planId)
+    {
+        // CASO 1: USUARIO FREE (ID 1)
+        if ($planId == 1) {
+            // Solo ve contenido marcado como nivel 1 (Free)
+            $builder->where('contenidos.nivel_acceso', 1);
         }
+        // CASO 2: USUARIO KIDS (ID 3)
+        elseif ($planId == 3) {
+            // Solo ve contenido para <= 11 años
+            $builder->where('contenidos.edad_recomendada <=', 11);
+            // Asumimos que el plan Kids (de pago) puede ver contenido Premium si es infantil
+            // Si quieres restringir también nivel, descomenta la siguiente línea:
+            // $builder->where('contenidos.nivel_acceso', 1); 
+        }
+        // CASO 3: PREMIUM (ID 2)
+        else {
+            // Ve todo (Nivel 1 y 2)
+            // No aplicamos restricción de edad
+        }
+
+        return $builder;
     }
 
-    // Obtener detalles completos con Actores y Géneros
-    public function getDetallesCompletos($id)
-    {
-        // 1. Datos básicos
-        $peli = $this->find($id);
-        if (!$peli) return null;
+    // =========================================================
+    // FUNCIONES DEL CATÁLOGO (INTEGRADAS CON SEGURIDAD)
+    // =========================================================
 
-        // 2. Traer Géneros (Relación N:M)
+    // 1. TENDENCIAS
+    public function getTendencias($limit = 10, $planId = 1)
+    {
+        $builder = $this->select('contenidos.*')
+                        ->orderBy('vistas', 'DESC');
+        
+        $this->_aplicarFiltrosPlan($builder, $planId);
+
+        return $builder->findAll($limit);
+    }
+
+    // 2. CONTENIDO RANDOM
+    public function getContentRandom($tipoId, $limit = 10, $planId = 1)
+    {
+        $builder = $this->where('tipo_id', $tipoId);
+        
+        $this->_aplicarFiltrosPlan($builder, $planId);
+
+        return $builder->orderBy('RAND()')->findAll($limit);
+    }
+
+    // 3. RECOMENDACIÓN POR GÉNERO
+    public function getPorGenero($generoId, $tipoId, $limit = 10, $excluirIds = [], $planId = 1)
+    {
+        $builder = $this->select('contenidos.*')
+                        ->join('contenido_genero cg', 'contenidos.id = cg.contenido_id')
+                        ->where('cg.genero_id', $generoId)
+                        ->where('contenidos.tipo_id', $tipoId);
+        
+        $this->_aplicarFiltrosPlan($builder, $planId);
+
+        if (!empty($excluirIds)) {
+            $builder->whereNotIn('contenidos.id', $excluirIds);
+        }
+
+        return $builder->orderBy('contenidos.fecha_agregada', 'DESC')
+                       ->findAll($limit);
+    }
+
+    // --- FUNCIONES CLÁSICAS (Mantenidas para compatibilidad) ---
+
+    public function getGeneroFavoritoUsuario($userId, $tipoContenidoId)
+    {
         $db = \Config\Database::connect();
-        $builder = $db->table('contenido_genero');
-        $builder->select('generos.nombre');
-        $builder->join('generos', 'generos.id = contenido_genero.genero_id');
-        $builder->where('contenido_id', $id);
-        $peli['generos'] = $builder->get()->getResultArray();
-
-        // 3. Traer Actores (Relación N:M)
-        $builder = $db->table('contenido_actor');
-        $builder->select('actores.nombre, actores.foto, contenido_actor.personaje');
-        $builder->join('actores', 'actores.id = contenido_actor.actor_id');
-        $builder->where('contenido_id', $id);
-        $peli['actores'] = $builder->get()->getResultArray();
-
-        return $peli;
+        $sql = "SELECT g.id, g.nombre, COUNT(g.id) as frecuencia
+                FROM mi_lista ml
+                JOIN contenidos c ON ml.contenido_id = c.id
+                JOIN contenido_genero cg ON c.id = cg.contenido_id
+                JOIN generos g ON cg.genero_id = g.id
+                WHERE ml.usuario_id = ? AND c.tipo_id = ?
+                GROUP BY g.id
+                ORDER BY frecuencia DESC
+                LIMIT 1";
+        $query = $db->query($sql, [$userId, $tipoContenidoId]);
+        return $query->getRowArray(); 
     }
 
-    // Obtener el director de un contenido concreto
-    public function getDirector($contenidoId)
+    public function getContenidoPaginadas($planId, $limit, $offset, $generoId = null)
     {
-        $builder = $this->db->table('contenido_director cd');
-        $builder->select('d.id, d.nombre');
-        $builder->join('directores d', 'd.id = cd.director_id');
-        $builder->where('cd.contenido_id', $contenidoId);
-        
-        return $builder->get()->getRowArray(); // Devolvemos solo un director (el principal)
-    }
+        $builder = $this->select('contenidos.*')->where('contenidos.tipo_id', 1);
 
-    // Obtener todo el contenido de un director (Mantiene nombre original)
-    public function getPeliculasPorDirector($directorId)
-    {
-        $builder = $this->select('contenidos.*');
-        $builder->join('contenido_director cd', 'cd.contenido_id = contenidos.id');
-        $builder->where('cd.director_id', $directorId);
-        // Se eliminó la línea: $builder->where('contenidos.tipo_id', 1);
-        
-        return $builder->orderBy('contenidos.anio', 'DESC')->findAll();
-    }
-    
-    // Función auxiliar para saber el nombre del director por su ID
-    public function getNombreDirector($directorId)
-    {
-        $getRow = $this->db->table('directores')->select('nombre')->where('id', $directorId)->get()->getRowArray();
-        return $getRow ? $getRow['nombre'] : 'Director';
-    }
-
-public function getPeliculasPaginadas($planId, $limit, $offset)
-    {
-        $builder = $this->where('tipo_id', 1); // Solo películas
-
-        // --- LÓGICA DE FILTRADO DE PLANES ---
-        
-        if ($planId == 3) {
-
-            $builder->where('edad_recomendada <=', 11);
-        } 
-        elseif ($planId == 1) {
-            // CASO PLAN FREE: Solo contenido de nivel 1
-            $builder->where('nivel_acceso', 1);
+        if ($generoId) {
+            $builder->join('contenido_genero cg', 'contenidos.id = cg.contenido_id')
+                    ->where('cg.genero_id', $generoId);
         }
-        // CASO PREMIUM (2): Ve todo, no aplicamos 'where' extra.
 
-        // ------------------------------------
+        // Usamos el helper también aquí para la paginación tradicional
+        $this->_aplicarFiltrosPlan($builder, $planId);
 
-        return $builder->orderBy('fecha_agregada', 'DESC')
+        return $builder->orderBy('contenidos.fecha_agregada', 'DESC')
                        ->findAll($limit, $offset);
     }
+
+    public function getDetallesCompletos($id) {
+        // ... (Tu código existente para detalles) ...
+        // Te lo resumo para no ocupar espacio, mantenlo igual que antes
+        $peli = $this->find($id);
+        if (!$peli) return null;
+        $db = \Config\Database::connect();
+        $builder = $db->table('contenido_genero');
+        $builder->select('generos.nombre')->join('generos', 'generos.id = contenido_genero.genero_id')->where('contenido_id', $id);
+        $peli['generos'] = $builder->get()->getResultArray();
+        $builder = $db->table('contenido_actor');
+        $builder->select('actores.nombre, actores.foto, contenido_actor.personaje')->join('actores', 'actores.id = contenido_actor.actor_id')->where('contenido_id', $id);
+        $peli['actores'] = $builder->get()->getResultArray();
+        return $peli;
+    }
+    
+    public function getDirector($id){ /* Tu código */ }
+    public function getPeliculasPorDirector($id){ /* Tu código */ }
+    public function getNombreDirector($id){ /* Tu código */ }
 }

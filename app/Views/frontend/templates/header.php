@@ -14,6 +14,8 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css"/>
 
     <link rel="stylesheet" href="<?= base_url('assets/css/front.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/auth.css') ?>"> 
+    
     <link rel="shortcut icon" type="image/png" href="<?= base_url('/labutaca2_logo.ico') ?>">
 </head>
 
@@ -35,7 +37,40 @@
             <a href="#" class="nav-link">Series</a>
         </nav>
 
-        <div style="display:flex; align-items:center;">
+        <div style="display:flex; align-items:center; gap: 10px;">
+            
+            <div class="category-menu-wrapper">
+                <button class="btn-grid-menu">
+                    <i class="fa fa-th-large"></i>
+                </button>
+
+                <div class="mega-menu">
+                    <div class="mega-column">
+                        <h4>GÉNEROS</h4>
+                        <div class="genre-grid">
+                            <?php if (!empty($generos)): ?>
+                                <?php foreach ($generos as $g): ?>
+                                    <a href="<?= base_url('?genero=' . $g['id']) ?>" class="genre-link">
+                                        <?= esc($g['nombre']) ?>
+                                    </a>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <p>Sin géneros</p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <div class="mega-column border-left">
+                        <h4>EXPLORAR</h4>
+                        <ul class="featured-list">
+                            <li><a href="<?= base_url('?sort=novedades') ?>">Novedades</a></li>
+                            <li><a href="<?= base_url('?calidad=4k') ?>">Cine 4K UHD</a></li>
+                            <li><a href="<?= base_url('?sort=vistas') ?>">Más Vistas</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
             <div class="search-wrapper">
                 <i class="fa fa-search search-icon"></i>
                 <input type="text" id="global-search" class="search-input-neon" placeholder="Buscar...">
@@ -47,13 +82,54 @@
             </a>
 
             <?php if (session()->get('is_logged_in')): ?>
-                <div onclick="logout()" style="cursor:pointer;" title="Salir (<?= session()->get('username') ?>)">
-                    <img src="<?= base_url('assets/img/avatars/' . session()->get('avatar')) ?>"
-                        style="width:40px; height:40px; border-radius:50%; border:2px solid var(--accent); object-fit:cover;">
+                
+                <div class="profile-menu-wrapper">
+                    <div class="avatar-trigger">
+                        <img src="<?= base_url('assets/img/avatars/' . session()->get('avatar')) ?>"
+                             style="width:40px; height:40px; border-radius:50%; border:2px solid var(--accent); object-fit:cover;">
+                    </div>
+
+                    <div class="profile-dropdown">
+                        
+                        <div class="profile-column border-right">
+                            <h4>MI CUENTA</h4>
+                            <ul class="profile-links">
+                                <li><a href="#">Cuenta y configuración</a></li>
+                                <li><a href="#">Ayuda</a></li>
+                                <li><a href="#" onclick="logout()" style="color: #ff4757;">Cerrar sesión</a></li>
+                            </ul>
+                        </div>
+
+                        <div class="profile-column">
+                            <h4>PERFILES</h4>
+                            
+                            <div class="profiles-list">
+                                <?php if (!empty($otrosPerfiles)): ?>
+                                    <?php foreach ($otrosPerfiles as $p): ?>
+                                        <div class="mini-profile-item" onclick="attemptLogin(<?= $p['id'] ?>, '<?= $p['username'] ?>', <?= $p['plan_id'] ?>)">
+                                            <img src="https://ui-avatars.com/api/?name=<?= $p['username'] ?>&background=random&color=fff" alt="<?= esc($p['username']) ?>">
+                                            <span><?= esc($p['username']) ?></span>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+
+                                <div class="mini-profile-item" onclick="alert('Funcionalidad próximamente...')">
+                                    <div class="add-profile-icon"><i class="fa fa-plus"></i></div>
+                                    <span>Añadir perfil</span>
+                                </div>
+                                
+                                <div class="mini-profile-item" onclick="alert('Editar perfiles')">
+                                    <div class="edit-profile-icon"><i class="fa fa-pencil"></i></div>
+                                    <span>Editar perfiles</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
+
             <?php else: ?>
-                <a href="#" onclick="openLogin(null, 'Usuario')"
-                    style="color:white; font-weight:bold; text-decoration:none;">Entrar</a>
+                <a href="#" onclick="openLogin(null, 'Usuario')" style="color:white; font-weight:bold; text-decoration:none;">Entrar</a>
             <?php endif; ?>
         </div>
     </header>

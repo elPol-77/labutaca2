@@ -6,7 +6,7 @@ function attemptLogin(id, username, planId) {
     // 1. SI ES NIÑO (PLAN 3) -> LOGIN DIRECTO
     if (planId == 3) {
         realizarLoginAjax(id, ''); // Enviamos contraseña vacía
-    } 
+    }
     // 2. SI ES ADULTO -> PEDIR PIN
     else {
         $('#selectedUserId').val(id);
@@ -39,7 +39,7 @@ function realizarLoginAjax(id, password) {
             password: password,
             [csrfName]: csrfHash
         },
-        success: function(response) {
+        success: function (response) {
             // Actualizamos token CSRF siempre
             if (response.token) {
                 $('.txt_csrftoken').val(response.token);
@@ -55,7 +55,7 @@ function realizarLoginAjax(id, password) {
                 // Si estábamos intentando entrar como niño y falló (raro), no hacemos nada visual extra
             }
         },
-        error: function() {
+        error: function () {
             alert('Error de conexión con el servidor');
         }
     });
@@ -63,5 +63,5 @@ function realizarLoginAjax(id, password) {
 
 // Permitir intro en el input
 $('#passwordInput').on('keypress', function (e) {
-    if(e.which === 13) submitLogin();
+    if (e.which === 13) submitLogin();
 });
