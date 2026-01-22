@@ -4,7 +4,7 @@ let finDeContenido = false;
 
 $(document).ready(function () {
     // ----------------------------------------------------
-    // 1. LÓGICA DE INICIO (SPLASH SCREEN INTELIGENTE)
+    // 1. INICIO & SPLASH SCREEN
     // ----------------------------------------------------
     function iniciarWeb() {
         $('#view-splash').fadeOut(600, function () {
@@ -37,23 +37,24 @@ $(document).ready(function () {
         $('.hero-carousel').slick({
             dots: true,
             infinite: true,
-            speed: 500,
+            speed: 800,           
             fade: true,
             cssEase: 'linear',
             autoplay: true,
-            autoplaySpeed: 4000,
-            arrows: false
+            autoplaySpeed: 4000,  
+            arrows: false,
+            pauseOnHover: false 
         });
     }
 
     // ----------------------------------------------------
     // 3. DETECTOR DE SCROLL INFINITO
     // ----------------------------------------------------
-    // IMPORTANTE: Escuchamos el scroll en la sección activa que tiene el scrollbar
-    $('.view-section').on('scroll', function() {
+    // Se escucha en .view-section porque es el contenedor con overflow
+    $('.view-section').on('scroll', function () {
         if (finDeContenido || cargando) return;
 
-        // Si el usuario llega al 80% del scroll del contenedor
+        // Si el usuario llega cerca del final
         if ($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight - 300) {
             cargarMasPeliculas();
         }
@@ -67,10 +68,11 @@ $(document).ready(function () {
         if (bgUrl) $('#dynamic-bg').css('background-image', `url(${bgUrl})`).css('opacity', '0.5');
     });
 
-    $(document).on('mouseleave', '.movie-poster', function () { 
-        $('#dynamic-bg').css('opacity', '0.2'); 
+    $(document).on('mouseleave', '.movie-poster', function () {
+        $('#dynamic-bg').css('opacity', '0.2');
     });
 
+    // Asegúrate de que el ID coincide con tu HTML (#global-search o #main-search)
     $("#global-search").autocomplete({
         source: function (request, response) {
             var csrfName = $('.txt_csrftoken').attr('name');
@@ -106,13 +108,14 @@ function cargarMasPeliculas() {
         url: BASE_URL + "home/index/" + paginaActual,
         type: "get",
         dataType: "json",
-        success: function(data) {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }, // Importante para detectar AJAX en CI4
+        success: function (data) {
             if (!data || data.length === 0) {
                 finDeContenido = true;
                 return;
             }
-            
-            // Adaptamos los datos para el renderizado
+
+            // Adaptar datos
             const moviesFormatted = data.map(item => ({
                 id: item.id,
                 title: item.titulo,
@@ -122,11 +125,10 @@ function cargarMasPeliculas() {
                 link: BASE_URL + 'detalle/' + item.id
             }));
 
-            // Usamos append en lugar de empty
             appendMoviesToGrid(moviesFormatted);
             cargando = false;
         },
-        error: function() {
+        error: function () {
             cargando = false;
         }
     });
@@ -140,10 +142,12 @@ window.renderGrid = function (movies) {
 
 function appendMoviesToGrid(movies) {
     const grid = $('#grid-container');
+
     if (!movies || movies.length === 0) {
         if (paginaActual === 1) grid.html('<p style="color:#a0a0a0; text-align:center; grid-column:1/-1;">No hay contenido disponible.</p>');
         return;
     }
+
     movies.forEach(m => {
         const badge = m.premium ? '<span class="badge badge-premium" style="position:absolute; top:10px; right:10px; z-index:5;">PRO</span>' : '';
         const card = `
@@ -159,7 +163,7 @@ function appendMoviesToGrid(movies) {
 // ----------------------------------------------------
 // 6. OTRAS UTILIDADES
 // ----------------------------------------------------
-window.playCinematic = function(urlDestino) {
+window.playCinematic = function (urlDestino) {
     $('#view-splash').addClass('active').css('display', 'flex').hide().fadeIn(300);
     $('.loader-line').css('width', '0%');
     setTimeout(() => { $('.loader-line').css('width', '100%'); }, 100);
@@ -169,13 +173,14 @@ window.playCinematic = function(urlDestino) {
 window.toggleMiLista = function (idContenido) {
     var csrfName = $('.txt_csrftoken').attr('name');
     var csrfHash = $('.txt_csrftoken').val();
+
     $.ajax({
         url: BASE_URL + "api/usuario/toggle-lista",
         type: "post", dataType: "json",
         data: { id: idContenido, [csrfName]: csrfHash },
         success: function (response) {
             if (response.token) $('.txt_csrftoken').val(response.token);
-            location.reload(); // Recargamos para actualizar estado visual
+            location.reload();
         }
     });
 };

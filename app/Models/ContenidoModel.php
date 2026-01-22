@@ -11,20 +11,20 @@ class ContenidoModel extends Model
     protected $allowedFields = [
         'tipo_id', 'titulo', 'descripcion', 'anio', 
         'duracion', 'imagen', 'imagen_bg', 'url_video', 
-        'nivel_acceso', 'vistas', 'destacada'
+        'nivel_acceso', 'vistas', 'destacada','edad_recomendada'
     ];
 
-    // Función auxiliar para sacar solo películas (tipo_id = 1)
+    // Función auxiliar (Mantiene nombre original, pero trae todo)
     public function getPeliculas($planUsuario = 1) {
         if ($planUsuario == 2) {
             // Premium ve todo
-            return $this->where('tipo_id', 1)->findAll();
+            return $this->findAll();
         } else {
             // Free solo ve contenido nivel 1
-            return $this->where('tipo_id', 1)->where('nivel_acceso', 1)->findAll();
+            return $this->where('nivel_acceso', 1)->findAll();
         }
-
     }
+
     // Obtener detalles completos con Actores y Géneros
     public function getDetallesCompletos($id)
     {
@@ -49,7 +49,8 @@ class ContenidoModel extends Model
 
         return $peli;
     }
-    // Obtener el director de una película concreta
+
+    // Obtener el director de un contenido concreto
     public function getDirector($contenidoId)
     {
         $builder = $this->db->table('contenido_director cd');
@@ -60,13 +61,13 @@ class ContenidoModel extends Model
         return $builder->get()->getRowArray(); // Devolvemos solo un director (el principal)
     }
 
-    // Obtener todas las películas de un director
+    // Obtener todo el contenido de un director (Mantiene nombre original)
     public function getPeliculasPorDirector($directorId)
     {
         $builder = $this->select('contenidos.*');
         $builder->join('contenido_director cd', 'cd.contenido_id = contenidos.id');
         $builder->where('cd.director_id', $directorId);
-        $builder->where('contenidos.tipo_id', 1); // Solo películas
+        // Se eliminó la línea: $builder->where('contenidos.tipo_id', 1);
         
         return $builder->orderBy('contenidos.anio', 'DESC')->findAll();
     }
@@ -77,12 +78,26 @@ class ContenidoModel extends Model
         $getRow = $this->db->table('directores')->select('nombre')->where('id', $directorId)->get()->getRowArray();
         return $getRow ? $getRow['nombre'] : 'Director';
     }
-    public function getPeliculasPaginadas($planId, $limit, $offset) {
-    $builder = $this->where('tipo_id', 1);
-    if ($planId == 1) {
-        $builder->where('nivel_acceso', 1);
+
+public function getPeliculasPaginadas($planId, $limit, $offset)
+    {
+        $builder = $this->where('tipo_id', 1); // Solo películas
+
+        // --- LÓGICA DE FILTRADO DE PLANES ---
+        
+        if ($planId == 3) {
+
+            $builder->where('edad_recomendada <=', 11);
+        } 
+        elseif ($planId == 1) {
+            // CASO PLAN FREE: Solo contenido de nivel 1
+            $builder->where('nivel_acceso', 1);
+        }
+        // CASO PREMIUM (2): Ve todo, no aplicamos 'where' extra.
+
+        // ------------------------------------
+
+        return $builder->orderBy('fecha_agregada', 'DESC')
+                       ->findAll($limit, $offset);
     }
-    return $builder->orderBy('fecha_agregada', 'DESC')
-                   ->findAll($limit, $offset);
-}
 }

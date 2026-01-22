@@ -1,73 +1,67 @@
-let currentUserId = null;
+// Variable global para el CSRF
+let csrfName = $('.txt_csrftoken').attr('name');
+let csrfHash = $('.txt_csrftoken').val();
 
-// Abrir el modal
-function openLogin(id, name) {
-    currentUserId = id;
-    $('#modalUser').text(name);
-    $('#passwordInput').val('');
-    $('#errorMsg').hide();
-
-    // Animación de entrada
-    $('#modalAuth').css('display', 'flex').hide().fadeIn(300);
-    $('#passwordInput').focus();
+function attemptLogin(id, username, planId) {
+    // 1. SI ES NIÑO (PLAN 3) -> LOGIN DIRECTO
+    if (planId == 3) {
+        realizarLoginAjax(id, ''); // Enviamos contraseña vacía
+    } 
+    // 2. SI ES ADULTO -> PEDIR PIN
+    else {
+        $('#selectedUserId').val(id);
+        $('#modalUser').text(username);
+        $('#passwordInput').val('');
+        $('#errorMsg').hide();
+        $('#modalAuth').fadeIn().css('display', 'flex');
+        $('#passwordInput').focus();
+    }
 }
 
-// Cerrar el modal
 function closeModal() {
-    $('#modalAuth').fadeOut(300);
+    $('#modalAuth').fadeOut();
 }
 
-// Detectar tecla ENTER
-$(document).ready(function () {
-    $('#passwordInput').on('keydown', function (e) {
-        if (e.key === 'Enter' || e.keyCode === 13) {
-            e.preventDefault(); 
-            doLogin();
-        }
-    });
-});
-
-// Proceso de Login con AJAX y CSRF
-function doLogin() {
+function submitLogin() {
+    const id = $('#selectedUserId').val();
     const pass = $('#passwordInput').val();
+    realizarLoginAjax(id, pass);
+}
 
-    // 1. Obtenemos los tokens del HTML (Que coinciden con header.php)
-    const csrfName = $('.txt_csrftoken').attr('name');
-    const csrfHash = $('.txt_csrftoken').val();
-
+// Función común para hacer la llamada al servidor
+function realizarLoginAjax(id, password) {
     $.ajax({
-        url: BASE_URL + 'auth/login', 
-        type: "POST",
+        url: BASE_URL + "auth/login",
+        type: "post",
         dataType: "json",
         data: {
-            id: currentUserId,
-            password: pass,
-            [csrfName]: csrfHash // Enviamos el token actual
+            id: id,
+            password: password,
+            [csrfName]: csrfHash
         },
-        success: function (response) {
-            // 2. IMPORTANTE: Actualizamos el token siempre, sea éxito o error.
-            // Si no hacemos esto, el segundo intento fallará con 403 Forbidden.
-            if(response.token) {
+        success: function(response) {
+            // Actualizamos token CSRF siempre
+            if (response.token) {
                 $('.txt_csrftoken').val(response.token);
+                csrfHash = response.token;
             }
 
             if (response.status === 'success') {
+                // Éxito: Recargar la página para ir al Home
                 window.location.href = BASE_URL;
             } else {
-                // Si hay error, mostrar mensaje y vibrar
-                $('#errorMsg').show();
-                $('.modal-content')
-                    .animate({ marginLeft: "-10px" }, 50)
-                    .animate({ marginLeft: "10px" }, 50)
-                    .animate({ marginLeft: "0px" }, 50);
-
-                // Limpiar input
-                $('#passwordInput').val('');
+                // Error: Mostrar mensaje en el modal
+                $('#errorMsg').text(response.msg).show();
+                // Si estábamos intentando entrar como niño y falló (raro), no hacemos nada visual extra
             }
         },
-        error: function (xhr) {
-            console.error("Error Login:", xhr.status);
-            alert("Error de conexión. Recarga la página.");
+        error: function() {
+            alert('Error de conexión con el servidor');
         }
     });
 }
+
+// Permitir intro en el input
+$('#passwordInput').on('keypress', function (e) {
+    if(e.which === 13) submitLogin();
+});

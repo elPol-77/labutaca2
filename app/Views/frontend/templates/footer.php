@@ -14,10 +14,11 @@
     <script>
         const rawData = <?= isset($peliculas) ? json_encode($peliculas) : '[]' ?>;
 
-        if (rawData.length > 0) {
+        if (rawData && rawData.length > 0) {
             const moviesFormatted = rawData.map(item => ({
                 id: item.id,
                 title: item.titulo,
+                // Corrección para asegurar rutas de imágenes
                 img: item.imagen.startsWith('http') ? item.imagen : '<?= base_url("assets/img/") ?>' + item.imagen,
                 bg: item.imagen_bg.startsWith('http') ? item.imagen_bg : '<?= base_url("assets/img/") ?>' + item.imagen_bg,
                 premium: item.nivel_acceso == '2',
