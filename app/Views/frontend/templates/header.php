@@ -120,7 +120,7 @@
                                 
                                 <div class="mini-profile-item" onclick="alert('Editar perfiles')">
                                     <div class="edit-profile-icon"><i class="fa fa-pencil"></i></div>
-                                    <span>Editar perfiles</span>
+                                    <span>Editar perfil</span>
                                 </div>
                             </div>
                         </div>

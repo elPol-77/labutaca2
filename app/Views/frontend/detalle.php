@@ -39,7 +39,26 @@
             </p>
 
             <div class="actions" style="display:flex; gap:20px;">
-                <?php if ($puede_ver): ?>
+
+                <?php if (isset($es_externo) && $es_externo): ?>
+                    
+                    <button onclick="abrirTrailer('<?= esc($peli['titulo']) ?>', '<?= $peli['anio'] ?>')" 
+                        class="btn-primary" 
+                        style="background: linear-gradient(90deg, #ff416c 0%, #ff4b2b 100%); 
+                        color: white; padding: 15px 40px; border:none; cursor:pointer;
+                        border-radius:30px; font-weight:bold; font-size:1.2rem; display:flex; align-items:center; gap:10px;
+                        box-shadow: 0 0 20px rgba(255, 75, 43, 0.4);">
+                        <i class="fa fa-youtube-play"></i> VER TRAILER
+                    </button>
+
+                    <button disabled style="
+                        background: rgba(255,255,255,0.1); color: #aaa; padding: 15px 25px; border: 1px solid rgba(255,255,255,0.2);
+                        border-radius:30px; font-weight:bold; font-size:1rem; display:flex; align-items:center; gap:10px; cursor:default;">
+                        <i class="fa fa-globe"></i> GLOBAL
+                    </button>
+
+                <?php elseif ($puede_ver): ?>
+                    
                     <a href="<?= base_url('ver/' . $peli['id']) ?>" class="btn-primary" style="
                         background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%); 
                         color: white; padding: 15px 40px; text-decoration:none; 
@@ -47,6 +66,13 @@
                         box-shadow: 0 0 20px rgba(0, 210, 255, 0.4);">
                         <i class="fa fa-play"></i> REPRODUCIR
                     </a>
+
+                    <button onclick="toggleMiLista(<?= $peli['id'] ?>)" id="btn-milista"
+                        class="<?= $en_lista ? 'en-lista' : '' ?>"
+                        style="background:rgba(255,255,255,0.1); color:white; border:none; width:50px; height:50px; border-radius:50%; font-size:1.2rem; cursor:pointer; transition:0.3s;">
+                        <i class="fa <?= $en_lista ? 'fa-check' : 'fa-plus' ?>" style="<?= $en_lista ? 'color:#00d2ff' : '' ?>"></i>
+                    </button>
+
                 <?php else: ?>
                     
                     <button disabled
@@ -55,31 +81,25 @@
                         border-radius:30px; font-weight:bold; font-size:1.2rem; display:flex; align-items:center; gap:10px; cursor:not-allowed;">
                         <i class="fa fa-lock"></i> NECESITAS PREMIUM
                     </button>
+
                 <?php endif; ?>
 
-                <button onclick="toggleMiLista(<?= $peli['id'] ?>)" id="btn-milista"
-                    class="<?= $en_lista ? 'en-lista' : '' ?>"
-                    style="background:rgba(255,255,255,0.1); color:white; border:none; width:50px; height:50px; border-radius:50%; font-size:1.2rem; cursor:pointer; transition:0.3s;">
-
-                    <i class="fa <?= $en_lista ? 'fa-check' : 'fa-plus' ?>"
-                        style="<?= $en_lista ? 'color:#00d2ff' : '' ?>"></i>
-
-                </button>
             </div>
+
             <?php if (!empty($director)): ?>
-        <div style="margin-top: 20px; margin-bottom: 20px;">
-            <span style="color: #a0a0a0; font-weight: 600; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px;">
-                Director
-            </span>
-            <br>
-            <a href="<?= base_url('director/' . $director['id']) ?>" 
-               style="color: white; text-decoration: none; font-size: 1.1rem; font-weight: 700; border-bottom: 2px solid var(--accent); padding-bottom: 2px; transition: 0.3s;"
-               onmouseover="this.style.color='var(--accent)'" 
-               onmouseout="this.style.color='white'">
-                <?= esc($director['nombre']) ?>
-            </a>
-        </div>
-    <?php endif; ?>
+                <div style="margin-top: 20px; margin-bottom: 20px;">
+                    <span style="color: #a0a0a0; font-weight: 600; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px;">
+                        Director
+                    </span>
+                    <br>
+                    <a href="<?= base_url('director/' . $director['id']) ?>" 
+                       style="color: white; text-decoration: none; font-size: 1.1rem; font-weight: 700; border-bottom: 2px solid var(--accent); padding-bottom: 2px; transition: 0.3s;"
+                       onmouseover="this.style.color='var(--accent)'" 
+                       onmouseout="this.style.color='white'">
+                        <?= esc($director['nombre']) ?>
+                    </a>
+                </div>
+            <?php endif; ?>
 
             <div class="cast" style="margin-top:50px;">
                 <h3 style="border-bottom:1px solid #333; padding-bottom:10px;">Reparto</h3>
@@ -89,13 +109,15 @@
                     <?php else: ?>
                         <?php foreach ($peli['actores'] as $actor): ?>
                             <div style="text-align:center; min-width:80px;">
-                                <div
-                                    style="width:80px; height:80px; border-radius:50%; background:#333; margin-bottom:10px; overflow:hidden;">
-                                    <img src="<?= $actor['foto'] ?? 'https://ui-avatars.com/api/?name=' . $actor['nombre'] ?>"
-                                        style="width:100%; height:100%; object-fit:cover;">
+                                <div style="width:80px; height:80px; border-radius:50%; background:#333; margin-bottom:10px; overflow:hidden;">
+                                    <?php 
+                                        // Si es externo, puede que no tengamos foto, usamos UI Avatars
+                                        $fotoActor = $actor['foto'] ?? 'https://ui-avatars.com/api/?name=' . urlencode($actor['nombre']) . '&background=random';
+                                    ?>
+                                    <img src="<?= $fotoActor ?>" style="width:100%; height:100%; object-fit:cover;">
                                 </div>
                                 <div style="font-size:0.8rem; font-weight:bold;"><?= $actor['nombre'] ?></div>
-                                <div style="font-size:0.7rem; color:#aaa;"><?= $actor['personaje'] ?></div>
+                                <div style="font-size:0.7rem; color:#aaa;"><?= $actor['personaje'] ?? '' ?></div>
                             </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -105,3 +127,11 @@
         </div>
     </div>
 </div>
+
+<script>
+function abrirTrailer(titulo, anio) {
+    // Abre una búsqueda directa en YouTube en una pestaña nueva
+    const query = encodeURIComponent(titulo + " trailer español " + anio);
+    window.open('https://www.youtube.com/results?search_query=' + query, '_blank');
+}
+</script>

@@ -61,7 +61,7 @@ class Home extends BaseController
             $this->procesarMetadatos($tendencias, $userId);
             
             $tituloTendencias = $esKids ? 'Los favoritos de los peques 🎈' : 'Tendencias en La Butaca';
-            if ($esFree) $tituloTendencias .= ' (Gratis)';
+            if ($esFree) $tituloTendencias ;
             
             $secciones[] = ['titulo' => $tituloTendencias, 'data' => $tendencias];
 
@@ -259,7 +259,7 @@ class Home extends BaseController
         }
 
         return view('frontend/player', [
-            'titulo'    => 'Viendo: ' . $contenido['titulo'],
+            'titulo'    => 'Viendo: ' . $contenido['titulo'] . ' | La Butaca',
             'contenido' => $contenido,
             'video_url' => $videoUrl
         ]);
@@ -268,45 +268,88 @@ class Home extends BaseController
     // ... (El resto de funciones detalle, autocompletar, director déjalas como las tenías) ...
     // Solo asegúrate de que 'detalle' tiene la misma lógica de $puedeVer visual.
     
+// ... dentro de Home.php ...
+
+    // =========================================================================
+    // 4. DETALLE HÍBRIDO (LOCAL + GLOBAL)
+    // =========================================================================
     public function detalle($id)
     {
         if (!session()->get('is_logged_in')) return redirect()->to('/auth');
 
         $userId = session()->get('user_id');
         $model = new ContenidoModel();
-        $userModel = new UsuarioModel();
-        $generoModel = new GeneroModel();
+        
+        // DETECTAR SI ES LOCAL O EXTERNO
+        // Si es numérico (1, 50, 100) -> Es local
+        // Si empieza por 'tt' -> Es externo (IMDB/OMDb)
+        $esLocal = is_numeric($id); 
 
-        $contenido = $model->getDetallesCompletos($id);
-        $director = $model->getDirector($id);
+        $contenido = null;
+        $director = null;
+        $esExterno = false;
 
-        if (!$contenido) throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
-
-        $db = \Config\Database::connect();
-        $enLista = $db->table('mi_lista')->where('usuario_id', $userId)->where('contenido_id', $id)->countAllResults() > 0;
-
-        $planUsuario = session()->get('plan_id');
-        $nivelAcceso = $contenido['nivel_acceso'];
-        $edadRecomendada = $contenido['edad_recomendada'];
-
-        $puedeVer = false;
-        if ($planUsuario == 2) { $puedeVer = true; } 
-        elseif ($planUsuario == 3) {
-            if (($nivelAcceso == 3 || $nivelAcceso == 1) && $edadRecomendada <= 11) $puedeVer = true;
-        } 
-        elseif ($planUsuario == 1) {
-            if ($nivelAcceso == 1) $puedeVer = true;
+        if ($esLocal) {
+            // --- LÓGICA LOCAL (Tu BBDD) ---
+            $contenido = $model->getDetallesCompletos($id);
+            $director = $model->getDirector($id);
+        } else {
+            // --- LÓGICA EXTERNA (API OMDb) ---
+            $contenido = $this->obtenerDetalleExterno($id);
+            $esExterno = true;
         }
 
+        if (!$contenido) {
+            // Si falla la API o no existe en BBDD
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        // --- GESTIÓN DE MI LISTA ---
+        $db = \Config\Database::connect();
+        $enLista = false;
+        
+        // Solo podemos comprobar "Mi Lista" si es local (por ahora)
+        // O si quieres guardar externos, tendrías que guardar el ID 'tt...' en tu tabla mi_lista
+        if ($esLocal) {
+            $enLista = $db->table('mi_lista')
+                ->where('usuario_id', $userId)
+                ->where('contenido_id', $id)
+                ->countAllResults() > 0;
+        }
+
+        // --- PERMISOS DE VISUALIZACIÓN ---
+        $puedeVer = false;
+        if ($esLocal) {
+            // Usamos tu lógica de planes estricta
+            $planUsuario = session()->get('plan_id');
+            $nivelAcceso = $contenido['nivel_acceso'];
+            $edadRecomendada = $contenido['edad_recomendada'];
+
+            if ($planUsuario == 2) $puedeVer = true;
+            elseif ($planUsuario == 3) {
+                if (($nivelAcceso == 3 || $nivelAcceso == 1) && $edadRecomendada <= 11) $puedeVer = true;
+            }
+            elseif ($planUsuario == 1) {
+                if ($nivelAcceso == 1) $puedeVer = true;
+            }
+        } else {
+            // Si es externo, dejamos "ver" la ficha (Trailer), no hay restricción de plan
+            $puedeVer = true; 
+        }
+
+        // Datos comunes para el Header/Footer
+        $generoModel = new GeneroModel();
+        $userModel = new UsuarioModel();
         $listaGeneros = $generoModel->orderBy('nombre', 'ASC')->findAll();
-        $otrosPerfiles = $userModel->where('id >=', 2)->where('id <=', 4)->where('id !=', $userId)->findAll();
+        $otrosPerfiles = $userModel->where('id !=', $userId)->findAll();
 
         $data = [
             'titulo'        => $contenido['titulo'],
             'peli'          => $contenido,
             'puede_ver'     => $puedeVer,
             'en_lista'      => $enLista,
-            'director'      => $director,
+            'director'      => $director, // Puede ser null si es externo
+            'es_externo'    => $esExterno, // ¡IMPORTANTE PARA LA VISTA!
             'generos'       => $listaGeneros,
             'otrosPerfiles' => $otrosPerfiles
         ];
@@ -314,6 +357,41 @@ class Home extends BaseController
         echo view('frontend/templates/header', $data);
         echo view('frontend/detalle', $data);
         echo view('frontend/templates/footer', $data);
+    }
+
+    // --- FUNCIÓN AUXILIAR: TRADUCIR API OMDb A TU FORMATO ---
+    private function obtenerDetalleExterno($imdbID) {
+        $apiKey = '78a51c36'; // Tu API Key
+        // Hacemos la petición al servidor de OMDb
+        $json = @file_get_contents("https://www.omdbapi.com/?apikey={$apiKey}&i={$imdbID}&plot=full");
+        
+        if (!$json) return null;
+        
+        $data = json_decode($json, true);
+
+        if (!isset($data['Response']) || $data['Response'] === 'False') return null;
+
+        // TRUCO DE MAGIA:
+        // Convertimos los datos raros de OMDb al formato EXACTO que usa tu vista 'detalle.php'
+        // Así la vista no sabe si viene de BBDD o de Internet.
+        return [
+            'id' => $data['imdbID'], // tt12345
+            'titulo' => $data['Title'],
+            'descripcion' => $data['Plot'],
+            'anio' => intval($data['Year']),
+            'duracion' => intval($data['Runtime']), // "120 min" -> 120
+            'imagen' => ($data['Poster'] != 'N/A') ? $data['Poster'] : base_url('assets/img/no-poster.jpg'),
+            'imagen_bg' => ($data['Poster'] != 'N/A') ? $data['Poster'] : base_url('assets/img/no-poster.jpg'),
+            
+            // Datos ficticios para que no falle la vista
+            'nivel_acceso' => 0, 
+            'edad_recomendada' => 12, 
+            'url_video' => null, // No tenemos video, usaremos YouTube
+            
+            // Convertimos géneros y actores a array
+            'generos' => array_map(function($g){ return ['nombre' => trim($g)]; }, explode(',', $data['Genre'])),
+            'actores' => array_map(function($a){ return ['nombre' => trim($a), 'foto' => null, 'personaje' => '']; }, explode(',', $data['Actors']))
+        ];
     }
 
     // =========================================================================
@@ -415,4 +493,5 @@ class Home extends BaseController
         echo view('frontend/catalogo', $data);
         echo view('frontend/templates/footer', $data);
     }
+    
 }
