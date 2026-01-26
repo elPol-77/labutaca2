@@ -112,39 +112,51 @@ class Catalogo extends ResourceController
     // 4. BUSCADOR API (AUTOCOMPLETE)
     public function autocompletar()
     {
-        // 1. Recibir datos JSON o POST
+        // 1. Recibir término
         $search = $this->request->getPost('search');
         
-        // Respuesta base con nuevo token CSRF
+        // Respuesta base
         $response = ['token' => csrf_hash(), 'data' => []];
 
         if ($search) {
-            $planId = session()->get('plan_id') ?? 1;
+            // OBTENEMOS EL PLAN DEL USUARIO (Si no hay sesión, asumimos Free/Restringido)
+            $planId = session()->get('plan_id') ?? 1; 
+
             $model = new \App\Models\ContenidoModel();
+            $builder = $model->select('id, titulo, imagen, anio, nivel_acceso, edad_recomendada')
+                             ->like('titulo', $search);
 
-            // Usamos Query Builder
-            $builder = $model->select('id, titulo, imagen, anio')
-                             ->like('titulo', $search)
-                             ->where('tipo_id', 1); // Solo películas por ahora
-
-            // Aplicar filtros de seguridad (Kids/Free)
+            // =========================================================
+            // 🛡️ FILTROS DE SEGURIDAD SEGÚN EL PLAN
+            // =========================================================
+            
+            // CASO 1: PLAN KIDS (Plan ID 3)
+            // "Ni a los niños películas de más de 11 años"
             if ($planId == 3) {
-                $builder->where('edad_recomendada <=', 12);
-            } elseif ($planId == 1) {
+                $builder->where('edad_recomendada <=', 11); 
+            }
+            
+            // CASO 2: PLAN FREE (Plan ID 1)
+            // "Los usuarios free no deberían ver películas premium"
+            // (Asumimos que nivel_acceso 1 es Free y 2 es Premium)
+            elseif ($planId == 1) {
                 $builder->where('nivel_acceso', 1);
             }
 
-            $listaPelis = $builder->orderBy('titulo')->findAll(5); // Top 5 resultados
+            // Si es Premium (Plan 2), no entra en ningún if y lo ve todo.
+            // =========================================================
 
-            // Formatear datos para el frontend
+            $listaPelis = $builder->limit(5)->find();
+
+            // Formatear datos
             foreach ($listaPelis as $peli) {
                 $imgUrl = str_starts_with($peli['imagen'], 'http')
                     ? $peli['imagen']
                     : base_url('assets/img/' . $peli['imagen']);
 
                 $response['data'][] = [
-                    "value" => $peli['id'],      // ID real
-                    "label" => $peli['titulo'],  // Título
+                    "value" => $peli['id'],
+                    "label" => $peli['titulo'],
                     "img"   => $imgUrl,
                     "year"  => $peli['anio']
                 ];

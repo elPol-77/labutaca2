@@ -7,45 +7,79 @@ use CodeIgniter\Router\RouteCollection;
  */
 
 // =============================================================================
-// 1. FRONTEND (VISTAS HTML)
+// 1. FRONTEND (Público)
 // =============================================================================
 $routes->get('/', 'Home::index');
-
-// [IMPORTANTE] Cambiamos (:num) por (:segment) para aceptar IDs de OMDb (tt12345)
-$routes->get('detalle/(:segment)', 'Home::detalle/$1'); 
-
-// Para ver película (reproductor local), seguimos exigiendo ID numérico por seguridad
-$routes->get('ver/(:num)', 'Home::ver/$1'); 
-
+$routes->get('detalle/(:segment)', 'Home::detalle/$1');
+$routes->get('ver/(:num)', 'Home::ver/$1');
 $routes->get('mi-lista', 'Home::miLista');
 $routes->get('director/(:num)', 'Home::director/$1');
 
 // =============================================================================
-// 2. AUTENTICACIÓN
+// 2. AUTENTICACIÓN (Perfiles y Login Admin)
 // =============================================================================
+// Login de Usuarios (Perfiles tipo Netflix)
 $routes->get('auth', 'Auth::index');
+$routes->get('login', 'Auth::index');
 $routes->post('auth/login', 'Auth::login');
-$routes->get('auth/logout', 'Auth::logout'); // Alias por si acaso
 $routes->get('logout', 'Auth::logout');
+$routes->get('auth/logout', 'Auth::logout');
+
+// Selección de perfiles
+$routes->get('profiles', 'Profiles::index');
+$routes->get('profiles/select/(:segment)', 'Profiles::select/$1');
+
+// Login de Administración (Panel Técnico)
+// Estas rutas deben coincidir con el action de tu formulario HTML
+$routes->get('admin/login', 'Admin\Auth::index'); 
+$routes->post('admin/auth/login', 'Admin\Auth::login'); 
+
 
 // =============================================================================
-// 3. API INTERNA RESTful (JSON)
+// 3. API INTERNA RESTful (Conectada al JS)
 // =============================================================================
-// Todo lo que empiece por /api/... irá aquí dentro
-$routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) {
+$routes->group('api', ['namespace' => 'App\Controllers\Api'], function ($routes) {
     
-    // --- CATÁLOGO ---
-    $routes->get('catalogo', 'Catalogo::index');          // Listado general (Angular/App)
-    $routes->get('catalogo/(:segment)', 'Catalogo::show/$1'); // Detalle (acepta OMDb)
-    $routes->get('tendencias', 'Catalogo::tendencias');   // Filas Netflix Home
+    // Catálogo y Tendencias
+    $routes->get('catalogo', 'Catalogo::index');
+    $routes->get('catalogo/(:segment)', 'Catalogo::show/$1');
+    $routes->get('tendencias', 'Catalogo::tendencias');
     
-    // --- USUARIO (Mi Lista) ---
-    // Mapeamos la ruta que usa tu JS ('api/usuario/toggle-lista') al método 'toggle'
-    $routes->post('usuario/toggle-lista', 'Usuario::toggle');  
-    $routes->get('mi-lista', 'Usuario::getLista');        
-
-    // --- BUSCADOR ---
-    // Movemos la lógica del buscador a la API. 
-    // Nota: Crearemos esta función en el controlador Catalogo para no crear otro archivo.
+    // Gestión de Usuario
+    $routes->post('usuario/toggle-lista', 'Usuario::toggle');
+    $routes->get('mi-lista', 'Usuario::getLista');
+    
+    // BUSCADOR (Esta es la ruta crítica corregida)
+    // Al estar dentro del grupo 'api', la URL final será: /api/buscador/autocompletar
     $routes->post('buscador/autocompletar', 'Catalogo::autocompletar');
+});
+
+// =============================================================================
+// 4. ÁREA DE ADMINISTRACIÓN (Protegida por Filtro)
+// =============================================================================
+$routes->group('admin', ['filter' => 'adminAuth', 'namespace' => 'App\Controllers\Admin'], function ($routes) {
+
+    // Dashboard Principal
+    $routes->get('/', 'Dashboard::index');
+
+    // --- GESTIÓN DE PELÍCULAS ---
+    $routes->group('peliculas', function ($routes) {
+        $routes->get('/', 'Peliculas::index');
+        $routes->get('create', 'Peliculas::create'); 
+        $routes->post('store', 'Peliculas::store');
+        $routes->get('borrar/(:num)', 'Peliculas::delete/$1');
+    });
+
+    // --- GESTIÓN DE SERIES ---
+    $routes->group('series', function ($routes) {
+        $routes->get('/', 'Series::index');
+        $routes->get('create', 'Series::create'); 
+        $routes->post('store', 'Series::store');
+        $routes->get('borrar/(:num)', 'Series::delete/$1');
+    });
+
+    // --- GESTIÓN DE USUARIOS ---
+    $routes->get('usuarios', 'Usuarios::index');
+    $routes->get('usuarios/borrar/(:num)', 'Usuarios::delete/$1');
+    $routes->post('usuarios/cambiar-rol', 'Usuarios::cambiarRol');
 });

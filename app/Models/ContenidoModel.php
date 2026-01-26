@@ -9,9 +9,20 @@ class ContenidoModel extends Model
     protected $primaryKey = 'id';
 
     protected $allowedFields = [
-        'tipo_id', 'titulo', 'descripcion', 'anio', 'duracion',
-        'imagen', 'imagen_bg', 'url_video', 'nivel_acceso',
-        'vistas', 'destacada', 'edad_recomendada'
+        'tipo_id',
+        'titulo',
+        'descripcion',
+        'anio',
+        'duracion',
+        'imagen',
+        'imagen_bg',
+        'url_video',
+        'nivel_acceso',
+        'vistas',
+        'destacada',
+        'edad_recomendada',
+        'imdb_rating',
+        'fecha_agregada'
     ];
 
     // =========================================================
@@ -50,8 +61,8 @@ class ContenidoModel extends Model
     public function getTendencias($limit = 10, $planId = 1)
     {
         $builder = $this->select('contenidos.*')
-                        ->orderBy('vistas', 'DESC');
-        
+            ->orderBy('vistas', 'DESC');
+
         $this->_aplicarFiltrosPlan($builder, $planId);
 
         return $builder->findAll($limit);
@@ -61,7 +72,7 @@ class ContenidoModel extends Model
     public function getContentRandom($tipoId, $limit = 10, $planId = 1)
     {
         $builder = $this->where('tipo_id', $tipoId);
-        
+
         $this->_aplicarFiltrosPlan($builder, $planId);
 
         return $builder->orderBy('RAND()')->findAll($limit);
@@ -71,10 +82,10 @@ class ContenidoModel extends Model
     public function getPorGenero($generoId, $tipoId, $limit = 10, $excluirIds = [], $planId = 1)
     {
         $builder = $this->select('contenidos.*')
-                        ->join('contenido_genero cg', 'contenidos.id = cg.contenido_id')
-                        ->where('cg.genero_id', $generoId)
-                        ->where('contenidos.tipo_id', $tipoId);
-        
+            ->join('contenido_genero cg', 'contenidos.id = cg.contenido_id')
+            ->where('cg.genero_id', $generoId)
+            ->where('contenidos.tipo_id', $tipoId);
+
         $this->_aplicarFiltrosPlan($builder, $planId);
 
         if (!empty($excluirIds)) {
@@ -82,7 +93,7 @@ class ContenidoModel extends Model
         }
 
         return $builder->orderBy('contenidos.fecha_agregada', 'DESC')
-                       ->findAll($limit);
+            ->findAll($limit);
     }
 
     // --- FUNCIONES CLÁSICAS (Mantenidas para compatibilidad) ---
@@ -100,7 +111,7 @@ class ContenidoModel extends Model
                 ORDER BY frecuencia DESC
                 LIMIT 1";
         $query = $db->query($sql, [$userId, $tipoContenidoId]);
-        return $query->getRowArray(); 
+        return $query->getRowArray();
     }
 
     public function getContenidoPaginadas($planId, $limit, $offset, $generoId = null)
@@ -109,21 +120,23 @@ class ContenidoModel extends Model
 
         if ($generoId) {
             $builder->join('contenido_genero cg', 'contenidos.id = cg.contenido_id')
-                    ->where('cg.genero_id', $generoId);
+                ->where('cg.genero_id', $generoId);
         }
 
         // Usamos el helper también aquí para la paginación tradicional
         $this->_aplicarFiltrosPlan($builder, $planId);
 
         return $builder->orderBy('contenidos.fecha_agregada', 'DESC')
-                       ->findAll($limit, $offset);
+            ->findAll($limit, $offset);
     }
 
-    public function getDetallesCompletos($id) {
+    public function getDetallesCompletos($id)
+    {
         // ... (Tu código existente para detalles) ...
         // Te lo resumo para no ocupar espacio, mantenlo igual que antes
         $peli = $this->find($id);
-        if (!$peli) return null;
+        if (!$peli)
+            return null;
         $db = \Config\Database::connect();
         $builder = $db->table('contenido_genero');
         $builder->select('generos.nombre')->join('generos', 'generos.id = contenido_genero.genero_id')->where('contenido_id', $id);
@@ -133,8 +146,14 @@ class ContenidoModel extends Model
         $peli['actores'] = $builder->get()->getResultArray();
         return $peli;
     }
-    
-    public function getDirector($id){ /* Tu código */ }
-    public function getPeliculasPorDirector($id){ /* Tu código */ }
-    public function getNombreDirector($id){ /* Tu código */ }
+
+    public function getDirector($id)
+    { /* Tu código */
+    }
+    public function getPeliculasPorDirector($id)
+    { /* Tu código */
+    }
+    public function getNombreDirector($id)
+    { /* Tu código */
+    }
 }

@@ -24,6 +24,7 @@ class Filters extends BaseFilters
         'forcehttps' => ForceHTTPS::class,
         'pagecache' => PageCache::class,
         'performance' => PerformanceMetrics::class,
+        'adminAuth' => \App\Filters\AdminAuth::class,
     ];
 
     public array $required = [
@@ -42,7 +43,13 @@ class Filters extends BaseFilters
     public array $globals = [
         'before' => [
             // 'honeypot',
-            'csrf', 
+            'csrf' => [
+                'except' => [
+                    'admin/peliculas/store', // Excepción para guardar pelis
+                    'admin/series/store',    // Excepción para guardar series
+                    'api/*'                  // Excepción para la API y el buscador
+                ]
+            ],
             // 'invalidchars',
         ],
         'after' => [
@@ -52,5 +59,22 @@ class Filters extends BaseFilters
     ];
 
     public array $methods = [];
-    public array $filters = [];
+    // app/Config/Filters.php
+
+    public array $filters = [
+        'adminAuth' => [
+            'before' => [
+                'admin/*',      // ✅ CORRECTO: Solo protege el panel de administración
+                // 'api/*',     // ❌ BORRA ESTO: La API es para usuarios, no solo admins
+                // 'mi-lista/*' // ❌ BORRA ESTO TAMBIÉN: Si no, tus usuarios no podrán ver su lista
+            ],
+            'except' => [
+                'admin/login',
+                'admin/auth/login',
+                'auth',
+                'auth/*'
+                // Ya no hace falta poner excepciones de api aquí si borraste la línea de arriba
+            ]
+        ],
+    ];
 }
