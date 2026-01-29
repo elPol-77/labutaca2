@@ -1,26 +1,25 @@
 let paginaActual = 1;
 let cargando = false;
 let finDeContenido = false;
-// API Key para el buscador híbrido (Asegúrate de que es válida)
-const OMDb_API_KEY = '78a51c36'; 
+const OMDb_API_KEY = '78a51c36';
+
+
 
 $(document).ready(function () {
-    
+    console.log("🚀 Frontend Iniciado.");
+
     // =========================================================
-    // 1. INICIO & SPLASH SCREEN (LÓGICA DE CARGA)
+    // 1. INICIO & SPLASH SCREEN
     // =========================================================
     function iniciarWeb() {
         $('#view-splash').fadeOut(600, function () {
             $(this).removeClass('active');
-            
             if ($('#view-profiles').length > 0) {
                 $('#view-profiles').addClass('active').css('display', 'flex');
             } else {
                 const viewHome = $('#view-home');
                 viewHome.addClass('active').css('opacity', 0).show();
-                
-                // Animación suave + Inicialización de Carruseles cuando es visible
-                viewHome.animate({ opacity: 1 }, 400, function() {
+                viewHome.animate({ opacity: 1 }, 400, function () {
                     inicializarCarruseles();
                 });
             }
@@ -32,237 +31,321 @@ $(document).ready(function () {
         setTimeout(() => { $('.loader-line').css('width', '100%'); }, 100);
         setTimeout(() => { iniciarWeb(); }, 1500);
     } else {
-        $('#view-splash').hide().removeClass('active');
-        $('#view-home').show().addClass('active');
-        inicializarCarruseles();
+        if ($('#view-peliculas-full').length === 0) {
+            $('#view-splash').hide().removeClass('active');
+            $('#view-home').show().addClass('active');
+            inicializarCarruseles();
+        } else {
+            $('#view-splash').hide();
+        }
     }
 
     // =========================================================
-    // 2. SCROLL INFINITO (Solo para Grid)
+    // 2. LÓGICA PELÍCULAS (SPA)
+    // =========================================================
+    if ($('#view-peliculas-full').length > 0) {
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const generoUrl = urlParams.get('genero');
+
+        // A. MODO FILTRO (Directo desde URL)
+        if (generoUrl) {
+            console.log("🔍 Modo Filtro URL:", generoUrl);
+            $('#hero-wrapper').hide();
+            $('#rows-container').hide();
+            cargarGridPeliculasAPI(generoUrl);
+        }
+        // B. MODO PORTADA
+        else {
+            console.log("🎬 Modo Portada");
+            $('#hero-wrapper').show();
+
+            // Usamos index.php en la ruta por seguridad
+            let cleanBase = BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/';
+
+            fetch(cleanBase + 'api/peliculas-landing')
+                .then(r => r.json())
+                .then(data => {
+                    $('#loading-initial').hide();
+                    $('.content').fadeIn();
+                    if (data.carrusel) renderHeroCarousel(data.carrusel);
+                    if (data.secciones) renderNetflixRows(data.secciones);
+                    inicializarCarruseles();
+                })
+                .catch(e => {
+                    console.error("Error Landing:", e);
+                    $('#loading-initial').hide();
+                });
+        }
+
+        // C. INTERCEPTOR DE CLICS EN MENÚ GÉNEROS
+        $(document).on('click', '.trigger-filtro', function (e) {
+            e.preventDefault();
+            const genero = $(this).data('genero');
+            console.log("⚡ Click Filtro:", genero);
+
+            // Actualizar URL
+            const newUrl = BASE_URL + "peliculas?genero=" + encodeURIComponent(genero);
+            window.history.pushState({ path: newUrl }, '', newUrl);
+
+            // Preparar UI
+            $('#hero-wrapper').hide();
+            $('#rows-container').hide();
+            $('#grid-container').empty().show();
+            $('#loading-initial').show();
+
+            // Llamar API
+            cargarGridPeliculasAPI(genero);
+        });
+    }
+
+    // =========================================================
+    // 3. SCROLL INFINITO
     // =========================================================
     $('.view-section').on('scroll', function () {
         if ($('#grid-container').length > 0 && !finDeContenido && !cargando) {
             if ($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight - 300) {
-                cargarMasPeliculas();
+                cargarGridPeliculasAPI(null, true);
             }
         }
     });
 
     // =========================================================
-    // 3. EFECTOS VISUALES
+    // 4. BUSCADOR & UI
     // =========================================================
     $(document).on('mouseenter', '.movie-poster', function () {
         const bgUrl = $(this).data('bg');
         if (bgUrl) $('#dynamic-bg').css('background-image', `url(${bgUrl})`).css('opacity', '0.5');
     });
+    $(document).on('mouseleave', '.movie-poster', function () { $('#dynamic-bg').css('opacity', '0.2'); });
 
-    $(document).on('mouseleave', '.movie-poster', function () {
-        $('#dynamic-bg').css('opacity', '0.2');
-    });
-
-    // =========================================================
-    // 4. BUSCADOR HÍBRIDO (LOCAL + GLOBAL) - ¡CORREGIDO!
-    // =========================================================
     $("#global-search").autocomplete({
-        minLength: 1, // Busca desde la primera letra
+        minLength: 1,
         source: function (request, response) {
             var csrfName = $('.txt_csrftoken').attr('name');
             var csrfHash = $('.txt_csrftoken').val();
-            
             let combinedResults = [];
 
-            // A. BUSCAR EN TU API LOCAL
             $.ajax({
                 url: BASE_URL + "api/buscador/autocompletar",
                 type: "post", dataType: "json",
                 data: { search: request.term, [csrfName]: csrfHash },
                 success: function (localData) {
                     if (localData.token) $('.txt_csrftoken').val(localData.token);
-                    
-                    // Añadir resultados locales
                     if (localData.data) {
-                        const locals = localData.data.map(i => ({ ...i, source: 'local' }));
-                        combinedResults = combinedResults.concat(locals);
+                        combinedResults = combinedResults.concat(localData.data.map(i => ({ ...i, source: 'local' })));
                     }
-
-                    // B. BUSCAR EN API GLOBAL (OMDb) SIMULTÁNEAMENTE
                     fetch(`https://www.omdbapi.com/?apikey=${OMDb_API_KEY}&s=${request.term}`)
                         .then(r => r.json())
                         .then(extData => {
                             if (extData.Response === "True") {
-                                // Filtramos para no repetir lo que ya tenemos en local (opcional)
-                                const externals = extData.Search.slice(0, 3).map(m => ({
-                                    label: m.Title,
-                                    value: m.imdbID, // ID tipo "tt12345"
+                                combinedResults = combinedResults.concat(extData.Search.slice(0, 3).map(m => ({
+                                    label: m.Title, value: m.imdbID,
                                     img: (m.Poster !== "N/A" ? m.Poster : BASE_URL + 'assets/img/no-poster.jpg'),
-                                    year: m.Year,
-                                    source: 'external'
-                                }));
-                                combinedResults = combinedResults.concat(externals);
+                                    year: m.Year, source: 'external'
+                                })));
                             }
-                            // ENVIAR TODOS LOS RESULTADOS AL DESPLEGABLE
                             response(combinedResults);
                         });
                 }
             });
         },
-        // PERSONALIZACIÓN VISUAL DEL DESPLEGABLE
         create: function () {
             $(this).data('ui-autocomplete')._renderItem = function (ul, item) {
-                // Etiqueta diferente según origen
-                const badge = item.source === 'local' 
-                    ? '<span style="color:#46d369; font-size:0.6rem; border:1px solid #46d369; padding:1px 3px; border-radius:3px; float:right;">EN CATÁLOGO</span>' 
-                    : '<span style="color:#00d2ff; font-size:0.6rem; border:1px solid #00d2ff; padding:1px 3px; border-radius:3px; float:right;">GLOBAL</span>';
-
-                return $("<li>")
-                    .append(`
-                        <div class="ui-menu-item-wrapper" style="display:flex; align-items:center; gap:10px; border-bottom:1px solid rgba(255,255,255,0.1);">
-                            <img src="${item.img}" style="width:35px; height:50px; object-fit:cover; border-radius:3px;">
-                            <div style="flex:1;">
-                                <div style="font-weight:bold; font-size:0.9rem; color:white;">${item.label}</div>
-                                <div style="font-size:0.75rem; color:#aaa;">${item.year || ''} ${badge}</div>
-                            </div>
-                        </div>`)
-                    .appendTo(ul);
+                const badge = item.source === 'local' ? '<span style="color:#46d369; font-size:0.6rem; border:1px solid #46d369; float:right;">EN CATÁLOGO</span>' : '<span style="color:#00d2ff; font-size:0.6rem; border:1px solid #00d2ff; float:right;">GLOBAL</span>';
+                return $("<li>").append(`<div class="ui-menu-item-wrapper" style="display:flex; gap:10px;"><img src="${item.img}" style="width:35px; height:50px; object-fit:cover;"><div style="flex:1;"><div>${item.label}</div><div style="font-size:0.75rem; color:#aaa;">${item.year || ''} ${badge}</div></div></div>`).appendTo(ul);
             };
         },
-        // AL SELECCIONAR -> IR A DETALLE (Local o Externo)
         select: function (event, ui) {
-            $('#global-search').val(ui.item.label);
-            // Gracias a la ruta 'detalle/(:segment)', esto funciona para ID numérico y texto
             window.location.href = BASE_URL + "detalle/" + ui.item.value;
             return false;
         }
     });
-});
+
+}); // <--- FIN DOCUMENT READY
 
 // =========================================================
-// 5. INICIALIZACIÓN DE CARRUSELES (FIX VISUAL)
+// 5. FUNCIONES GLOBALES (FUERA DEL READY)
 // =========================================================
-function inicializarCarruseles() {
-    // Hero
-    if ($('.hero-carousel').length > 0 && !$('.hero-carousel').hasClass('slick-initialized')) {
-        $('.hero-carousel').slick({
-            dots: true, infinite: true, speed: 800, fade: true, cssEase: 'linear',
-            autoplay: true, autoplaySpeed: 4000, arrows: false, pauseOnHover: false
-        });
-    }
-    // Filas Netflix
-    if ($('.slick-row').length > 0 && !$('.slick-row').hasClass('slick-initialized')) {
-        $('.slick-row').slick({
-            dots: false, infinite: true, speed: 500, slidesToShow: 6, slidesToScroll: 3,
-            responsive: [
-                { breakpoint: 1600, settings: { slidesToShow: 5, slidesToScroll: 2 } },
-                { breakpoint: 1100, settings: { slidesToShow: 4, slidesToScroll: 2 } },
-                { breakpoint: 800, settings: { slidesToShow: 3, slidesToScroll: 1 } },
-                { breakpoint: 500, settings: { slidesToShow: 2, slidesToScroll: 1 } }
-            ],
-            prevArrow: '<button type="button" class="slick-prev custom-arrow"><i class="fa fa-chevron-left"></i></button>',
-            nextArrow: '<button type="button" class="slick-next custom-arrow"><i class="fa fa-chevron-right"></i></button>'
-        });
-    }
-    // Forzar recálculo
-    $('.hero-carousel, .slick-row').slick('setPosition');
-}
 
-// =========================================================
-// 6. CARGA DE DATOS (CONECTADO A NUEVA API)
-// =========================================================
-function cargarMasPeliculas() {
+// --- A. CARGA Y PINTADO DEL GRID (VERSIÓN MANUAL DEFINITIVA) ---
+function cargarGridPeliculasAPI(genero = null, esScroll = false) {
     if (cargando) return;
     cargando = true;
-    paginaActual++;
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const genero = urlParams.get('genero');
-    
-    // Llamada a la API RESTful
-    let urlApi = BASE_URL + "api/catalogo?page=" + paginaActual;
-    if (genero) urlApi += "&genero=" + genero;
-
-    $.ajax({
-        url: urlApi,
-        type: "get", dataType: "json",
-        success: function (response) {
-            // La API devuelve { data: [...] }
-            const listaPeliculas = response.data;
-
-            if (!listaPeliculas || listaPeliculas.length === 0) {
-                finDeContenido = true;
-                cargando = false;
-                return;
-            }
-
-            const moviesFormatted = listaPeliculas.map(item => ({
-                id: item.id,
-                title: item.titulo,
-                img: item.imagen.startsWith('http') ? item.imagen : BASE_URL + 'assets/img/' + item.imagen,
-                bg: item.imagen_bg.startsWith('http') ? item.imagen_bg : BASE_URL + 'assets/img/' + item.imagen_bg,
-                premium: item.nivel_acceso == '2',
-                age: item.edad_recomendada, 
-                desc: item.descripcion,
-                in_list: item.en_mi_lista || false,
-                link_detalle: BASE_URL + 'detalle/' + item.id,
-                link_ver: BASE_URL + 'ver/' + item.id
-            }));
-
-            appendMoviesToGrid(moviesFormatted);
-            cargando = false;
-        },
-        error: function () { 
-            console.error("Error API"); 
-            cargando = false; 
-        }
-    });
-}
-
-window.renderGrid = function (movies) {
-    const grid = $('#grid-container');
-    grid.empty();
-    appendMoviesToGrid(movies);
-};
-
-function appendMoviesToGrid(movies) {
-    const grid = $('#grid-container');
-    if (!movies || movies.length === 0) {
-        if (paginaActual === 1) grid.html('<p style="color:#a0a0a0; text-align:center; grid-column:1/-1;">No hay contenido disponible.</p>');
-        return;
+    // 1. Gestión estado
+    if (!esScroll) {
+        paginaActual = 1;
+        $('#grid-container').empty();
+        finDeContenido = false;
+    } else {
+        paginaActual++;
     }
 
-    movies.forEach(m => {
-        let badgesHtml = '';
-        let edadTexto = (m.age && m.age > 0) ? '+' + m.age : 'TP';
-        badgesHtml += `<span class="badge badge-hd" style="font-size:0.6rem; padding:2px 6px;">${edadTexto}</span>`;
+    // 2. Obtener género
+    if (!genero) {
+        const urlParams = new URLSearchParams(window.location.search);
+        genero = urlParams.get('genero');
+    }
 
-        let iconClass = m.in_list ? 'fa-check' : 'fa-heart';
-        let btnStyle = m.in_list ? 'border-color: var(--accent); color: var(--accent);' : '';
-        let btnTitle  = m.in_list ? 'Quitar de mi lista' : 'Añadir a mi lista';
+    // 3. Construir URL (Asegurando barra e index.php)
+    let baseUrlClean = BASE_URL;
+    if (!baseUrlClean.endsWith('/')) {
+        baseUrlClean += '/';
+    }
+    // Añadimos index.php por si acaso el servidor no tiene rewrite rules
+    let urlApi = baseUrlClean + "index.php/api/catalogo?page=" + paginaActual;
 
-        const card = `
-            <div class="movie-card">
-                <div class="poster-visible">
-                    <img src="${m.img}" alt="${m.title}">
-                </div>
-                <div class="hover-details-card">
-                    <div class="hover-backdrop" style="background-image: url('${m.bg}'); cursor: pointer;" onclick="window.location.href='${m.link_detalle}'"></div>
-                    <div class="hover-info">
-                        <div class="hover-buttons">
-                            <button class="btn-mini-play" onclick="playCinematic('${m.link_ver}')" title="Reproducir"><i class="fa fa-play"></i></button>
-                            <button class="btn-mini-icon btn-lista-${m.id}" onclick="toggleMiLista(${m.id})" title="${btnTitle}" style="${btnStyle}"><i class="fa ${iconClass}"></i></button>
+    if (genero) {
+        urlApi += "&genero=" + encodeURIComponent(genero);
+    }
+
+    console.log("🎨 Pidiendo:", urlApi);
+
+    // 4. AJAX y PINTADO MANUAL
+    $.ajax({
+        url: urlApi,
+        method: 'GET',
+        dataType: 'json',
+        success: function (response) {
+            console.log("📦 Respuesta:", response); // Debug
+
+            $('#loading-initial').hide();
+            $('.content').fadeIn(); // Aseguramos que el contenedor principal sea visible
+
+            // Forzamos visibilidad y estilo Grid
+            $('#grid-container').css({
+                'display': 'grid',
+                'grid-template-columns': 'repeat(auto-fill, minmax(180px, 1fr))',
+                'gap': '20px',
+                'padding': '120px 4% 40px 4%'
+            }).show();
+
+            cargando = false;
+
+            if (response.data && response.data.length > 0) {
+                let htmlAcumulado = '';
+
+                response.data.forEach(peli => {
+                    // Ajuste ruta imagen
+                    let imgPoster = peli.imagen;
+                    if (!imgPoster.startsWith('http')) {
+                        imgPoster = baseUrlClean + 'assets/img/' + imgPoster;
+                    }
+
+                    // HTML Tarjeta
+                    htmlAcumulado += `
+                        <div class="movie-card-grid" style="position:relative; transition: transform 0.3s; cursor:pointer;" onclick="window.location.href='${baseUrlClean}detalle/${peli.id}'">
+                            <div class="poster-wrapper" style="border-radius: 8px; overflow: hidden; height: 280px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+                                <img src="${imgPoster}" alt="${peli.titulo}" 
+                                     style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
+                            <div class="movie-info" style="margin-top: 10px;">
+                                <h4 style="color: white; font-size: 0.9rem; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${peli.titulo}</h4>
+                                <span style="color: #aaa; font-size: 0.8rem;">${peli.anio || ''}</span>
+                            </div>
                         </div>
-                        <h4 style="cursor:pointer;" onclick="window.location.href='${m.link_detalle}'">${m.title}</h4>
-                        <div class="hover-meta"><span style="color:#46d369; font-weight:bold;">98% para ti</span>${badgesHtml}</div>
-                         <p style="font-size:0.75rem; color:#ccc; margin:0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${m.desc}</p> 
-                    </div>
-                </div>
-            </div>`;
-        grid.append(card);
+                    `;
+                });
+
+                $('#grid-container').append(htmlAcumulado);
+
+            } else {
+                if (paginaActual === 1) {
+                    $('#grid-container').html('<h3 style="color:white; text-align:center; grid-column: 1/-1; padding: 50px;">No hay contenido disponible en esta categoría.</h3>');
+                }
+                finDeContenido = true;
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error("❌ Error JS:", error);
+            cargando = false;
+            // Si falla, mostramos mensaje amigable
+            if (paginaActual === 1) {
+                $('#grid-container').html('<div style="color:red; text-align:center; grid-column:1/-1">Error cargando películas.<br>Verifica la consola.</div>').show();
+                $('#loading-initial').hide();
+            }
+        }
+
     });
 }
 
+// --- B. RENDERIZADO VISUAL PORTADA ---
+function renderHeroCarousel(movies) {
+    let html = '<div class="hero-carousel">';
+    movies.forEach(c => {
+        let bg = c.imagen_bg.startsWith('http') ? c.imagen_bg : BASE_URL + 'assets/img/' + c.imagen_bg;
+        html += `<div class="hero-item" style="background-image: url('${bg}');"><div class="hero-content-wrapper"><div class="hero-info"><h1>${c.titulo}</h1><div class="hero-badges"><span class="badge badge-hd">4K</span><span class="badge badge-age">+${c.edad_recomendada}</span></div><p style="color:#ddd; margin-bottom:20px; font-size:1.1rem; line-height:1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${c.descripcion}</p><div style="display:flex; gap:15px;"><button class="btn-primary" onclick="playCinematic('${BASE_URL}ver/${c.id}')"><i class="fa fa-play"></i> Ver</button><button class="btn-secondary btn-lista-${c.id}" onclick="toggleMiLista(${c.id})" style="background:rgba(255,255,255,0.2); border:none; color:white; padding:12px 25px; border-radius:50px; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:8px;"><i class="fa ${c.en_mi_lista ? 'fa-check' : 'fa-plus'}"></i> Mi Lista</button></div></div></div></div>`;
+    });
+    html += '</div>';
+    $('#hero-wrapper').html(html);
+}
+
+function renderNetflixRows(secciones) {
+    let html = '';
+    secciones.forEach((sec, idx) => {
+        if (sec.data && sec.data.length > 0) {
+            const movies = formatData(sec.data);
+            html += `<div class="category-row" style="margin-bottom: 40px; padding-left: 4%;"><h3 class="row-title" style="color:white; font-size:1.4rem; margin-bottom:15px; font-weight:600;">${sec.titulo}</h3><div class="slick-row" id="row-spa-${idx}">${movies.map(m => `<div class="slick-slide-item" style="padding: 0 5px;"><div class="movie-card"><div class="poster-visible"><img src="${m.img}" alt="${m.title}"></div><div class="hover-details-card"><div class="hover-backdrop" style="background-image: url('${m.bg}'); cursor: pointer;" onclick="window.location.href='${m.link_detalle}'"></div><div class="hover-info"><div class="hover-buttons"><button class="btn-mini-play" onclick="playCinematic('${m.link_ver}')"><i class="fa fa-play"></i></button><button class="btn-mini-icon btn-lista-${m.id}" onclick="toggleMiLista(${m.id})"><i class="fa ${m.in_list ? 'fa-check' : 'fa-heart'}"></i></button></div><h4 style="cursor:pointer;" onclick="window.location.href='${m.link_detalle}'">${m.title}</h4><div class="hover-meta"><span style="color:#46d369; font-weight:bold;">98% para ti</span><span class="badge badge-hd" style="font-size:0.6rem;">+${m.age}</span></div><p style="font-size:0.75rem; color:#ccc; margin:0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${m.desc}</p></div></div></div></div>`).join('')}</div></div>`;
+        }
+    });
+    $('#rows-container').html(html);
+}
+
+// --- C. HELPERS & UTILIDADES ---
+function formatData(lista) {
+    let cleanBase = BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/';
+    return lista.map(item => ({
+        id: item.id, title: item.titulo,
+        img: item.imagen.startsWith('http') ? item.imagen : cleanBase + 'assets/img/' + item.imagen,
+        bg: item.imagen_bg.startsWith('http') ? item.imagen_bg : cleanBase + 'assets/img/' + item.imagen_bg,
+        premium: item.nivel_acceso == '2', age: item.edad_recomendada, desc: item.descripcion,
+        in_list: item.en_mi_lista || false, link_detalle: cleanBase + 'detalle/' + item.id, link_ver: cleanBase + 'ver/' + item.id
+    }));
+}
+
 // =========================================================
-// 7. UTILIDADES (LISTA, PLAY, LOGIN)
+// 5. INICIALIZACIÓN DE CARRUSELES (CORREGIDO DESCUADRE)
 // =========================================================
+function inicializarCarruseles() {
+    // 1. Inicializar Hero (Principal)
+    if ($('.hero-carousel').length > 0) {
+        if (!$('.hero-carousel').hasClass('slick-initialized')) {
+            $('.hero-carousel').slick({ 
+                dots: true, infinite: true, speed: 800, fade: true, 
+                cssEase: 'linear', autoplay: true, autoplaySpeed: 4000, 
+                arrows: false, pauseOnHover: false 
+            });
+        }
+    }
+
+    // 2. Inicializar Filas (Netflix)
+    if ($('.slick-row').length > 0) {
+        if (!$('.slick-row').hasClass('slick-initialized')) {
+            $('.slick-row').slick({
+                dots: false, infinite: true, speed: 500, 
+                slidesToShow: 6, slidesToScroll: 3,
+                responsive: [
+                    { breakpoint: 1600, settings: { slidesToShow: 5, slidesToScroll: 2 } },
+                    { breakpoint: 1100, settings: { slidesToShow: 4, slidesToScroll: 2 } },
+                    { breakpoint: 800, settings: { slidesToShow: 3, slidesToScroll: 1 } },
+                    { breakpoint: 500, settings: { slidesToShow: 2, slidesToScroll: 1 } }
+                ],
+                prevArrow: '<button type="button" class="slick-prev custom-arrow"><i class="fa fa-chevron-left"></i></button>',
+                nextArrow: '<button type="button" class="slick-next custom-arrow"><i class="fa fa-chevron-right"></i></button>'
+            });
+        }
+    }
+
+    // [TRUCO CLAVE] Forzar recalculo de posición tras 100ms
+    // Esto arregla el descuadre cuando vienes de login/splash
+    setTimeout(function() {
+        $('.hero-carousel, .slick-row').slick('setPosition');
+        // A veces se necesita un trigger de resize manual
+        $(window).trigger('resize');
+    }, 200);
+}
+
 window.playCinematic = function (urlDestino) {
     $('#view-splash').addClass('active').css('display', 'flex').hide().fadeIn(300);
     $('.loader-line').css('width', '0%');
@@ -276,9 +359,8 @@ window.toggleMiLista = function (idContenido) {
     const btn = $(`.btn-lista-${idContenido}`);
     const icon = btn.find('i');
 
-    // Usamos la nueva ruta API para toggle
     $.ajax({
-        url: BASE_URL + "api/usuario/toggle-lista", 
+        url: BASE_URL + "api/usuario/toggle-lista",
         type: "post", dataType: "json",
         data: { id: idContenido, [csrfName]: csrfHash },
         success: function (response) {
@@ -286,53 +368,49 @@ window.toggleMiLista = function (idContenido) {
             if (response.status === 'success') {
                 if (response.action === 'added') {
                     icon.removeClass('fa-heart').addClass('fa-check');
-                    btn.css({'border-color': 'var(--accent)', 'color': 'var(--accent)'});
+                    btn.css({ 'border-color': 'var(--accent)', 'color': 'var(--accent)' });
                 } else {
                     icon.removeClass('fa-check').addClass('fa-heart');
-                    btn.css({'border-color': '', 'color': ''});
+                    btn.css({ 'border-color': '', 'color': '' });
                 }
             }
-        },
-        error: function() { console.log("Error al actualizar lista"); }
+        }
     });
 };
 
-window.logout = function () { window.location.href = BASE_URL + 'auth/logout'; }
+window.logout = function () { window.location.href = BASE_URL + 'auth/logout'; };
 
+// Login Functions
 function attemptLogin(id, username, planId) {
-    if (planId == 3) {
-        realizarCambioPerfil(id, ''); 
-    } else {
+    if (planId == 3) { realizarCambioPerfil(id, ''); }
+    else {
         $('#selectedUserId').val(id);
         $('#modalUser').text(username);
         $('#passwordInput').val('');
         $('#errorMsg').hide();
         $('#modalAuth').fadeIn().css('display', 'flex');
-        setTimeout(() => $('#passwordInput').focus(), 100); 
+        setTimeout(() => $('#passwordInput').focus(), 100);
     }
 }
-
-window.closeModal = function() { $('#modalAuth').fadeOut(); };
-window.submitSwitchProfile = function() { realizarCambioPerfil($('#selectedUserId').val(), $('#passwordInput').val()); };
-$(document).on('keypress', '#passwordInput', function (e) { if(e.which === 13) submitSwitchProfile(); });
+window.closeModal = function () { $('#modalAuth').fadeOut(); };
+window.submitSwitchProfile = function () { realizarCambioPerfil($('#selectedUserId').val(), $('#passwordInput').val()); };
+$(document).on('keypress', '#passwordInput', function (e) { if (e.which === 13) submitSwitchProfile(); });
 
 function realizarCambioPerfil(id, password) {
     let csrfName = $('.txt_csrftoken').attr('name');
     let csrfHash = $('.txt_csrftoken').val();
-
     $.ajax({
         url: BASE_URL + "auth/login",
         type: "post", dataType: "json",
         data: { id: id, password: password, [csrfName]: csrfHash },
-        success: function(response) {
+        success: function (response) {
             if (response.token) $('.txt_csrftoken').val(response.token);
-            if (response.status === 'success') {
-                window.location.reload(); 
-            } else {
+            if (response.status === 'success') window.location.reload();
+            else {
                 $('#errorMsg').text(response.msg).show();
-                if(typeof $.fn.effect === 'function') $('.modal-content').effect('shake', {times:3}, 300);
+                if (typeof $.fn.effect === 'function') $('.modal-content').effect('shake', { times: 3 }, 300);
             }
         },
-        error: function() { alert('Error de conexión.'); }
+        error: function () { alert('Error de conexión.'); }
     });
 }

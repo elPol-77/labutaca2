@@ -14,11 +14,12 @@ class Home extends BaseController
     // =========================================================================
     public function index($pagina = 1)
     {
-        if (!session()->get('is_logged_in')) return redirect()->to('/auth');
+        if (!session()->get('is_logged_in'))
+            return redirect()->to('/auth');
 
         $planId = session()->get('plan_id'); // 1=Free, 2=Premium, 3=Kids
-        $userId = session()->get('user_id'); 
-        
+        $userId = session()->get('user_id');
+
         $esKids = ($planId == 3);
         $esFree = ($planId == 1);
 
@@ -40,14 +41,14 @@ class Home extends BaseController
         if ($filtroGenero) {
             // === MODO REJILLA (Estilo clásico para filtros) ===
             // Si el usuario filtra, NO mostramos filas de Netflix, mostramos el grid
-            
+
             $nombreGenero = $generoModel->find($filtroGenero)['nombre'] ?? 'Género';
             $tituloCategoria = 'Categoría: ' . $nombreGenero;
             $mostrarHero = false; // Ocultamos el héroe para ver los resultados directos
 
             $porPagina = 10;
             $offset = ($pagina - 1) * $porPagina;
-            
+
             // Usamos la paginación normal
             $peliculas = $model->getContenidoPaginadas($planId, $porPagina, $offset, $filtroGenero);
             $this->procesarMetadatos($peliculas, $userId);
@@ -55,19 +56,20 @@ class Home extends BaseController
         } else {
             // === MODO NETFLIX (Portada) ===
             // Solo entramos aquí si NO hay filtros
-            
+
             // 1. TENDENCIAS
             $tendencias = $model->getTendencias(10, $planId);
             $this->procesarMetadatos($tendencias, $userId);
-            
+
             $tituloTendencias = $esKids ? 'Los favoritos de los peques 🎈' : 'Tendencias en La Butaca';
-            if ($esFree) $tituloTendencias ;
-            
+            if ($esFree)
+                $tituloTendencias;
+
             $secciones[] = ['titulo' => $tituloTendencias, 'data' => $tendencias];
 
             if ($esKids) {
                 // --- MUNDO KIDS ---
-                $animacion = $model->getPorGenero(5, 1, 10, [], 3); 
+                $animacion = $model->getPorGenero(5, 1, 10, [], 3);
                 $this->procesarMetadatos($animacion, $userId);
                 $secciones[] = ['titulo' => 'Mundo Animado ✨', 'data' => $animacion];
 
@@ -75,13 +77,13 @@ class Home extends BaseController
                 $this->procesarMetadatos($aventuras, $userId);
                 $secciones[] = ['titulo' => 'Grandes Aventuras 🚀', 'data' => $aventuras];
 
-                $mix = $model->getContentRandom(1, 10, 3); 
+                $mix = $model->getContentRandom(1, 10, 3);
                 $this->procesarMetadatos($mix, $userId);
                 $secciones[] = ['titulo' => '¡Descubre algo nuevo! 🎲', 'data' => $mix];
 
             } else {
                 // --- MUNDO ADULTO ---
-                $seriesRandom = $model->getContentRandom(2, 10, $planId); 
+                $seriesRandom = $model->getContentRandom(2, 10, $planId);
                 $this->procesarMetadatos($seriesRandom, $userId);
                 $secciones[] = ['titulo' => 'Series para maratonear', 'data' => $seriesRandom];
 
@@ -117,7 +119,7 @@ class Home extends BaseController
         // DATOS COMUNES
         $listaGeneros = $generoModel->orderBy('nombre', 'ASC')->findAll();
         $otrosPerfiles = $userModel->where('id >=', 2)->where('id <=', 4)->where('id !=', $userId)->findAll();
-        
+
         // Carrusel Hero
         $builderCarrusel = $model->where('destacada', 1);
         if ($esFree) {
@@ -126,26 +128,28 @@ class Home extends BaseController
             $builderCarrusel->where('edad_recomendada <=', 11);
         }
         $carrusel = $builderCarrusel->limit(3)->findAll();
-        
+
         // Fallback si el carrusel está vacío
         if (empty($carrusel)) {
             $builderRelleno = $model->orderBy('anio', 'DESC');
-            if ($esFree) $builderRelleno->where('nivel_acceso', 1);
-            elseif ($esKids) $builderRelleno->where('edad_recomendada <=', 11);
+            if ($esFree)
+                $builderRelleno->where('nivel_acceso', 1);
+            elseif ($esKids)
+                $builderRelleno->where('edad_recomendada <=', 11);
             $carrusel = $builderRelleno->limit(3)->findAll();
         }
         $this->procesarMetadatos($carrusel, $userId);
 
         $data = [
-            'titulo'        => 'La Butaca - ' . $tituloCategoria,
-            'carrusel'      => $carrusel, 
-            'secciones'     => $secciones, // Si está lleno -> Vista Netflix
-            'peliculas'     => $peliculas, // Si está lleno -> Vista Grid (Filtros)
-            'categoria'     => $tituloCategoria,
-            'generos'       => $listaGeneros,
+            'titulo' => 'La Butaca - ' . $tituloCategoria,
+            'carrusel' => $carrusel,
+            'secciones' => $secciones, // Si está lleno -> Vista Netflix
+            'peliculas' => $peliculas, // Si está lleno -> Vista Grid (Filtros)
+            'categoria' => $tituloCategoria,
+            'generos' => $listaGeneros,
             'otrosPerfiles' => $otrosPerfiles,
-            'mostrarHero'   => $mostrarHero,
-            'splash'        => (session()->getFlashdata('mostrar_intro') === true)
+            'mostrarHero' => $mostrarHero,
+            'splash' => (session()->getFlashdata('mostrar_intro') === true)
         ];
 
         echo view('frontend/templates/header', $data);
@@ -153,16 +157,20 @@ class Home extends BaseController
         echo view('frontend/templates/footer', $data);
     }
 
-    private function procesarMetadatos(&$lista, $userId) {
+    private function procesarMetadatos(&$lista, $userId)
+    {
         $userModel = new UsuarioModel();
         $idsFavoritos = $userModel->getListaIds($userId);
-        
-        if (!is_array($lista)) return;
+
+        if (!is_array($lista))
+            return;
 
         foreach ($lista as &$p) {
             $p['en_mi_lista'] = in_array($p['id'], $idsFavoritos);
-            if (!str_starts_with($p['imagen'], 'http')) $p['imagen'] = base_url('assets/img/') . $p['imagen'];
-            if (!str_starts_with($p['imagen_bg'], 'http')) $p['imagen_bg'] = base_url('assets/img/') . $p['imagen_bg'];
+            if (!str_starts_with($p['imagen'], 'http'))
+                $p['imagen'] = base_url('assets/img/') . $p['imagen'];
+            if (!str_starts_with($p['imagen_bg'], 'http'))
+                $p['imagen_bg'] = base_url('assets/img/') . $p['imagen_bg'];
         }
     }
 
@@ -171,7 +179,8 @@ class Home extends BaseController
     // =========================================================================
     public function miLista()
     {
-        if (!session()->get('is_logged_in')) return redirect()->to('/auth');
+        if (!session()->get('is_logged_in'))
+            return redirect()->to('/auth');
 
         $userId = session()->get('user_id');
         $db = \Config\Database::connect();
@@ -196,12 +205,12 @@ class Home extends BaseController
         $otrosPerfiles = $userModel->where('id >=', 2)->where('id <=', 4)->where('id !=', $userId)->findAll();
 
         $data = [
-            'titulo'        => 'Mi Lista Personal',
-            'peliculas'     => $misPelis,
-            'categoria'     => 'Mi Lista',
-            'mostrarHero'   => false, 
-            'splash'        => false,
-            'generos'       => $listaGeneros,
+            'titulo' => 'Mi Lista Personal',
+            'peliculas' => $misPelis,
+            'categoria' => 'Mi Lista',
+            'mostrarHero' => false,
+            'splash' => false,
+            'generos' => $listaGeneros,
             'otrosPerfiles' => $otrosPerfiles
         ];
 
@@ -215,7 +224,8 @@ class Home extends BaseController
     // =========================================================================
     public function ver($id)
     {
-        if (!session()->get('is_logged_in')) return redirect()->to('/auth');
+        if (!session()->get('is_logged_in'))
+            return redirect()->to('/auth');
 
         $model = new ContenidoModel();
         $contenido = $model->find($id);
@@ -224,24 +234,23 @@ class Home extends BaseController
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
 
         $planUsuario = session()->get('plan_id');
-        $nivelAcceso = $contenido['nivel_acceso']; 
+        $nivelAcceso = $contenido['nivel_acceso'];
         $edadRecomendada = $contenido['edad_recomendada'];
 
         $puedeVer = false;
 
-        if ($planUsuario == 2) { 
+        if ($planUsuario == 2) {
             // Premium ve todo
-            $puedeVer = true; 
-        } 
-        elseif ($planUsuario == 3) {
+            $puedeVer = true;
+        } elseif ($planUsuario == 3) {
             // KIDS: Nivel 3 o 1 Y edad <= 11
             if (($nivelAcceso == 3 || $nivelAcceso == 1) && $edadRecomendada <= 11) {
                 $puedeVer = true;
             }
-        } 
-        elseif ($planUsuario == 1) {
+        } elseif ($planUsuario == 1) {
             // FREE: Solo nivel 1
-            if ($nivelAcceso == 1) $puedeVer = true;
+            if ($nivelAcceso == 1)
+                $puedeVer = true;
         }
 
         // SEGURIDAD: REDIRECT SI NO PUEDE VER
@@ -251,7 +260,7 @@ class Home extends BaseController
         }
 
         $videoUrl = $contenido['url_video'];
-        
+
         if (strpos($videoUrl, 'youtu') !== false) {
             if (preg_match('%(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\.be/)([^"&?/ ]{11})%i', $videoUrl, $match)) {
                 $videoUrl = 'https://www.youtube.com/embed/' . $match[1] . '?autoplay=1&rel=0&modestbranding=1';
@@ -259,7 +268,7 @@ class Home extends BaseController
         }
 
         return view('frontend/player', [
-            'titulo'    => 'Viendo: ' . $contenido['titulo'] . ' | La Butaca',
+            'titulo' => 'Viendo: ' . $contenido['titulo'] . ' | La Butaca',
             'contenido' => $contenido,
             'video_url' => $videoUrl
         ]);
@@ -267,23 +276,24 @@ class Home extends BaseController
 
     // ... (El resto de funciones detalle, autocompletar, director déjalas como las tenías) ...
     // Solo asegúrate de que 'detalle' tiene la misma lógica de $puedeVer visual.
-    
-// ... dentro de Home.php ...
+
+    // ... dentro de Home.php ...
 
     // =========================================================================
     // 4. DETALLE HÍBRIDO (LOCAL + GLOBAL)
     // =========================================================================
     public function detalle($id)
     {
-        if (!session()->get('is_logged_in')) return redirect()->to('/auth');
+        if (!session()->get('is_logged_in'))
+            return redirect()->to('/auth');
 
         $userId = session()->get('user_id');
         $model = new ContenidoModel();
-        
+
         // DETECTAR SI ES LOCAL O EXTERNO
         // Si es numérico (1, 50, 100) -> Es local
         // Si empieza por 'tt' -> Es externo (IMDB/OMDb)
-        $esLocal = is_numeric($id); 
+        $esLocal = is_numeric($id);
 
         $contenido = null;
         $director = null;
@@ -307,7 +317,7 @@ class Home extends BaseController
         // --- GESTIÓN DE MI LISTA ---
         $db = \Config\Database::connect();
         $enLista = false;
-        
+
         // Solo podemos comprobar "Mi Lista" si es local (por ahora)
         // O si quieres guardar externos, tendrías que guardar el ID 'tt...' en tu tabla mi_lista
         if ($esLocal) {
@@ -325,16 +335,18 @@ class Home extends BaseController
             $nivelAcceso = $contenido['nivel_acceso'];
             $edadRecomendada = $contenido['edad_recomendada'];
 
-            if ($planUsuario == 2) $puedeVer = true;
+            if ($planUsuario == 2)
+                $puedeVer = true;
             elseif ($planUsuario == 3) {
-                if (($nivelAcceso == 3 || $nivelAcceso == 1) && $edadRecomendada <= 11) $puedeVer = true;
-            }
-            elseif ($planUsuario == 1) {
-                if ($nivelAcceso == 1) $puedeVer = true;
+                if (($nivelAcceso == 3 || $nivelAcceso == 1) && $edadRecomendada <= 11)
+                    $puedeVer = true;
+            } elseif ($planUsuario == 1) {
+                if ($nivelAcceso == 1)
+                    $puedeVer = true;
             }
         } else {
             // Si es externo, dejamos "ver" la ficha (Trailer), no hay restricción de plan
-            $puedeVer = true; 
+            $puedeVer = true;
         }
 
         // Datos comunes para el Header/Footer
@@ -344,13 +356,13 @@ class Home extends BaseController
         $otrosPerfiles = $userModel->where('id !=', $userId)->findAll();
 
         $data = [
-            'titulo'        => $contenido['titulo'],
-            'peli'          => $contenido,
-            'puede_ver'     => $puedeVer,
-            'en_lista'      => $enLista,
-            'director'      => $director, // Puede ser null si es externo
-            'es_externo'    => $esExterno, // ¡IMPORTANTE PARA LA VISTA!
-            'generos'       => $listaGeneros,
+            'titulo' => $contenido['titulo'],
+            'peli' => $contenido,
+            'puede_ver' => $puedeVer,
+            'en_lista' => $enLista,
+            'director' => $director, // Puede ser null si es externo
+            'es_externo' => $esExterno, // ¡IMPORTANTE PARA LA VISTA!
+            'generos' => $listaGeneros,
             'otrosPerfiles' => $otrosPerfiles
         ];
 
@@ -360,16 +372,19 @@ class Home extends BaseController
     }
 
     // --- FUNCIÓN AUXILIAR: TRADUCIR API OMDb A TU FORMATO ---
-    private function obtenerDetalleExterno($imdbID) {
+    private function obtenerDetalleExterno($imdbID)
+    {
         $apiKey = '78a51c36'; // Tu API Key
         // Hacemos la petición al servidor de OMDb
         $json = @file_get_contents("https://www.omdbapi.com/?apikey={$apiKey}&i={$imdbID}&plot=full");
-        
-        if (!$json) return null;
-        
+
+        if (!$json)
+            return null;
+
         $data = json_decode($json, true);
 
-        if (!isset($data['Response']) || $data['Response'] === 'False') return null;
+        if (!isset($data['Response']) || $data['Response'] === 'False')
+            return null;
 
         // TRUCO DE MAGIA:
         // Convertimos los datos raros de OMDb al formato EXACTO que usa tu vista 'detalle.php'
@@ -382,15 +397,17 @@ class Home extends BaseController
             'duracion' => intval($data['Runtime']), // "120 min" -> 120
             'imagen' => ($data['Poster'] != 'N/A') ? $data['Poster'] : base_url('assets/img/no-poster.jpg'),
             'imagen_bg' => ($data['Poster'] != 'N/A') ? $data['Poster'] : base_url('assets/img/no-poster.jpg'),
-            
+
             // Datos ficticios para que no falle la vista
-            'nivel_acceso' => 0, 
-            'edad_recomendada' => 12, 
+            'nivel_acceso' => 0,
+            'edad_recomendada' => 12,
             'url_video' => null, // No tenemos video, usaremos YouTube
-            
+
             // Convertimos géneros y actores a array
-            'generos' => array_map(function($g){ return ['nombre' => trim($g)]; }, explode(',', $data['Genre'])),
-            'actores' => array_map(function($a){ return ['nombre' => trim($a), 'foto' => null, 'personaje' => '']; }, explode(',', $data['Actors']))
+            'generos' => array_map(function ($g) {
+                return ['nombre' => trim($g)]; }, explode(',', $data['Genre'])),
+            'actores' => array_map(function ($a) {
+                return ['nombre' => trim($a), 'foto' => null, 'personaje' => '']; }, explode(',', $data['Actors']))
         ];
     }
 
@@ -416,8 +433,7 @@ class Home extends BaseController
 
             if ($planId == 3) {
                 $builder->where('edad_recomendada <=', 11);
-            } 
-            elseif ($planId == 1) {
+            } elseif ($planId == 1) {
                 $builder->where('nivel_acceso', 1);
             }
 
@@ -431,7 +447,7 @@ class Home extends BaseController
                 $data[] = [
                     "value" => $peli['id'],
                     "label" => $peli['titulo'],
-                    "img"   => $imgUrl
+                    "img" => $imgUrl
                 ];
             }
         }
@@ -444,7 +460,8 @@ class Home extends BaseController
     // =========================================================================
     public function director($id)
     {
-        if (!session()->get('is_logged_in')) return redirect()->to('/auth');
+        if (!session()->get('is_logged_in'))
+            return redirect()->to('/auth');
 
         $userId = session()->get('user_id');
         $model = new ContenidoModel();
@@ -464,12 +481,14 @@ class Home extends BaseController
         $tieneSeries = false;
 
         foreach ($peliculas as $item) {
-            if ($item['tipo_id'] == 1) $tienePeliculas = true;
-            if ($item['tipo_id'] == 2) $tieneSeries = true;
+            if ($item['tipo_id'] == 1)
+                $tienePeliculas = true;
+            if ($item['tipo_id'] == 2)
+                $tieneSeries = true;
         }
 
-        $nombreCategoria = 'Filmografía de ' . $nombreDirector; 
-        
+        $nombreCategoria = 'Filmografía de ' . $nombreDirector;
+
         if ($tienePeliculas && !$tieneSeries) {
             $nombreCategoria = 'Películas de ' . $nombreDirector;
         } elseif (!$tienePeliculas && $tieneSeries) {
@@ -480,12 +499,12 @@ class Home extends BaseController
         $otrosPerfiles = $userModel->where('id >=', 2)->where('id <=', 4)->where('id !=', $userId)->findAll();
 
         $data = [
-            'titulo'        => $nombreCategoria,
-            'peliculas'     => $peliculas,
-            'categoria'     => $nombreCategoria,
-            'mostrarHero'   => false,
-            'splash'        => false,
-            'generos'       => $listaGeneros,
+            'titulo' => $nombreCategoria,
+            'peliculas' => $peliculas,
+            'categoria' => $nombreCategoria,
+            'mostrarHero' => false,
+            'splash' => false,
+            'generos' => $listaGeneros,
             'otrosPerfiles' => $otrosPerfiles
         ];
 
@@ -493,5 +512,45 @@ class Home extends BaseController
         echo view('frontend/catalogo', $data);
         echo view('frontend/templates/footer', $data);
     }
-    
+// En App/Controllers/Home.php
+
+
+ public function paginaPeliculas()
+    {
+        // 1. Datos básicos
+        $userId = session()->get('user_id');
+        
+        // 2. Modelos
+        $userModel = new \App\Models\UsuarioModel(); 
+        $generoModel = new \App\Models\GeneroModel();
+
+        // 3. Perfiles (Lógica corregida por IDs)
+        $otrosPerfiles = $userModel->where('id >=', 2)
+                                   ->where('id <=', 4)
+                                   ->where('id !=', $userId)
+                                   ->findAll();
+
+        // 4. DATOS COMPLETOS (Para que no falle el Header)
+        $data = [
+            'titulo'        => 'Películas - La Butaca',
+            'generos'       => $generoModel->findAll(),
+            'otrosPerfiles' => $otrosPerfiles,
+            
+            // --- VARIABLES DE SEGURIDAD (Para evitar errores en la vista) ---
+            'splash'        => false,   // Evita error de variable indefinida en header
+            'mostrarHero'   => false,   // Evita error si el header busca esta variable
+            'categoria'     => 'Películas', // Evita error en títulos
+            'carrusel'      => [],      // Por si acaso footer o header lo piden
+            'secciones'     => []       // Por si acaso
+        ];
+
+        // 5. Renderizado (Importante: usas echo de header/footer en tu index, aquí deberías mantener la estructura)
+        // Si tu archivo 'frontend/peliculas' YA incluye el header, usa 'return view'. 
+        // Si NO incluye header, usa la estructura de abajo:
+        
+        echo view('frontend/templates/header', $data);
+        echo view('frontend/peliculas', $data);
+        echo view('frontend/templates/footer', $data);
+    }
+
 }

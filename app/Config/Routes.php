@@ -13,6 +13,7 @@ $routes->get('/', 'Home::index');
 $routes->get('detalle/(:segment)', 'Home::detalle/$1');
 $routes->get('ver/(:num)', 'Home::ver/$1');
 $routes->get('mi-lista', 'Home::miLista');
+$routes->get('peliculas', 'Home::paginaPeliculas');
 $routes->get('director/(:num)', 'Home::director/$1');
 
 // =============================================================================
@@ -48,6 +49,8 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function ($routes)
     // Gestión de Usuario
     $routes->post('usuario/toggle-lista', 'Usuario::toggle');
     $routes->get('mi-lista', 'Usuario::getLista');
+    $routes->get('destacada-random', 'Catalogo::getDestacadaRandom');
+    $routes->get('peliculas-landing', 'Catalogo::getPeliculasLanding'); // <--- AÑADE ESTA
     
     // BUSCADOR (Esta es la ruta crítica corregida)
     // Al estar dentro del grupo 'api', la URL final será: /api/buscador/autocompletar

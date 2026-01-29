@@ -18,7 +18,7 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
 
     <script>
-        const BASE_URL = "<?= base_url() ?>";
+        // const BASE_URL = "<?= base_url() ?>";
         const SHOW_SPLASH = <?= json_encode($splash ?? false) ?>;
     </script>
 
