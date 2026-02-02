@@ -40,56 +40,56 @@ $(document).ready(function () {
         }
     }
 
-// =========================================================
+    // =========================================================
     // 2. LÓGICA PELÍCULAS (SPA) - CORREGIDA
     // =========================================================
     if ($('#view-peliculas-full').length > 0) {
-        
+
         const urlParams = new URLSearchParams(window.location.search);
         const generoUrl = urlParams.get('genero');
 
         // A. CASO: HAY FILTRO (Mostrar Grid, Ocultar Portada)
         if (generoUrl) {
             console.log("🔍 Modo Filtro Activado:", generoUrl);
-            
+
             modoGridActivo = true; // Activamos el scroll infinito
-            
+
             // 1. Ocultamos lo que no queremos ver
             $('#hero-wrapper').hide().empty();
             $('#rows-container').hide().empty();
-            
+
             // 2. Mostramos el Grid
             $('#grid-container').show();
-            
+
             // 3. Cargamos datos
             cargarGridPeliculasAPI(generoUrl);
-        } 
-        
+        }
+
         // B. CASO: PORTADA GENERAL (Mostrar Portada, Ocultar Grid)
         else {
             console.log("🎬 Modo Portada (Netflix Style)");
-            
+
             modoGridActivo = false; // Desactivamos scroll infinito del grid
-            
+
             // 1. Ocultamos y LIMPIAMOS el Grid para que no salga abajo
-            $('#grid-container').hide().empty(); 
-            
+            $('#grid-container').hide().empty();
+
             // 2. Mostramos contenedores de portada
             $('#hero-wrapper').show();
             $('#rows-container').show();
-            
+
             // 3. Llamada a la API de Portada
             let cleanBase = BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/';
-            
+
             fetch(cleanBase + 'api/peliculas-landing')
                 .then(r => r.json())
                 .then(data => {
                     $('#loading-initial').hide();
                     $('.content').fadeIn();
-                    
+
                     if (data.carrusel) renderHeroCarousel(data.carrusel);
                     if (data.secciones) renderNetflixRows(data.secciones);
-                    
+
                     inicializarCarruseles();
                 })
                 .catch(e => {
@@ -99,13 +99,13 @@ $(document).ready(function () {
         }
 
         // C. INTERCEPTOR DE CLICS (Para cambiar entre modos sin recargar)
-        $(document).on('click', '.trigger-filtro', function(e) {
-            e.preventDefault(); 
+        $(document).on('click', '.trigger-filtro', function (e) {
+            e.preventDefault();
             const genero = $(this).data('genero');
-            
+
             // Cambiar URL
             const newUrl = BASE_URL + "peliculas?genero=" + encodeURIComponent(genero);
-            window.history.pushState({path: newUrl}, '', newUrl);
+            window.history.pushState({ path: newUrl }, '', newUrl);
 
             // Cambiar a MODO GRID manualmente
             modoGridActivo = true;
@@ -113,7 +113,7 @@ $(document).ready(function () {
             $('#rows-container').hide();
             $('#grid-container').empty().show(); // Vaciamos y mostramos
             $('#loading-initial').show();
-            
+
             cargarGridPeliculasAPI(genero);
         });
     }
@@ -227,18 +227,18 @@ function cargarGridPeliculasAPI(genero = null, esScroll = false) {
         method: 'GET',
         dataType: 'json',
         success: function (response) {
-            console.log("📦 Respuesta:", response); // Debug
+            console.log("📦 Datos recibidos:", response);
 
             $('#loading-initial').hide();
-            $('.content').fadeIn(); // Aseguramos que el contenedor principal sea visible
+            $('.content').fadeIn();
 
-            // Forzamos visibilidad y estilo Grid
-            $('#grid-container').css({
-                'display': 'grid',
-                'grid-template-columns': 'repeat(auto-fill, minmax(180px, 1fr))',
-                'gap': '20px',
-                'padding': '120px 4% 40px 4%'
-            }).show();
+            // --- CAMBIO CLAVE AQUÍ ---
+            // En lugar de .css(...) o .show(), usamos la clase
+            if (modoGridActivo) {
+                $('#grid-container').addClass('activo-visible'); // <--- MOSTRAMOS
+            } else {
+                $('#grid-container').removeClass('activo-visible'); // <--- OCULTAMOS
+            }
 
             cargando = false;
 
@@ -330,10 +330,10 @@ function inicializarCarruseles() {
     // 1. Inicializar Hero (Principal)
     if ($('.hero-carousel').length > 0) {
         if (!$('.hero-carousel').hasClass('slick-initialized')) {
-            $('.hero-carousel').slick({ 
-                dots: true, infinite: true, speed: 800, fade: true, 
-                cssEase: 'linear', autoplay: true, autoplaySpeed: 4000, 
-                arrows: false, pauseOnHover: false 
+            $('.hero-carousel').slick({
+                dots: true, infinite: true, speed: 800, fade: true,
+                cssEase: 'linear', autoplay: true, autoplaySpeed: 4000,
+                arrows: false, pauseOnHover: false
             });
         }
     }
@@ -342,7 +342,7 @@ function inicializarCarruseles() {
     if ($('.slick-row').length > 0) {
         if (!$('.slick-row').hasClass('slick-initialized')) {
             $('.slick-row').slick({
-                dots: false, infinite: true, speed: 500, 
+                dots: false, infinite: true, speed: 500,
                 slidesToShow: 6, slidesToScroll: 3,
                 responsive: [
                     { breakpoint: 1600, settings: { slidesToShow: 5, slidesToScroll: 2 } },
@@ -357,7 +357,7 @@ function inicializarCarruseles() {
     }
 
     // Esto arregla el descuadre cuando vienes de login/splash
-    setTimeout(function() {
+    setTimeout(function () {
         $('.hero-carousel, .slick-row').slick('setPosition');
         // A veces se necesita un trigger de resize manual
         $(window).trigger('resize');
