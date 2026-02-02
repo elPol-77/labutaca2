@@ -95,40 +95,62 @@ class Catalogo extends ResourceController
     // =================================================================
 // En App/Controllers/Api/Catalogo.php
 
-    public function index()
+public function index()
     {
+        $planId = session()->get('plan_id') ?? 1; 
+        $page   = $this->request->getVar('page') ?? 1;
+        $generoId = $this->request->getVar('genero');
         
-        $model = new ContenidoModel();
+        $model = new \App\Models\ContenidoModel();
+        $generoModel = new \App\Models\GeneroModel();
 
-        // 1. Recoger parámetros
-        $page     = $this->request->getVar('page') ?? 1;
-        $generoId = $this->request->getVar('genero'); // Aquí llega el "5"
-        $planId   = session()->get('plan_id') ?? 1;
-        
-        // Configuración de paginación
-        $limit  = 12;
-        $offset = ($page - 1) * $limit;
-
-        // 2. LÓGICA DE DECISIÓN (EL CEREBRO)
+        // A. SI HAY GÉNERO -> Devolvemos estructura de "Landing de Género"
         if (!empty($generoId)) {
-            // CASO A: Hay filtro -> Usamos tu función SQL optimizada
-            // Parámetros: ID Género, Tipo 1 (Peli), Límite, Excluir(vacío), Plan, Offset
-            $peliculas = $model->getPorGenero($generoId, 1, $limit, [], $planId, $offset);
-        } else {
-            // CASO B: Portada normal -> Usamos la función estándar
+            $nombreGenero = $generoModel->find($generoId)['nombre'] ?? 'Contenido';
+
+            // 1. Obtener Películas (Tipo 1) - Traemos 24 para llenar 2 filas
+            $pelis = $model->getPorGenero($generoId, 1, 24, [], $planId);
+            
+            // 2. Obtener Series (Tipo 2) - Traemos 24 para llenar 2 filas
+            $series = $model->getPorGenero($generoId, 2, 24, [], $planId);
+
+            $this->procesarImagenes($pelis);
+            $this->procesarImagenes($series);
+
+            return $this->respond([
+                'status' => 'success',
+                'modo'   => 'landing_genero', // Bandera para el JS
+                'titulo' => $nombreGenero,
+                'secciones' => [
+                    [
+                        'titulo' => 'Películas de ' . $nombreGenero,
+                        'tipo'   => 1, // 1 = Películas
+                        'data'   => $pelis,
+                        'ver_mas'=> true
+                    ],
+                    [
+                        'titulo' => 'Series de ' . $nombreGenero,
+                        'tipo'   => 2, // 2 = Series
+                        'data'   => $series,
+                        'ver_mas'=> true
+                    ]
+                ]
+            ]);
+        } 
+        
+        // B. SI NO HAY GÉNERO -> Lógica normal de portada (Paginada)
+        else {
+            $limit  = 12;
+            $offset = ($page - 1) * $limit;
             $peliculas = $model->getContenidoPaginadas($planId, $limit, $offset);
+            $this->procesarImagenes($peliculas);
+
+            return $this->respond([
+                'status' => 'success',
+                'modo'   => 'paginacion_normal',
+                'data'   => $peliculas
+            ]);
         }
-
-        // 3. Procesar imágenes (links completos)
-        $this->procesarImagenes($peliculas);
-
-        // 4. Responder JSON
-        return $this->respond([
-            'status' => 'success',
-            'page'   => $page,
-            'data'   => $peliculas,
-            'debug'  => $generoId // Para ver en consola si llega el ID
-        ]);
     }
 
     // =================================================================

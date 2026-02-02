@@ -552,5 +552,40 @@ class Home extends BaseController
         echo view('frontend/peliculas', $data);
         echo view('frontend/templates/footer', $data);
     }
+// =========================================================
+    // PAGINA SERIES (Igual que Películas)
+    // =========================================================
+    public function series()
+    {
+        // 1. Datos básicos
+        $userId = session()->get('user_id');
+        
+        $userModel = new \App\Models\UsuarioModel(); 
+        $generoModel = new \App\Models\GeneroModel();
 
+        // 2. Perfiles
+        $otrosPerfiles = $userModel->where('id >=', 2)
+                                   ->where('id <=', 4)
+                                   ->where('id !=', $userId)
+                                   ->findAll();
+
+        // 3. Datos
+        $data = [
+            'titulo'        => 'Series - La Butaca',
+            'generos'       => $generoModel->findAll(),
+            'otrosPerfiles' => $otrosPerfiles,
+            
+            // Variables de seguridad
+            'splash'        => false,
+            'mostrarHero'   => false,
+            'categoria'     => 'Series',
+            'carrusel'      => [],
+            'secciones'     => []
+        ];
+
+        // 4. Vista
+        echo view('frontend/templates/header', $data);
+        echo view('frontend/series', $data); // <--- OJO: Llama a 'series.php'
+        echo view('frontend/templates/footer', $data);
+    }
 }

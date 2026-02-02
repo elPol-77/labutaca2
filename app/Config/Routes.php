@@ -14,6 +14,7 @@ $routes->get('detalle/(:segment)', 'Home::detalle/$1');
 $routes->get('ver/(:num)', 'Home::ver/$1');
 $routes->get('mi-lista', 'Home::miLista');
 $routes->get('peliculas', 'Home::paginaPeliculas');
+$routes->get('series', 'Home::series');
 $routes->get('director/(:num)', 'Home::director/$1');
 
 // =============================================================================

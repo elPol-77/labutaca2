@@ -40,84 +40,39 @@ $(document).ready(function () {
         }
     }
 
-    // =========================================================
-    // 2. LÓGICA PELÍCULAS (SPA) - CORREGIDA
+
+// =========================================================
+    // 2. LÓGICA PELÍCULAS (SPA) - NUEVA ESTRUCTURA PRIME VIDEO
     // =========================================================
     if ($('#view-peliculas-full').length > 0) {
-
+        
         const urlParams = new URLSearchParams(window.location.search);
         const generoUrl = urlParams.get('genero');
 
-        // A. CASO: HAY FILTRO (Mostrar Grid, Ocultar Portada)
+        // A. SI ENTRAMOS CON URL DE GÉNERO
         if (generoUrl) {
-            console.log("🔍 Modo Filtro Activado:", generoUrl);
-
-            modoGridActivo = true; // Activamos el scroll infinito
-
-            // 1. Ocultamos lo que no queremos ver
-            $('#hero-wrapper').hide().empty();
-            $('#rows-container').hide().empty();
-
-            // 2. Mostramos el Grid
-            $('#grid-container').show();
-
-            // 3. Cargamos datos
-            cargarGridPeliculasAPI(generoUrl);
-        }
-
-        // B. CASO: PORTADA GENERAL (Mostrar Portada, Ocultar Grid)
+            generoActualId = generoUrl;
+            cargarVistaGenero(generoUrl);
+        } 
+        // B. SI ENTRAMOS A LA PORTADA NORMAL
         else {
-            console.log("🎬 Modo Portada (Netflix Style)");
-
-            modoGridActivo = false; // Desactivamos scroll infinito del grid
-
-            // 1. Ocultamos y LIMPIAMOS el Grid para que no salga abajo
-            $('#grid-container').hide().empty();
-
-            // 2. Mostramos contenedores de portada
-            $('#hero-wrapper').show();
-            $('#rows-container').show();
-
-            // 3. Llamada a la API de Portada
-            let cleanBase = BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/';
-
-            fetch(cleanBase + 'api/peliculas-landing')
-                .then(r => r.json())
-                .then(data => {
-                    $('#loading-initial').hide();
-                    $('.content').fadeIn();
-
-                    if (data.carrusel) renderHeroCarousel(data.carrusel);
-                    if (data.secciones) renderNetflixRows(data.secciones);
-
-                    inicializarCarruseles();
-                })
-                .catch(e => {
-                    console.error("Error Landing:", e);
-                    $('#loading-initial').hide();
-                });
+            cargarPortadaNormal();
         }
 
-        // C. INTERCEPTOR DE CLICS (Para cambiar entre modos sin recargar)
-        $(document).on('click', '.trigger-filtro', function (e) {
-            e.preventDefault();
+        // C. INTERCEPTOR DEL MENÚ (Click en un género)
+        $(document).on('click', '.trigger-filtro', function(e) {
+            e.preventDefault(); 
             const genero = $(this).data('genero');
-
-            // Cambiar URL
+            
+            // Actualizamos URL sin recargar
             const newUrl = BASE_URL + "peliculas?genero=" + encodeURIComponent(genero);
-            window.history.pushState({ path: newUrl }, '', newUrl);
-
-            // Cambiar a MODO GRID manualmente
-            modoGridActivo = true;
-            $('#hero-wrapper').hide();
-            $('#rows-container').hide();
-            $('#grid-container').empty().show(); // Vaciamos y mostramos
-            $('#loading-initial').show();
-
-            cargarGridPeliculasAPI(genero);
+            window.history.pushState({path: newUrl}, '', newUrl);
+            
+            // Cargamos la nueva vista
+            generoActualId = genero;
+            cargarVistaGenero(genero);
         });
     }
-
     // =========================================================
     // 3. SCROLL INFINITO
     // =========================================================
@@ -181,13 +136,13 @@ $(document).ready(function () {
         }
     });
 
-}); // <--- FIN DOCUMENT READY
+}); 
 
 // =========================================================
 // 5. FUNCIONES GLOBALES (FUERA DEL READY)
 // =========================================================
 
-// --- A. CARGA Y PINTADO DEL GRID (VERSIÓN MANUAL DEFINITIVA) ---
+// --- A. CARGA Y PINTADO DEL GRID (VERSIÓN CORREGIDA Y UNIFICADA) ---
 function cargarGridPeliculasAPI(genero = null, esScroll = false) {
     if (cargando) return;
     cargando = true;
@@ -207,12 +162,8 @@ function cargarGridPeliculasAPI(genero = null, esScroll = false) {
         genero = urlParams.get('genero');
     }
 
-    // 3. Construir URL (Asegurando barra e index.php)
-    let baseUrlClean = BASE_URL;
-    if (!baseUrlClean.endsWith('/')) {
-        baseUrlClean += '/';
-    }
-    // Añadimos index.php por si acaso el servidor no tiene rewrite rules
+    // 3. Construir URL
+    let baseUrlClean = BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/';
     let urlApi = baseUrlClean + "index.php/api/catalogo?page=" + paginaActual;
 
     if (genero) {
@@ -221,23 +172,20 @@ function cargarGridPeliculasAPI(genero = null, esScroll = false) {
 
     console.log("🎨 Pidiendo:", urlApi);
 
-    // 4. AJAX y PINTADO MANUAL
+    // 4. AJAX
     $.ajax({
         url: urlApi,
         method: 'GET',
         dataType: 'json',
         success: function (response) {
-            console.log("📦 Datos recibidos:", response);
-
             $('#loading-initial').hide();
             $('.content').fadeIn();
 
-            // --- CAMBIO CLAVE AQUÍ ---
-            // En lugar de .css(...) o .show(), usamos la clase
+            // Gestionar visibilidad del contenedor Grid
             if (modoGridActivo) {
-                $('#grid-container').addClass('activo-visible'); // <--- MOSTRAMOS
+                $('#grid-container').addClass('activo-visible');
             } else {
-                $('#grid-container').removeClass('activo-visible'); // <--- OCULTAMOS
+                $('#grid-container').removeClass('activo-visible');
             }
 
             cargando = false;
@@ -245,33 +193,18 @@ function cargarGridPeliculasAPI(genero = null, esScroll = false) {
             if (response.data && response.data.length > 0) {
                 let htmlAcumulado = '';
 
+                // --- BUCLE CORREGIDO ---
                 response.data.forEach(peli => {
-                    // Ajuste ruta imagen
-                    let imgPoster = peli.imagen;
-                    if (!imgPoster.startsWith('http')) {
-                        imgPoster = baseUrlClean + 'assets/img/' + imgPoster;
-                    }
-
-                    // HTML Tarjeta
-                    htmlAcumulado += `
-                        <div class="movie-card-grid" style="position:relative; transition: transform 0.3s; cursor:pointer;" onclick="window.location.href='${baseUrlClean}detalle/${peli.id}'">
-                            <div class="poster-wrapper" style="border-radius: 8px; overflow: hidden; height: 280px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
-                                <img src="${imgPoster}" alt="${peli.titulo}" 
-                                     style="width: 100%; height: 100%; object-fit: cover;">
-                            </div>
-                            <div class="movie-info" style="margin-top: 10px;">
-                                <h4 style="color: white; font-size: 0.9rem; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${peli.titulo}</h4>
-                                <span style="color: #aaa; font-size: 0.8rem;">${peli.anio || ''}</span>
-                            </div>
-                        </div>
-                    `;
+                    // Usamos la misma función que el resto de la web para uniformidad
+                    // Nota: generarHtmlTarjeta ya gestiona si viene 'imagen' o 'img'
+                    htmlAcumulado += generarHtmlTarjeta(peli); 
                 });
 
                 $('#grid-container').append(htmlAcumulado);
 
             } else {
                 if (paginaActual === 1) {
-                    $('#grid-container').html('<h3 style="color:white; text-align:center; grid-column: 1/-1; padding: 50px;">No hay contenido disponible en esta categoría.</h3>');
+                    $('#grid-container').html('<h3 style="color:white; text-align:center; grid-column: 1/-1; padding: 50px;">No hay contenido disponible.</h3>');
                 }
                 finDeContenido = true;
             }
@@ -279,13 +212,10 @@ function cargarGridPeliculasAPI(genero = null, esScroll = false) {
         error: function (xhr, status, error) {
             console.error("❌ Error JS:", error);
             cargando = false;
-            // Si falla, mostramos mensaje amigable
             if (paginaActual === 1) {
-                $('#grid-container').html('<div style="color:red; text-align:center; grid-column:1/-1">Error cargando películas.<br>Verifica la consola.</div>').show();
                 $('#loading-initial').hide();
             }
         }
-
     });
 }
 
@@ -431,4 +361,259 @@ function realizarCambioPerfil(id, password) {
         },
         error: function () { alert('Error de conexión.'); }
     });
+}
+// =========================================================
+// FUNCIONES NUEVAS (ESTILO PRIME VIDEO / NETFLIX)
+// =========================================================
+
+let generoActualId = null; // Variable global para saber dónde estamos
+
+// 1. CARGA LA VISTA DE FILAS (2 Pelis + 2 Series)
+function cargarVistaGenero(generoId) {
+    $('#loading-initial').show();
+    
+    // 1. Ocultar todo lo demás
+    $('#hero-wrapper').hide();
+    $('#rows-container').hide();
+    $('#grid-expandido').hide().empty();
+    $('#genre-landing-container').hide().empty(); 
+
+    // 2. GESTIÓN DEL MENÚ ACTIVE (NUEVO)
+    // Como estamos viendo una mezcla, quitamos el active de Pelis y Series
+    $('.nav-link').removeClass('active'); 
+    // O si prefieres mantener 'Inicio' activo, usa selectores específicos:
+    // $('a[href*="peliculas"], a[href*="series"]').removeClass('active');
+
+    // 3. Pedir datos a la API
+    let urlApi = BASE_URL + "index.php/api/catalogo?genero=" + generoId;
+
+    $.ajax({
+        url: urlApi,
+        dataType: 'json',
+        success: function(response) {
+            $('#loading-initial').hide();
+            $('.content').fadeIn();
+
+            if (response.modo === 'landing_genero') {
+                renderGenreRows(response.secciones, response.titulo);
+                $('#genre-landing-container').fadeIn();
+            }
+        },
+        error: function() {
+            $('#loading-initial').hide();
+            console.error("Error cargando género");
+        }
+    });
+}
+
+// 2. PINTA LAS FILAS Y EL BOTÓN "VER MÁS"
+function renderGenreRows(secciones, nombreGenero) {
+    let html = `<div style="padding: 20px 4% 0;"><h1 style="color:white; margin: 0 0 10px 0; font-size: 2rem;">Explorando: <span style="color:var(--accent)">${nombreGenero}</span></h1></div>`;
+
+    secciones.forEach((sec, idx) => {
+        if (sec.data && sec.data.length > 0) {
+            const movies = formatData(sec.data);
+            
+            html += `
+            <div class="category-row" style="margin-bottom: 50px; padding-left: 4%;">
+                <div class="header-seccion-genero" style="display:flex; align-items:center; margin-bottom:15px;">
+                    <h3 class="row-title" style="color:white; font-size:1.4rem; margin:0;">${sec.titulo}</h3>
+                    
+                    <button class="btn-ver-mas-row" onclick="abrirGridExpandido(${sec.tipo}, '${sec.titulo}')" 
+                        style="background:transparent; border:1px solid var(--accent); color:var(--accent); margin-left:20px; padding:5px 15px; border-radius:4px; cursor:pointer;">
+                        Ver todo <i class="fa fa-th"></i>
+                    </button>
+                </div>
+
+                <div class="slick-row" id="row-genre-${idx}">
+                    ${movies.map(m => `<div class="slick-slide-item" style="padding: 0 5px;">
+                    ${generarHtmlTarjeta(m)}  </div>`).join('')}
+                    </div>
+                </div>
+            </div>`;
+        }
+    });
+
+    $('#genre-landing-container').html(html);
+
+    // Inicializamos los carruseles de estas nuevas filas
+    setTimeout(() => {
+        $('.slick-row').slick({
+            dots: false, infinite: false, speed: 500, slidesToShow: 6, slidesToScroll: 3,
+            prevArrow: '<button type="button" class="slick-prev custom-arrow"><i class="fa fa-chevron-left"></i></button>',
+            nextArrow: '<button type="button" class="slick-next custom-arrow"><i class="fa fa-chevron-right"></i></button>',
+            responsive: [ 
+                { breakpoint: 1400, settings: { slidesToShow: 5 } },
+                { breakpoint: 1100, settings: { slidesToShow: 4 } }, 
+                { breakpoint: 500, settings: { slidesToShow: 2 } } 
+            ]
+        });
+    }, 100);
+}
+
+// 3. ABRE EL GRID DE 6 COLUMNAS (VER TODO)
+window.abrirGridExpandido = function(tipoId, tituloSeccion) {
+    // 1. GESTIÓN DEL MENÚ ACTIVE (NUEVO)
+    // Limpiamos primero
+    $('.nav-link').removeClass('active');
+
+    // Activamos según el tipo que hemos pulsado
+    if (tipoId == 1) {
+        // Buscamos el link que contenga "peliculas" en su href
+        $('a[href*="peliculas"]').addClass('active');
+    } else if (tipoId == 2) {
+        // Buscamos el link que contenga "series" en su href
+        $('a[href*="series"]').addClass('active');
+    }
+
+    // 2. Ocultamos las filas y mostramos el grid
+    $('#genre-landing-container').hide();
+    $('#loading-initial').show();
+    $('#grid-expandido').empty();
+
+    let urlApi = BASE_URL + "index.php/api/catalogo?genero=" + generoActualId; 
+
+    $.ajax({
+        url: urlApi,
+        dataType: 'json',
+        success: function(response) {
+            $('#loading-initial').hide();
+            
+            let datosFiltrados = [];
+            if(response.secciones) {
+                response.secciones.forEach(sec => {
+                    if (sec.tipo == tipoId) {
+                        datosFiltrados = sec.data;
+                    }
+                });
+            }
+
+            // Pintamos el Header con botón de volver
+            let htmlGrid = `
+                <div style="grid-column: 1/-1; margin-bottom: 30px; display:flex; align-items:center; gap:15px;">
+                    <button onclick="volverALandingGenero()" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;"><i class="fa fa-arrow-left"></i></button>
+                    <h2 style="color:white; margin:0;">${tituloSeccion}</h2>
+                </div>
+            `;
+
+            // Pintamos las tarjetas
+            const movies = formatData(datosFiltrados);
+            movies.forEach(m => {
+            htmlGrid += generarHtmlTarjeta(m); // <--- USAMOS LA NUEVA FUNCIÓN
+        });
+
+            // Mostramos el contenedor con estilo Grid
+            $('#grid-expandido').html(htmlGrid).css('display', 'grid').show();
+        }
+    });
+};
+
+// 4. VOLVER ATRÁS (Del Grid a las Filas)
+window.volverALandingGenero = function() {
+    // 1. GESTIÓN MENÚ (NUEVO)
+    // Al volver a la vista mixta, quitamos el active de nuevo
+    $('.nav-link').removeClass('active');
+    
+    // 2. Lógica visual
+    $('#grid-expandido').hide();
+    $('#genre-landing-container').fadeIn();
+};
+
+// 5. CARGAR PORTADA (Cuando no hay filtro)
+function cargarPortadaNormal() {
+    $('#hero-wrapper').show();
+    $('#rows-container').show();
+    $('#genre-landing-container').hide();
+    $('#grid-expandido').hide();
+    
+    let cleanBase = BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/';
+    fetch(cleanBase + 'api/peliculas-landing')
+        .then(r => r.json())
+        .then(data => {
+            $('#loading-initial').hide();
+            $('.content').fadeIn();
+            if (data.carrusel) renderHeroCarousel(data.carrusel);
+            if (data.secciones) renderNetflixRows(data.secciones);
+            inicializarCarruseles();
+        });
+}
+// =========================================================
+// HELPER: Generador de HTML de Tarjeta (DISEÑO UNIFICADO)
+// =========================================================
+// =========================================================
+// HELPER: Generador de HTML de Tarjeta (DISEÑO NETFLIX PREVIEW)
+// =========================================================
+// =========================================================
+// HELPER: Generador de Tarjetas (ESTILO PRIME/NETFLIX DEFINITIVO)
+// =========================================================
+function generarHtmlTarjeta(item) {
+    // 1. URLs de Imágenes
+    let cleanBase = BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/';
+    
+    // Poster (Vertical)
+    let imgPoster = item.img || item.imagen;
+    if (imgPoster && !imgPoster.startsWith('http')) {
+        imgPoster = cleanBase + 'assets/img/' + imgPoster;
+    }
+
+    // Fondo (Horizontal) - Fallback al poster si no hay fondo
+    let imgBg = item.bg || item.imagen_bg;
+    if (!imgBg) {
+        imgBg = imgPoster;
+    } else if (!imgBg.startsWith('http')) {
+        imgBg = cleanBase + 'assets/img/' + imgBg;
+    }
+
+    // 2. Datos y Enlaces
+    let titulo = item.title || item.titulo;
+    let linkDetalle = item.link_detalle || (cleanBase + 'detalle/' + item.id);
+    let linkVer = item.link_ver || (cleanBase + 'ver/' + item.id);
+    let edad = item.age || item.edad_recomendada || "12";
+    let desc = item.desc || item.descripcion || "Sin descripción disponible.";
+    
+
+    // Estado de "Mi Lista" (si lo tenemos disponible)
+    let iconLista = item.in_list ? 'fa-check' : 'fa-plus';
+
+    // 3. RETORNAR HTML (Estructura exacta para tu CSS)
+    return `
+    <div class="movie-card" onclick="window.location.href='${linkDetalle}'">
+        
+        <div class="poster-visible">
+            <img src="${imgPoster}" alt="${titulo}" loading="lazy">
+        </div>
+
+        <div class="hover-details-card">
+            
+            <div class="hover-backdrop" style="background-image: url('${imgBg}');"></div>
+            
+            <div class="hover-info">
+                
+                <div class="hover-buttons">
+                    <button class="btn-mini-play" onclick="event.stopPropagation(); playCinematic('${linkVer}')">
+                        <i class="fa fa-play"></i>
+                    </button>
+                    <button class="btn-mini-icon btn-lista-${item.id}" onclick="event.stopPropagation(); toggleMiLista(${item.id})">
+                        <i class="fa ${iconLista}"></i>
+                    </button>
+                    <button class="btn-mini-icon" onclick="event.stopPropagation(); window.location.href='${linkDetalle}'">
+                        <i class="fa fa-chevron-down"></i>
+                    </button>
+                </div>
+
+                <h4>${titulo}</h4>
+
+                <div class="hover-meta">
+                    <span style="color:#46d369; font-weight:bold;">${matchScore}% para ti</span>
+                    <span class="badge badge-hd" style="border:1px solid #aaa; padding:0 4px; border-radius:2px; color:#ddd; font-size:0.65rem;">+${edad}</span>
+                    <span>HD</span>
+                </div>
+
+                <p style="font-size:0.75rem; color:#ccc; margin:0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                    ${desc}
+                </p>
+
+            </div>
+        </div>
+    </div>`;
 }
