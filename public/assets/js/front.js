@@ -40,36 +40,56 @@ $(document).ready(function () {
         }
     }
 
-    // =========================================================
-    // 2. LÓGICA PELÍCULAS (SPA)
+// =========================================================
+    // 2. LÓGICA PELÍCULAS (SPA) - CORREGIDA
     // =========================================================
     if ($('#view-peliculas-full').length > 0) {
-
+        
         const urlParams = new URLSearchParams(window.location.search);
         const generoUrl = urlParams.get('genero');
 
-        // A. MODO FILTRO (Directo desde URL)
+        // A. CASO: HAY FILTRO (Mostrar Grid, Ocultar Portada)
         if (generoUrl) {
-            console.log("🔍 Modo Filtro URL:", generoUrl);
-            $('#hero-wrapper').hide();
-            $('#rows-container').hide();
+            console.log("🔍 Modo Filtro Activado:", generoUrl);
+            
+            modoGridActivo = true; // Activamos el scroll infinito
+            
+            // 1. Ocultamos lo que no queremos ver
+            $('#hero-wrapper').hide().empty();
+            $('#rows-container').hide().empty();
+            
+            // 2. Mostramos el Grid
+            $('#grid-container').show();
+            
+            // 3. Cargamos datos
             cargarGridPeliculasAPI(generoUrl);
-        }
-        // B. MODO PORTADA
+        } 
+        
+        // B. CASO: PORTADA GENERAL (Mostrar Portada, Ocultar Grid)
         else {
-            console.log("🎬 Modo Portada");
+            console.log("🎬 Modo Portada (Netflix Style)");
+            
+            modoGridActivo = false; // Desactivamos scroll infinito del grid
+            
+            // 1. Ocultamos y LIMPIAMOS el Grid para que no salga abajo
+            $('#grid-container').hide().empty(); 
+            
+            // 2. Mostramos contenedores de portada
             $('#hero-wrapper').show();
-
-            // Usamos index.php en la ruta por seguridad
+            $('#rows-container').show();
+            
+            // 3. Llamada a la API de Portada
             let cleanBase = BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/';
-
+            
             fetch(cleanBase + 'api/peliculas-landing')
                 .then(r => r.json())
                 .then(data => {
                     $('#loading-initial').hide();
                     $('.content').fadeIn();
+                    
                     if (data.carrusel) renderHeroCarousel(data.carrusel);
                     if (data.secciones) renderNetflixRows(data.secciones);
+                    
                     inicializarCarruseles();
                 })
                 .catch(e => {
@@ -78,23 +98,22 @@ $(document).ready(function () {
                 });
         }
 
-        // C. INTERCEPTOR DE CLICS EN MENÚ GÉNEROS
-        $(document).on('click', '.trigger-filtro', function (e) {
-            e.preventDefault();
+        // C. INTERCEPTOR DE CLICS (Para cambiar entre modos sin recargar)
+        $(document).on('click', '.trigger-filtro', function(e) {
+            e.preventDefault(); 
             const genero = $(this).data('genero');
-            console.log("⚡ Click Filtro:", genero);
-
-            // Actualizar URL
+            
+            // Cambiar URL
             const newUrl = BASE_URL + "peliculas?genero=" + encodeURIComponent(genero);
-            window.history.pushState({ path: newUrl }, '', newUrl);
+            window.history.pushState({path: newUrl}, '', newUrl);
 
-            // Preparar UI
+            // Cambiar a MODO GRID manualmente
+            modoGridActivo = true;
             $('#hero-wrapper').hide();
             $('#rows-container').hide();
-            $('#grid-container').empty().show();
+            $('#grid-container').empty().show(); // Vaciamos y mostramos
             $('#loading-initial').show();
-
-            // Llamar API
+            
             cargarGridPeliculasAPI(genero);
         });
     }
@@ -337,7 +356,6 @@ function inicializarCarruseles() {
         }
     }
 
-    // [TRUCO CLAVE] Forzar recalculo de posición tras 100ms
     // Esto arregla el descuadre cuando vienes de login/splash
     setTimeout(function() {
         $('.hero-carousel, .slick-row').slick('setPosition');

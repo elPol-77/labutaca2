@@ -1077,3 +1077,17 @@ body {
 .meta-info .rating {
     color: #ffd700; /* Estrella amarilla */
 }
+
+/* --- FIX FINAL GRID --- */
+/* 1. Oculto por defecto SIEMPRE (incluso si el HTML viene sucio) */
+#grid-container {
+    display: none !important; 
+}
+
+/* 2. Solo se muestra si le ponemos esta clase específica con JS */
+#grid-container.activo-visible {
+    display: grid !important; 
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+    padding: 120px 4% 40px 4%; /* El padding que te gustaba */
+}
