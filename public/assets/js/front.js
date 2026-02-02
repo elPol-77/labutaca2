@@ -546,6 +546,9 @@ function cargarPortadaNormal() {
 // =========================================================
 // HELPER: Generador de Tarjetas (ESTILO PRIME/NETFLIX DEFINITIVO)
 // =========================================================
+// =========================================================
+// HELPER: Generador de Tarjetas (ESTILO PRIME/NETFLIX DEFINITIVO)
+// =========================================================
 function generarHtmlTarjeta(item) {
     // 1. URLs de Imágenes
     let cleanBase = BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/';
@@ -571,6 +574,8 @@ function generarHtmlTarjeta(item) {
     let edad = item.age || item.edad_recomendada || "12";
     let desc = item.desc || item.descripcion || "Sin descripción disponible.";
     
+    // Random Match para simular algoritmo
+    let matchScore = Math.floor(Math.random() * (99 - 80 + 1) + 80);
 
     // Estado de "Mi Lista" (si lo tenemos disponible)
     let iconLista = item.in_list ? 'fa-check' : 'fa-plus';
