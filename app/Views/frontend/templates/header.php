@@ -14,7 +14,7 @@
 
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css" />
     <link rel="stylesheet" type="text/css"
-        href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css" />
+    href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css" />
 
     <link rel="stylesheet" href="<?= base_url('assets/css/front.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/auth.css') ?>">
@@ -43,6 +43,7 @@
             <a href="<?= base_url('peliculas') ?>"
                 class="nav-link <?= ($uri == 'peliculas') ? 'active' : '' ?>">Películas</a>
             <a href="<?= base_url('series') ?>" class="nav-link <?= ($uri == 'series') ? 'active' : '' ?>">Series</a>
+            
         </nav>
 
         <div style="display:flex; align-items:center; gap: 10px;">

@@ -60,12 +60,7 @@
                     </div>
                 </div>
 
-                <div style="margin-top: 40px; text-align: center;">
-                    <a href="<?= base_url('admin/login') ?>"
-                        style="color: rgba(255,255,255,0.4); text-decoration: none; font-size: 0.85rem; font-family: 'Outfit';">
-                        <i class="fa fa-lock"></i> Acceso Administración
-                    </a>
-                </div>
+
 
 
             </div>
@@ -86,7 +81,14 @@
                 </div>
             </div>
         </div>
+                            <div style="margin-top: 40px; text-align: center;">
+                    <a href="<?= base_url('admin/login') ?>"
+                        style="color: rgba(255,255,255,0.4); text-decoration: none; font-size: 0.85rem; font-family: 'Outfit';">
+                        <i class="fa fa-lock"></i> Acceso Administración
+                    </a>
+                </div>
     </section>
+
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>const BASE_URL = "<?= base_url() ?>";</script>

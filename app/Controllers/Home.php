@@ -157,65 +157,96 @@ class Home extends BaseController
         echo view('frontend/templates/footer', $data);
     }
 
-    private function procesarMetadatos(&$lista, $userId)
+    private function procesarMetadatos(&$contenidos, $userId)
     {
-        $userModel = new UsuarioModel();
-        $idsFavoritos = $userModel->getListaIds($userId);
+        if (empty($contenidos)) return;
 
-        if (!is_array($lista))
-            return;
+        // 1. Instanciamos el modelo de Mi Lista
+        // Asegúrate de tener: use App\Models\MiListaModel; arriba del todo
+        $miListaModel = new \App\Models\MiListaModel();
 
-        foreach ($lista as &$p) {
-            $p['en_mi_lista'] = in_array($p['id'], $idsFavoritos);
-            if (!str_starts_with($p['imagen'], 'http'))
-                $p['imagen'] = base_url('assets/img/') . $p['imagen'];
-            if (!str_starts_with($p['imagen_bg'], 'http'))
-                $p['imagen_bg'] = base_url('assets/img/') . $p['imagen_bg'];
+        // 2. Obtenemos los IDs de los contenidos que vamos a procesar
+        $ids = array_column($contenidos, 'id');
+
+        // 3. Consultamos cuáles de estos IDs están en la lista del usuario
+        $favoritos = [];
+        if (!empty($ids) && $userId) {
+            $favoritos = $miListaModel->where('usuario_id', $userId)
+                                      ->whereIn('contenido_id', $ids)
+                                      ->findColumn('contenido_id'); 
+            // Esto devuelve un array simple: [5, 12, 40...]
+        }
+        
+        if (!$favoritos) $favoritos = [];
+
+        // 4. Recorremos y modificamos
+        foreach ($contenidos as &$item) {
+            // A. Arreglar Imágenes (URL absoluta)
+            if (isset($item['imagen']) && !str_starts_with($item['imagen'], 'http')) {
+                $item['imagen'] = base_url('assets/img/' . $item['imagen']);
+            }
+            if (isset($item['imagen_bg']) && !str_starts_with($item['imagen_bg'], 'http')) {
+                $item['imagen_bg'] = base_url('assets/img/' . $item['imagen_bg']);
+            }
+
+            // B. Marcar si está en Mi Lista
+            // Creamos el campo 'en_mi_lista' que el JS espera
+            $item['en_mi_lista'] = in_array($item['id'], $favoritos);
         }
     }
 
     // =========================================================================
     // 2. MI LISTA
     // =========================================================================
+    // En app/Controllers/Home.php
+
     public function miLista()
     {
-        if (!session()->get('is_logged_in'))
-            return redirect()->to('/auth');
+        // 1. Seguridad: Si no está logueado, fuera
+        if (!session()->get('is_logged_in')) return redirect()->to('/auth');
 
         $userId = session()->get('user_id');
+        
+        // 2. Conexión y Modelos
         $db = \Config\Database::connect();
-        $generoModel = new GeneroModel();
-        $userModel = new UsuarioModel();
+        $generoModel = new \App\Models\GeneroModel();
+        $userModel = new \App\Models\UsuarioModel();
 
+        // 3. CONSULTA MAESTRA: Obtener solo lo que está en 'mi_lista' de este usuario
         $builder = $db->table('mi_lista ml');
-        $builder->select('c.*');
-        $builder->join('contenidos c', 'c.id = ml.contenido_id');
-        $builder->where('ml.usuario_id', $userId);
-        $builder->orderBy('ml.fecha_agregado', 'DESC');
+        $builder->select('c.*, ml.fecha_agregado'); // Traemos todos los datos de la peli
+        $builder->join('contenidos c', 'c.id = ml.contenido_id'); // Unimos con contenidos
+        $builder->where('ml.usuario_id', $userId); // FILTRO CLAVE: Solo este perfil
+        $builder->orderBy('ml.fecha_agregado', 'DESC'); // Lo último añadido primero
+        
+        $misPeliculas = $builder->get()->getResultArray();
 
-        $misPelis = $builder->get()->getResultArray();
-
-        foreach ($misPelis as &$p) {
-            $p['en_mi_lista'] = true;
+        // 4. Truco: Marcar todas como 'en_mi_lista' para que el corazón salga rojo
+        foreach ($misPeliculas as &$peli) {
+            $peli['en_mi_lista'] = true; 
         }
-        // Procesar imágenes también aquí por si acaso
-        $this->procesarMetadatos($misPelis, $userId);
 
-        $listaGeneros = $generoModel->orderBy('nombre', 'ASC')->findAll();
-        $otrosPerfiles = $userModel->where('id >=', 2)->where('id <=', 4)->where('id !=', $userId)->findAll();
+        // 5. Perfiles para el header (Copiar de tu index/peliculas)
+        $otrosPerfiles = $userModel->where('id >=', 2)
+                                   ->where('id <=', 4)
+                                   ->where('id !=', $userId)
+                                   ->findAll();
 
         $data = [
-            'titulo' => 'Mi Lista Personal',
-            'peliculas' => $misPelis,
+            'titulo' => 'Mi Lista - La Butaca',
+            'peliculas' => $misPeliculas, 
+            'generos' => $generoModel->findAll(),
+            'otrosPerfiles' => $otrosPerfiles,
             'categoria' => 'Mi Lista',
-            'mostrarHero' => false,
+            
+            // Variables para evitar errores en el header
             'splash' => false,
-            'generos' => $listaGeneros,
-            'otrosPerfiles' => $otrosPerfiles
+            'mostrarHero' => false,
+            'carrusel' => []
         ];
 
         echo view('frontend/templates/header', $data);
-        echo view('frontend/catalogo', $data);
+        echo view('frontend/mi_lista', $data);
         echo view('frontend/templates/footer', $data);
     }
 

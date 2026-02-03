@@ -103,6 +103,139 @@ body {
   margin-top: 20px;
   transition: width 2s ease-in-out;
 }
+/* =========================================
+   SPLASH SCREEN: CÁMARA DE CINE
+   ========================================= */
+
+#view-splash {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background-color: #141414; /* Fondo oscuro estilo Netflix */
+    z-index: 99999; /* Por encima de todo */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: sans-serif;
+}
+
+/* --- LA CÁMARA --- */
+.camera-loader {
+    position: relative;
+    width: 120px;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    transform: scale(1.2); /* Un poco más grande */
+}
+
+/* --- LAS CINTAS (Reels) --- */
+.reels-container {
+    position: absolute;
+    top: -40px;
+    display: flex;
+    gap: 10px;
+    z-index: 1;
+}
+
+.reel {
+    width: 50px;
+    height: 50px;
+    background-color: #222;
+    border: 4px solid #555;
+    border-radius: 50%;
+    position: relative;
+    animation: rodar 2s linear infinite;
+}
+
+.reel::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 15px; height: 15px;
+    background-color: #fff;
+    border-radius: 50%;
+    box-shadow: 18px 0 0 -3px #888, -18px 0 0 -3px #888, 0 18px 0 -3px #888, 0 -18px 0 -3px #888;
+}
+
+/* --- EL CUERPO --- */
+.camera-body {
+    width: 100px;
+    height: 80px;
+    background-color: #333;
+    border-radius: 8px;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 10px 15px rgba(0,0,0,0.5);
+}
+
+.camera-body::before {
+    content: '';
+    position: absolute;
+    top: 10px; left: 10px; right: 35px; bottom: 10px;
+    border: 2px solid #666;
+    border-radius: 4px;
+}
+
+/* --- LA LENTE --- */
+.lens {
+    width: 40px;
+    height: 40px;
+    background: radial-gradient(circle at 30% 30%, #aaddff, #111);
+    border: 4px solid #888;
+    border-radius: 50%;
+    position: absolute;
+    top: 20px;
+    right: -15px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+}
+
+.matte-box {
+    position: absolute;
+    top: 15px;
+    right: -45px;
+    width: 0; height: 0;
+    border-top: 25px solid transparent;
+    border-bottom: 25px solid transparent;
+    border-left: 40px solid #222;
+}
+
+/* --- TEXTO Y BARRA DE CARGA --- */
+.loading-text {
+    margin-top: 30px;
+    color: #fff; /* Texto blanco */
+    font-weight: bold;
+    letter-spacing: 3px;
+    font-size: 0.9rem;
+    animation: parpadeo 1.5s infinite;
+}
+
+/* Barra de carga fina (para que funcione tu JS actual) */
+.loader-line {
+    width: 0%; /* Empieza en 0 */
+    height: 3px;
+    background-color: var(--accent); 
+    margin-top: 10px;
+    border-radius: 2px;
+    transition: width 0.5s ease-out;
+    max-width: 150px; 
+}
+
+/* --- ANIMACIONES --- */
+@keyframes rodar {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes parpadeo {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
 
 /* Panel de Cristal (Login) */
 .glass-panel {
@@ -829,40 +962,6 @@ body {
 .category-row:hover .custom-arrow {
     opacity: 1;
 }
-
-/* Flechas Personalizadas */
-.custom-arrow {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    margin: auto;
-    width: 50px;
-    background: rgba(0,0,0,0.5); /* Fondo oscuro semitransparente */
-    border: none;
-    color: white;
-    font-size: 2rem;
-    z-index: 10;
-    cursor: pointer;
-    opacity: 0; /* Ocultas por defecto */
-    transition: opacity 0.3s, background 0.3s;
-    height: 100%; /* Ocupa toda la altura de la fila */
-}
-.custom-arrow:hover {
-    background: rgba(0,0,0,0.8);
-    color: var(--accent);
-}
-.slick-prev { left: -40px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; }
-.slick-next { right: 0; border-top-left-radius: 5px; border-bottom-left-radius: 5px; }
-
-/* Ajuste para que la tarjeta hover no quede tapada por el slider */
-.slick-row {
-    position: relative;
-    z-index: 2;
-}
-/* Al hacer hover en una tarjeta, esa tarjeta debe subir Z-index */
-.slick-slide-item:hover {
-    z-index: 20;
-}
 /* =========================================================
    NUEVO: ESTILOS PARA MODAL API GLOBAL (OMDb)
    ========================================================= */
@@ -892,6 +991,75 @@ body {
     .api-modal-poster { width: 100%; height: 200px !important; }
 }
 
+/* =========================================
+   FLECHAS DE NAVEGACIÓN (CENTRADO PERFECTO)
+   ========================================= */
+
+.custom-arrow {
+    position: absolute;
+    /* 1. CENTRADO VERTICAL MATEMÁTICO */
+    /* Esto ignora el padding del contenedor y busca el centro real */
+    top: 50% !important; 
+    transform: translateY(-50%);
+    
+    /* 2. TAMAÑO DE LA FLECHA */
+    /* No uses height: 100% o se estirará hasta el cielo */
+    width: 45px;
+    height: 80px; /* Una altura cómoda para hacer clic */
+    
+    background-color: rgba(0, 0, 0, 0.5);
+    border: none;
+    color: white;
+    font-size: 1.5rem; /* Tamaño del icono */
+    z-index: 50;
+    
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    
+    opacity: 0;
+    transition: all 0.3s ease;
+    border-radius: 4px;
+}
+
+/* POSICIÓN LATERAL (Pegadas al borde) */
+.slick-prev.custom-arrow {
+    left: 0;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+.slick-next.custom-arrow {
+    right: 0;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+}
+
+/* MOSTRAR AL HACER HOVER EN LA FILA */
+.slick-row:hover .custom-arrow {
+    opacity: 1;
+}
+
+/* EFECTO AL PASAR SOBRE LA FLECHA */
+.custom-arrow:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+    color: var(--accent);
+    /* Importante: Mantener el translateY(-50%) al escalar */
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* RESPONSIVE: En móvil siempre visibles y más pequeñas */
+@media (max-width: 768px) {
+    .custom-arrow {
+        opacity: 1;
+        width: 30px;
+        height: 60px;
+    }
+}
+
+
+
 /* =========================================================
    AJUSTES FINALES SLICK & CONTENEDORES
    ========================================================= */
@@ -911,18 +1079,7 @@ body {
     overflow-x: clip; /* clip es más agresivo que hidden para sliders */
 }
 
-/* Flechas flotantes personalizadas */
-.custom-arrow {
-    position: absolute; top: 0; bottom: 0; margin: auto; width: 50px; height: 100%;
-    background: rgba(0,0,0,0.5); border: none; color: white; font-size: 2rem; z-index: 50;
-    cursor: pointer; opacity: 0; transition: 0.3s;
-}
-.category-row:hover .custom-arrow { opacity: 1; }
-.custom-arrow:hover { background: rgba(0,0,0,0.8); color: var(--accent); }
 
-/* Posición exacta flechas */
-.slick-prev { left: 0; }
-.slick-next { right: 0; }
 
 /* Placeholder mientras cargan las imágenes (evita saltos) */
 .movie-card {

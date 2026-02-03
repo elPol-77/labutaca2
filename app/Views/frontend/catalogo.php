@@ -1,9 +1,24 @@
-<section id="view-splash" class="view-section active">
-    <div class="splash-logo">LA BUTACA</div>
-    <div style="width: 200px;">
-        <div class="loader-line"></div>
+<div id="view-splash" class="active">
+    
+    <div class="camera-loader">
+        <div class="reels-container">
+            <div class="reel"></div>
+            <div class="reel"></div>
+        </div>
+
+        <div class="camera-body">
+            <div class="lens"></div>
+            <div class="matte-box"></div>
+        </div>
     </div>
-</section>
+
+    <p class="loading-text">CARGANDO...</p>
+    
+    <div class="loader-line-container" style="width: 150px; background: #333; height: 3px; border-radius: 2px; margin-top: 10px;">
+        <div class="loader-line" style="width: 0%; height: 100%; background: var(--accent); transition: width 1s;"></div>
+    </div>
+
+</div>
 
 <section id="view-home" class="view-section">
 
@@ -108,7 +123,7 @@
                 <?php endforeach; ?>
             </div>
 
-            <script>
+            <!-- <script>
                 document.addEventListener("DOMContentLoaded", function() {
                     $('.slick-row').slick({
                         dots: false, infinite: true, speed: 500,
@@ -123,7 +138,7 @@
                         nextArrow: '<button type="button" class="slick-next custom-arrow"><i class="fa fa-chevron-right"></i></button>'
                     });
                 });
-            </script>
+            </script> -->
 
         <?php else: ?>
             <div class="movie-grid" id="grid-container"></div>
