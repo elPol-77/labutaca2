@@ -10,12 +10,15 @@ use CodeIgniter\Router\RouteCollection;
 // 1. FRONTEND (Público)
 // =============================================================================
 $routes->get('/', 'Home::index');
-$routes->get('detalle/(:segment)', 'Home::detalle/$1');
-$routes->get('ver/(:num)', 'Home::ver/$1');
+$routes->get('detalle/(:segment)', 'Home::detalle/$1'); 
+$routes->get('ver/(:segment)', 'Home::ver/$1');
 $routes->get('mi-lista', 'Home::miLista');
 $routes->get('peliculas', 'Home::paginaPeliculas');
 $routes->get('series', 'Home::series');
 $routes->get('director/(:num)', 'Home::director/$1');
+$routes->post('autocompletar', 'Home::autocompletar');
+$routes->get('persona/(:segment)', 'Home::persona/$1');
+$routes->post('ajax/cargar-fila', 'Home::ajaxCargarFila');
 
 // --- RUTA PARA ANGULAR ---
 $routes->get('global', 'Home::vistaGlobal'); 
@@ -50,6 +53,7 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function ($routes)
     $routes->get('catalogo', 'Catalogo::index');
     $routes->get('catalogo/(:segment)', 'Catalogo::show/$1');
     $routes->get('tendencias', 'Catalogo::tendencias');
+    
     
     // Gestión de Usuario
     $routes->post('usuario/toggle-lista', 'Usuario::toggle');

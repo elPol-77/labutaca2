@@ -159,7 +159,8 @@ class Home extends BaseController
 
     private function procesarMetadatos(&$contenidos, $userId)
     {
-        if (empty($contenidos)) return;
+        if (empty($contenidos))
+            return;
 
         // 1. Instanciamos el modelo de Mi Lista
         // Asegúrate de tener: use App\Models\MiListaModel; arriba del todo
@@ -172,12 +173,13 @@ class Home extends BaseController
         $favoritos = [];
         if (!empty($ids) && $userId) {
             $favoritos = $miListaModel->where('usuario_id', $userId)
-                                      ->whereIn('contenido_id', $ids)
-                                      ->findColumn('contenido_id'); 
+                ->whereIn('contenido_id', $ids)
+                ->findColumn('contenido_id');
             // Esto devuelve un array simple: [5, 12, 40...]
         }
-        
-        if (!$favoritos) $favoritos = [];
+
+        if (!$favoritos)
+            $favoritos = [];
 
         // 4. Recorremos y modificamos
         foreach ($contenidos as &$item) {
@@ -203,10 +205,11 @@ class Home extends BaseController
     public function miLista()
     {
         // 1. Seguridad: Si no está logueado, fuera
-        if (!session()->get('is_logged_in')) return redirect()->to('/auth');
+        if (!session()->get('is_logged_in'))
+            return redirect()->to('/auth');
 
         $userId = session()->get('user_id');
-        
+
         // 2. Conexión y Modelos
         $db = \Config\Database::connect();
         $generoModel = new \App\Models\GeneroModel();
@@ -218,27 +221,27 @@ class Home extends BaseController
         $builder->join('contenidos c', 'c.id = ml.contenido_id'); // Unimos con contenidos
         $builder->where('ml.usuario_id', $userId); // FILTRO CLAVE: Solo este perfil
         $builder->orderBy('ml.fecha_agregado', 'DESC'); // Lo último añadido primero
-        
+
         $misPeliculas = $builder->get()->getResultArray();
 
         // 4. Truco: Marcar todas como 'en_mi_lista' para que el corazón salga rojo
         foreach ($misPeliculas as &$peli) {
-            $peli['en_mi_lista'] = true; 
+            $peli['en_mi_lista'] = true;
         }
 
         // 5. Perfiles para el header (Copiar de tu index/peliculas)
         $otrosPerfiles = $userModel->where('id >=', 2)
-                                   ->where('id <=', 4)
-                                   ->where('id !=', $userId)
-                                   ->findAll();
+            ->where('id <=', 4)
+            ->where('id !=', $userId)
+            ->findAll();
 
         $data = [
             'titulo' => 'Mi Lista - La Butaca',
-            'peliculas' => $misPeliculas, 
+            'peliculas' => $misPeliculas,
             'generos' => $generoModel->findAll(),
             'otrosPerfiles' => $otrosPerfiles,
             'categoria' => 'Mi Lista',
-            
+
             // Variables para evitar errores en el header
             'splash' => false,
             'mostrarHero' => false,
@@ -253,45 +256,112 @@ class Home extends BaseController
     // =========================================================================
     // 3. REPRODUCTOR (TU SEGURIDAD ESTÁ BIEN AQUÍ)
     // =========================================================================
-    public function ver($id)
+    // =========================================================================
+    // 3. REPRODUCTOR UNIVERSAL (SOPORTA BASE DE DATOS + TMDB)
+    // =========================================================================
+public function ver($id)
     {
-        if (!session()->get('is_logged_in'))
-            return redirect()->to('/auth');
-
+        if (!session()->get('is_logged_in')) return redirect()->to('/auth');
         $model = new ContenidoModel();
-        $contenido = $model->find($id);
 
-        if (!$contenido)
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        // =========================================================
+        // 1. DETECCIÓN EXACTA (CINE vs TV)
+        // =========================================================
+        $esTmdb = false;
+        $tipoBusqueda = null; // 'movie' o 'tv'
+        $idLimpio = $id;
 
-        $planUsuario = session()->get('plan_id');
-        $nivelAcceso = $contenido['nivel_acceso'];
-        $edadRecomendada = $contenido['edad_recomendada'];
-
-        $puedeVer = false;
-
-        if ($planUsuario == 2) {
-            // Premium ve todo
-            $puedeVer = true;
-        } elseif ($planUsuario == 3) {
-            // KIDS: Nivel 3 o 1 Y edad <= 11
-            if (($nivelAcceso == 3 || $nivelAcceso == 1) && $edadRecomendada <= 11) {
-                $puedeVer = true;
-            }
-        } elseif ($planUsuario == 1) {
-            // FREE: Solo nivel 1
-            if ($nivelAcceso == 1)
-                $puedeVer = true;
+        // CASO A: Es una SERIE externa (tmdb_tv_XXXX)
+        if (str_starts_with($id, 'tmdb_tv_')) {
+            $esTmdb = true;
+            $tipoBusqueda = 'tv';
+            $idLimpio = str_replace('tmdb_tv_', '', $id);
+        }
+        // CASO B: Es una PELÍCULA externa (tmdb_movie_XXXX)
+        elseif (str_starts_with($id, 'tmdb_movie_')) {
+            $esTmdb = true;
+            $tipoBusqueda = 'movie';
+            $idLimpio = str_replace('tmdb_movie_', '', $id);
+        }
+        // CASO C: Compatibilidad antigua (tmdb_XXXX) -> Asumimos Cine
+        elseif (str_starts_with($id, 'tmdb_')) {
+            $esTmdb = true;
+            $tipoBusqueda = 'movie';
+            $idLimpio = str_replace('tmdb_', '', $id);
         }
 
-        // SEGURIDAD: REDIRECT SI NO PUEDE VER
+        $contenido = null;
+
+        // =========================================================
+        // 2. BÚSQUEDA EXCLUYENTE
+        // =========================================================
+
+        // SI ES TMDB -> Vamos directo a la API con el TIPO ESPECÍFICO
+        if ($esTmdb) {
+            // ¡AQUÍ ESTÁ LA SOLUCIÓN! Pasamos $tipoBusqueda ('tv' o 'movie')
+            $datosExternos = $this->obtenerDetalleExterno($idLimpio, $tipoBusqueda);
+            
+            if ($datosExternos && !empty($datosExternos['url_video'])) {
+                // Reconstruimos el prefijo correcto
+                $prefix = ($tipoBusqueda === 'tv') ? 'tmdb_tv_' : 'tmdb_movie_';
+
+                $contenido = [
+                    'id' => $prefix . $datosExternos['id'],
+                    'titulo' => $datosExternos['titulo'],
+                    'url_video' => $datosExternos['url_video'],
+                    'nivel_acceso' => 0, 
+                    'edad_recomendada' => $datosExternos['edad_recomendada'],
+                    'descripcion' => $datosExternos['descripcion']
+                ];
+            }
+        } 
+        // SI NO ES TMDB -> Buscamos en Local
+        else {
+            $contenido = $model->find($idLimpio);
+            
+            // Fallback (por si acaso entra un ID numérico que no es local)
+            if (!$contenido) {
+                // Intentamos buscar fuera como peli por defecto
+                $datosExternos = $this->obtenerDetalleExterno($idLimpio, 'movie');
+                if ($datosExternos && !empty($datosExternos['url_video'])) {
+                     $contenido = [
+                        'id' => 'tmdb_movie_' . $datosExternos['id'],
+                        'titulo' => $datosExternos['titulo'],
+                        'url_video' => $datosExternos['url_video'],
+                        'nivel_acceso' => 0,
+                        'edad_recomendada' => $datosExternos['edad_recomendada'],
+                        'descripcion' => $datosExternos['descripcion']
+                    ];
+                }
+            }
+        }
+
+        // 3. ERROR 404
+        if (!$contenido) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        // --- GESTIÓN DE PERMISOS ---
+        $puedeVer = true; // Por defecto sí (externas)
+
+        if (!$esTmdb) {
+             // Si es local, comprobamos los planes estrictos
+             $puedeVer = false;
+             $planUsuario = session()->get('plan_id');
+             $nivelAcceso = $contenido['nivel_acceso'];
+             // (Tu lógica de permisos local se mantiene igual)
+             if ($planUsuario == 2) $puedeVer = true;
+             elseif ($planUsuario == 3 && ($nivelAcceso == 3 || $nivelAcceso == 1)) $puedeVer = true;
+             elseif ($planUsuario == 1 && $nivelAcceso == 1) $puedeVer = true;
+        }
+
         if (!$puedeVer) {
-            session()->setFlashdata('error', 'Contenido no disponible para tu perfil o plan.');
+            session()->setFlashdata('error', 'Contenido restringido.');
             return redirect()->to('/');
         }
 
+        // --- PREPARAR YOUTUBE ---
         $videoUrl = $contenido['url_video'];
-
         if (strpos($videoUrl, 'youtu') !== false) {
             if (preg_match('%(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\.be/)([^"&?/ ]{11})%i', $videoUrl, $match)) {
                 $videoUrl = 'https://www.youtube.com/embed/' . $match[1] . '?autoplay=1&rel=0&modestbranding=1';
@@ -299,58 +369,99 @@ class Home extends BaseController
         }
 
         return view('frontend/player', [
-            'titulo' => 'Viendo: ' . $contenido['titulo'] . ' | La Butaca',
+            'titulo' => 'Viendo: ' . $contenido['titulo'],
             'contenido' => $contenido,
             'video_url' => $videoUrl
         ]);
     }
-
-    // ... (El resto de funciones detalle, autocompletar, director déjalas como las tenías) ...
-    // Solo asegúrate de que 'detalle' tiene la misma lógica de $puedeVer visual.
-
-    // ... dentro de Home.php ...
-
     // =========================================================================
     // 4. DETALLE HÍBRIDO (LOCAL + GLOBAL)
     // =========================================================================
-    public function detalle($id)
+    // =========================================================================
+    // 4. DETALLE HÍBRIDO (INTELIGENTE)
+    // =========================================================================
+ public function detalle($id)
     {
-        if (!session()->get('is_logged_in'))
-            return redirect()->to('/auth');
+        if (!session()->get('is_logged_in')) return redirect()->to('/auth');
 
         $userId = session()->get('user_id');
         $model = new ContenidoModel();
 
-        // DETECTAR SI ES LOCAL O EXTERNO
-        // Si es numérico (1, 50, 100) -> Es local
-        // Si empieza por 'tt' -> Es externo (IMDB/OMDb)
-        $esLocal = is_numeric($id);
+        // 1. DETECCIÓN DE TIPO
+        $esTmdb = false;
+        $tipoBusqueda = null;
+        $idLimpio = $id;
+
+        if (str_starts_with($id, 'tmdb_tv_')) {
+            $esTmdb = true; $tipoBusqueda = 'tv'; $idLimpio = str_replace('tmdb_tv_', '', $id);
+        } elseif (str_starts_with($id, 'tmdb_movie_')) {
+            $esTmdb = true; $tipoBusqueda = 'movie'; $idLimpio = str_replace('tmdb_movie_', '', $id);
+        } elseif (str_starts_with($id, 'tmdb_')) {
+            $esTmdb = true; $tipoBusqueda = 'movie'; $idLimpio = str_replace('tmdb_', '', $id);
+        }
 
         $contenido = null;
         $director = null;
         $esExterno = false;
+        $esLocal = false;
 
-        if ($esLocal) {
-            // --- LÓGICA LOCAL (Tu BBDD) ---
-            $contenido = $model->getDetallesCompletos($id);
-            $director = $model->getDirector($id);
+        // 2. BÚSQUEDA
+        if ($esTmdb) {
+            // Buscamos en la API (y calculamos la edad real)
+            $contenido = $this->obtenerDetalleExterno($idLimpio, $tipoBusqueda);
+            
+            if ($contenido) {
+                $esExterno = true;
+                $prefix = ($tipoBusqueda === 'tv') ? 'tmdb_tv_' : 'tmdb_movie_';
+                $contenido['id'] = $prefix . $contenido['id'];
+            }
         } else {
-            // --- LÓGICA EXTERNA (API OMDb) ---
-            $contenido = $this->obtenerDetalleExterno($id);
-            $esExterno = true;
+            $contenido = $model->getDetallesCompletos($id);
+            if ($contenido) {
+                $esLocal = true;
+                $director = $model->getDirector($id);
+            }
         }
 
         if (!$contenido) {
-            // Si falla la API o no existe en BBDD
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
 
-        // --- GESTIÓN DE MI LISTA ---
+        // =========================================================
+        // 3. SEGURIDAD BLINDADA (ESTO ES LO QUE TE FALTABA)
+        // =========================================================
+        $planUsuario = session()->get('plan_id');
+        $puedeVer = true;
+
+        // REGLA A: Usuario FREE intentando ver contenido EXTERNO (TMDB)
+        if ($planUsuario == 1 && $esExterno) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        // REGLA B: Usuario KIDS intentando ver contenido MAYORES DE 11 AÑOS
+
+        if ($planUsuario == 3) {
+            // Si la edad recomendada es mayor de 11, lo echamos fuera
+            if ($contenido['edad_recomendada'] > 11) {
+                 return redirect()->to('/')->with('error', 'Este contenido no es adecuado para tu edad.');
+            }
+        }
+
+        // REGLA C: Usuario FREE intentando ver contenido LOCAL PREMIUM
+        if ($planUsuario == 1 && $esLocal && $contenido['nivel_acceso'] > 1) {
+            $puedeVer = false; // Aquí le dejamos ver la ficha, pero saldrá el candado
+        }
+        
+        // REGLA D: Usuario KIDS intentando ver contenido LOCAL DE ADULTOS
+        if ($planUsuario == 3 && $esLocal && $contenido['edad_recomendada'] > 11) {
+             return redirect()->to('/')->with('error', 'Este contenido no es adecuado para tu edad.');
+        }
+
+        // =========================================================
+
+        // MI LISTA
         $db = \Config\Database::connect();
         $enLista = false;
-
-        // Solo podemos comprobar "Mi Lista" si es local (por ahora)
-        // O si quieres guardar externos, tendrías que guardar el ID 'tt...' en tu tabla mi_lista
         if ($esLocal) {
             $enLista = $db->table('mi_lista')
                 ->where('usuario_id', $userId)
@@ -358,43 +469,22 @@ class Home extends BaseController
                 ->countAllResults() > 0;
         }
 
-        // --- PERMISOS DE VISUALIZACIÓN ---
-        $puedeVer = false;
-        if ($esLocal) {
-            // Usamos tu lógica de planes estricta
-            $planUsuario = session()->get('plan_id');
-            $nivelAcceso = $contenido['nivel_acceso'];
-            $edadRecomendada = $contenido['edad_recomendada'];
-
-            if ($planUsuario == 2)
-                $puedeVer = true;
-            elseif ($planUsuario == 3) {
-                if (($nivelAcceso == 3 || $nivelAcceso == 1) && $edadRecomendada <= 11)
-                    $puedeVer = true;
-            } elseif ($planUsuario == 1) {
-                if ($nivelAcceso == 1)
-                    $puedeVer = true;
-            }
-        } else {
-            // Si es externo, dejamos "ver" la ficha (Trailer), no hay restricción de plan
-            $puedeVer = true;
-        }
-
-        // Datos comunes para el Header/Footer
+        // VISTA
         $generoModel = new GeneroModel();
         $userModel = new UsuarioModel();
-        $listaGeneros = $generoModel->orderBy('nombre', 'ASC')->findAll();
-        $otrosPerfiles = $userModel->where('id !=', $userId)->findAll();
 
         $data = [
             'titulo' => $contenido['titulo'],
             'peli' => $contenido,
             'puede_ver' => $puedeVer,
             'en_lista' => $enLista,
-            'director' => $director, // Puede ser null si es externo
-            'es_externo' => $esExterno, // ¡IMPORTANTE PARA LA VISTA!
-            'generos' => $listaGeneros,
-            'otrosPerfiles' => $otrosPerfiles
+            'director' => $director,
+            'es_externo' => $esExterno,
+            'generos' => $generoModel->orderBy('nombre', 'ASC')->findAll(),
+            'otrosPerfiles' => $userModel->where('id !=', $userId)->findAll(),
+            'splash' => false,
+            'mostrarHero' => false,
+            'carrusel' => []
         ];
 
         echo view('frontend/templates/header', $data);
@@ -403,85 +493,249 @@ class Home extends BaseController
     }
 
     // --- FUNCIÓN AUXILIAR: TRADUCIR API OMDb A TU FORMATO ---
-    private function obtenerDetalleExterno($imdbID)
+// --- FUNCIÓN AUXILIAR: API TMDB (MODO PRO) ---
+    // --- SOPORTE HÍBRIDO (CINE Y SERIES) ---
+   // Aceptamos un segundo parámetro: $tipoEspecifico ('movie' o 'tv')
+   private function obtenerDetalleExterno($tmdbID, $tipoEspecifico = null)
     {
-        $apiKey = '78a51c36'; // Tu API Key
-        // Hacemos la petición al servidor de OMDb
-        $json = @file_get_contents("https://www.omdbapi.com/?apikey={$apiKey}&i={$imdbID}&plot=full");
+        $apiKey = '6387e3c183c454304108333c56530988'; 
+        $lang = 'es-ES';
 
-        if (!$json)
-            return null;
+       $arrContextOptions = ["ssl" => ["verify_peer" => false, "verify_peer_name" => false], "http" => ["ignore_errors" => true]];
+        $context = stream_context_create($arrContextOptions);
 
+        $json = null;
+        $esSerie = false;
+
+        // 1. SELECCIÓN DE TIPO
+        if ($tipoEspecifico === 'tv') {
+            $urlTV = "https://api.themoviedb.org/3/tv/{$tmdbID}?api_key={$apiKey}&language={$lang}&append_to_response=videos,credits,content_ratings";
+            $json = @file_get_contents($urlTV, false, $context);
+            $esSerie = true;
+        } elseif ($tipoEspecifico === 'movie') {
+            $urlMovie = "https://api.themoviedb.org/3/movie/{$tmdbID}?api_key={$apiKey}&language={$lang}&append_to_response=videos,credits,release_dates";
+            $json = @file_get_contents($urlMovie, false, $context);
+            $esSerie = false;
+        } else {
+            // Fallback (tu lógica anterior)
+            $urlMovie = "https://api.themoviedb.org/3/movie/{$tmdbID}?api_key={$apiKey}&language={$lang}&append_to_response=videos,credits,release_dates";
+            $json = @file_get_contents($urlMovie, false, $context);
+            $esSerie = false;
+            if (!$json || strpos($json, '"success":false') !== false) {
+                $urlTV = "https://api.themoviedb.org/3/tv/{$tmdbID}?api_key={$apiKey}&language={$lang}&append_to_response=videos,credits,content_ratings";
+                $json = @file_get_contents($urlTV, false, $context);
+                $esSerie = true;
+            }
+        }
+
+        if (!$json) return null;
         $data = json_decode($json, true);
+        if (isset($data['success']) && $data['success'] === false) return null;
 
-        if (!isset($data['Response']) || $data['Response'] === 'False')
-            return null;
+        // 2. VIDEO (Tu lógica de siempre)
+        $videoKey = null;
+        if (isset($data['videos']['results'])) {
+             foreach ($data['videos']['results'] as $vid) {
+                if ($vid['site'] === 'YouTube' && $vid['type'] === 'Trailer') { $videoKey = $vid['key']; break; }
+            }
+            if (!$videoKey) {
+                foreach ($data['videos']['results'] as $vid) {
+                    if ($vid['site'] === 'YouTube') { $videoKey = $vid['key']; break; }
+                }
+            }
+        }
+        $finalVideoUrl = $videoKey ? "https://www.youtube.com/embed/" . $videoKey . "?autoplay=1&rel=0&modestbranding=1" : "";
 
-        // TRUCO DE MAGIA:
-        // Convertimos los datos raros de OMDb al formato EXACTO que usa tu vista 'detalle.php'
-        // Así la vista no sabe si viene de BBDD o de Internet.
+        // 3. DIRECTOR (Tu lógica de siempre)
+        $directorData = null;
+        if (isset($data['credits']['crew'])) {
+            foreach ($data['credits']['crew'] as $crewMember) {
+                if ($crewMember['job'] === 'Director') {
+                    $directorData = ['id' => 'tmdb_person_' . $crewMember['id'], 'nombre' => $crewMember['name']];
+                    break; 
+                }
+            }
+        }
+        if (!$directorData && $esSerie && !empty($data['created_by'])) {
+            $directorData = ['id' => 'tmdb_person_' . $data['created_by'][0]['id'], 'nombre' => $data['created_by'][0]['name']];
+        }
+
+        // --- 4. CALCULAR EDAD RECOMENDADA REAL (CRÍTICO PARA KIDS) ---
+        $edad = 12; // Valor por defecto si no encontramos nada
+
+        if ($esSerie && isset($data['content_ratings']['results'])) {
+            foreach ($data['content_ratings']['results'] as $rating) {
+                if ($rating['iso_3166_1'] === 'ES') {
+                    $ratingVal = $rating['rating']; // Ej: "16", "TP", "7"
+                    $edad = is_numeric($ratingVal) ? intval($ratingVal) : ($ratingVal === 'TP' || $ratingVal === 'A' ? 0 : 18);
+                    break;
+                }
+            }
+        } elseif (!$esSerie && isset($data['release_dates']['results'])) {
+            foreach ($data['release_dates']['results'] as $release) {
+                if ($release['iso_3166_1'] === 'ES') {
+                    foreach ($release['release_dates'] as $dateInfo) {
+                        if (!empty($dateInfo['certification'])) {
+                            $ratingVal = $dateInfo['certification'];
+                            $edad = is_numeric($ratingVal) ? intval($ratingVal) : ($ratingVal === 'TP' || $ratingVal === 'A' || $ratingVal === 'Ai' ? 0 : 18);
+                            break 2;
+                        }
+                    }
+                }
+            }
+        }
+
+        // DATOS BÁSICOS
+        $baseImg = "https://image.tmdb.org/t/p/w500";
+        $baseBackdrop = "https://image.tmdb.org/t/p/original";
+        $titulo = $esSerie ? ($data['name'] ?? '') : ($data['title'] ?? '');
+        $fecha = $esSerie ? ($data['first_air_date'] ?? '') : ($data['release_date'] ?? '');
+
         return [
-            'id' => $data['imdbID'], // tt12345
-            'titulo' => $data['Title'],
-            'descripcion' => $data['Plot'],
-            'anio' => intval($data['Year']),
-            'duracion' => intval($data['Runtime']), // "120 min" -> 120
-            'imagen' => ($data['Poster'] != 'N/A') ? $data['Poster'] : base_url('assets/img/no-poster.jpg'),
-            'imagen_bg' => ($data['Poster'] != 'N/A') ? $data['Poster'] : base_url('assets/img/no-poster.jpg'),
+            'id' => $data['id'],
+            'titulo' => $titulo,
+            'descripcion' => $data['overview'] ?? '',
+            'anio' => intval(substr($fecha, 0, 4)),
+            'duracion' => $esSerie ? ($data['episode_run_time'][0] ?? 0) : ($data['runtime'] ?? 0),
+            'imagen' => !empty($data['poster_path']) ? $baseImg . $data['poster_path'] : base_url('assets/img/no-poster.jpg'),
+            'imagen_bg' => !empty($data['backdrop_path']) ? $baseBackdrop . $data['backdrop_path'] : '',
+            'url_video' => $finalVideoUrl,
+            'rating' => isset($data['vote_average']) ? round($data['vote_average'], 1) : 0,
+            'director_externo' => $directorData, 
+            'nivel_acceso' => 0, // Las externas siempre son nivel 0 (acceso base), el filtro lo hacemos por plan
+            
+            // AQUÍ LA EDAD REAL CALCULADA
+            'edad_recomendada' => $edad, 
 
-            // Datos ficticios para que no falle la vista
-            'nivel_acceso' => 0,
-            'edad_recomendada' => 12,
-            'url_video' => null, // No tenemos video, usaremos YouTube
-
-            // Convertimos géneros y actores a array
-            'generos' => array_map(function ($g) {
-                return ['nombre' => trim($g)]; }, explode(',', $data['Genre'])),
-            'actores' => array_map(function ($a) {
-                return ['nombre' => trim($a), 'foto' => null, 'personaje' => '']; }, explode(',', $data['Actors']))
+            'generos' => array_map(function ($g) { return ['nombre' => $g['name']]; }, $data['genres'] ?? []),
+            'actores' => array_map(function ($a) use ($baseImg) {
+                return [
+                    'id' => 'tmdb_person_' . $a['id'],
+                    'nombre' => $a['name'],
+                    'personaje' => $a['character'] ?? '',
+                    'foto' => !empty($a['profile_path']) ? $baseImg . $a['profile_path'] : null
+                ];
+            }, array_slice($data['credits']['cast'] ?? [], 0, 8))
         ];
     }
 
     // =========================================================================
     // 5. BUSCADOR
     // =========================================================================
-    public function autocompletar()
+    // =========================================================================
+    // 5. BUSCADOR HÍBRIDO (LOCAL + TMDB)
+    // =========================================================================
+// =========================================================================
+    // 5. BUSCADOR INTELIGENTE (CINE + SERIES + LOCAL)
+    // =========================================================================
+public function autocompletar()
     {
         $request = service('request');
         $postData = $request->getPost();
+
         $response = [];
         $data = [];
         $response['token'] = csrf_hash();
 
-        if (isset($postData['search'])) {
+        if (isset($postData['search']) && strlen($postData['search']) > 2) {
             $search = $postData['search'];
             $planId = session()->get('plan_id') ?? 1;
 
+            // ---------------------------------------------------------
+            // 1. BÚSQUEDA LOCAL (Lo que tienes en tu BBDD)
+            // ---------------------------------------------------------
             $model = new ContenidoModel();
-            $builder = $model->select('id, titulo, imagen')
-                ->like('titulo', $search)
-                ->where('tipo_id', 1);
+            $builder = $model->select('id, titulo, imagen, edad_recomendada') // Importante: traer edad
+                ->like('titulo', $search);
 
-            if ($planId == 3) {
+            // Filtros de seguridad LOCAL
+            if ($planId == 3) { // Kids
                 $builder->where('edad_recomendada <=', 11);
-            } elseif ($planId == 1) {
+            } elseif ($planId == 1) { // Free
                 $builder->where('nivel_acceso', 1);
             }
 
-            $listaPelis = $builder->orderBy('titulo')->findAll(10);
+            $locales = $builder->orderBy('titulo')->findAll(5);
+            $idsLocales = [];
 
-            foreach ($listaPelis as $peli) {
+            foreach ($locales as $peli) {
+                $idsLocales[] = $peli['id'];
+
                 $imgUrl = str_starts_with($peli['imagen'], 'http')
                     ? $peli['imagen']
                     : base_url('assets/img/' . $peli['imagen']);
 
                 $data[] = [
-                    "value" => $peli['id'],
+                    "value" => $peli['id'], 
                     "label" => $peli['titulo'],
-                    "img" => $imgUrl
+                    "img" => $imgUrl,
+                    "type" => "local" 
                 ];
             }
+
+            // ---------------------------------------------------------
+            // 2. BÚSQUEDA EXTERNA (TMDB - CINE Y SERIES)
+            // ---------------------------------------------------------
+            
+            // SEGURIDAD: Si es Plan Free (1), NO buscamos fuera.
+            if (count($data) < 10 && $planId != 1) { // <--- AQUÍ ESTÁ EL CAMBIO DE SEGURIDAD
+                
+                $apiKey = '6387e3c183c454304108333c56530988'; 
+                $query = urlencode($search);
+
+                // include_adult=false filtra contenido explícito para todos (incluido Kids)
+                $url = "https://api.themoviedb.org/3/search/multi?api_key={$apiKey}&language=es-ES&query={$query}&include_adult=false";
+
+                // Contexto para evitar errores SSL en Localhost
+                $arrContextOptions = [
+                    "ssl" => ["verify_peer" => false, "verify_peer_name" => false],
+                    "http" => ["ignore_errors" => true]
+                ];
+                $context = stream_context_create($arrContextOptions);
+
+                $json = @file_get_contents($url, false, $context);
+
+                if ($json) {
+                    $tmdbResults = json_decode($json, true);
+
+                    if (!empty($tmdbResults['results'])) {
+                        foreach ($tmdbResults['results'] as $item) {
+                            if (count($data) >= 10) break;
+
+                            if ($item['media_type'] != 'movie' && $item['media_type'] != 'tv') continue;
+                            if (in_array($item['id'], $idsLocales)) continue;
+
+                            // --- NORMALIZACIÓN ---
+                            if ($item['media_type'] == 'tv') {
+                                $titulo = $item['name'];
+                                $fecha = $item['first_air_date'] ?? '';
+                                $tipoLabel = " (Serie)";
+                                $prefix = "tmdb_tv_"; // PREFIJO TV
+                            } else {
+                                $titulo = $item['title'];
+                                $fecha = $item['release_date'] ?? '';
+                                $tipoLabel = "";
+                                $prefix = "tmdb_movie_"; // PREFIJO PELI
+                            }
+
+                            $anio = substr($fecha, 0, 4);
+
+                            $poster = $item['poster_path']
+                                ? "https://image.tmdb.org/t/p/w92" . $item['poster_path']
+                                : base_url('assets/img/no-poster.jpg');
+
+                            $data[] = [
+                                "value" => $prefix . $item['id'], 
+                                "label" => $titulo . ($anio ? " ($anio)" : "") . $tipoLabel,
+                                "img" => $poster,
+                                "type" => "tmdb"
+                            ];
+                        }
+                    }
+                }
+            }
         }
+
         $response['data'] = $data;
         return $this->response->setJSON($response);
     }
@@ -543,42 +797,42 @@ class Home extends BaseController
         echo view('frontend/catalogo', $data);
         echo view('frontend/templates/footer', $data);
     }
-// En App/Controllers/Home.php
+    // En App/Controllers/Home.php
 
 
- public function paginaPeliculas()
+    public function paginaPeliculas()
     {
         // 1. Datos básicos
         $userId = session()->get('user_id');
-        
+
         // 2. Modelos
-        $userModel = new \App\Models\UsuarioModel(); 
+        $userModel = new \App\Models\UsuarioModel();
         $generoModel = new \App\Models\GeneroModel();
 
         // 3. Perfiles (Lógica corregida por IDs)
         $otrosPerfiles = $userModel->where('id >=', 2)
-                                   ->where('id <=', 4)
-                                   ->where('id !=', $userId)
-                                   ->findAll();
+            ->where('id <=', 4)
+            ->where('id !=', $userId)
+            ->findAll();
 
         // 4. DATOS COMPLETOS (Para que no falle el Header)
         $data = [
-            'titulo'        => 'Películas - La Butaca',
-            'generos'       => $generoModel->findAll(),
+            'titulo' => 'Películas - La Butaca',
+            'generos' => $generoModel->findAll(),
             'otrosPerfiles' => $otrosPerfiles,
-            
+
             // --- VARIABLES DE SEGURIDAD (Para evitar errores en la vista) ---
-            'splash'        => false,   // Evita error de variable indefinida en header
-            'mostrarHero'   => false,   // Evita error si el header busca esta variable
-            'categoria'     => 'Películas', // Evita error en títulos
-            'carrusel'      => [],      // Por si acaso footer o header lo piden
-            'secciones'     => []       // Por si acaso
+            'splash' => false,   // Evita error de variable indefinida en header
+            'mostrarHero' => false,   // Evita error si el header busca esta variable
+            'categoria' => 'Películas', // Evita error en títulos
+            'carrusel' => [],      // Por si acaso footer o header lo piden
+            'secciones' => []       // Por si acaso
         ];
 
         // 5. Renderizado (Importante: usas echo de header/footer en tu index, aquí deberías mantener la estructura)
         // Si tu archivo 'frontend/peliculas' YA incluye el header, usa 'return view'. 
         // Si NO incluye header, usa la estructura de abajo:
-        
+
         echo view('frontend/templates/header', $data);
         echo view('frontend/peliculas', $data);
         echo view('frontend/templates/footer', $data);
@@ -588,7 +842,8 @@ class Home extends BaseController
     // =========================================================================
     public function vistaGlobal()
     {
-    if (!session()->get('is_logged_in')) return redirect()->to('/auth');
+        if (!session()->get('is_logged_in'))
+            return redirect()->to('/auth');
 
         // BLOQUEO DE SEGURIDAD: Solo Plan 2 (Premium)
         if (session()->get('plan_id') != 2) {
@@ -597,52 +852,258 @@ class Home extends BaseController
         $data = [
             'titulo' => 'Zona Global - La Butaca',
             // Puedes pasar datos de sesión a Angular si quieres
-            'user_token' => csrf_hash(), 
+            'user_token' => csrf_hash(),
             'user_id' => session()->get('user_id')
         ];
 
         // Cargamos una vista específica para Angular
         // Nota: No cargamos header/footer de PHP si Angular va a gestionar su propia navegación,
         // pero si quieres mantener el menú de PHP, descomenta las líneas.
-        
+
         echo view('frontend/templates/header', $data); // Mantener menú superior
         echo view('frontend/angular_app', $data);      // El contenedor de Angular
         echo view('frontend/templates/footer', $data); // Mantener pie de página
     }
-// =========================================================
+    // =========================================================
     // PAGINA SERIES (Igual que Películas)
     // =========================================================
     public function series()
     {
         // 1. Datos básicos
         $userId = session()->get('user_id');
-        
-        $userModel = new \App\Models\UsuarioModel(); 
+
+        $userModel = new \App\Models\UsuarioModel();
         $generoModel = new \App\Models\GeneroModel();
 
         // 2. Perfiles
         $otrosPerfiles = $userModel->where('id >=', 2)
-                                   ->where('id <=', 4)
-                                   ->where('id !=', $userId)
-                                   ->findAll();
+            ->where('id <=', 4)
+            ->where('id !=', $userId)
+            ->findAll();
 
         // 3. Datos
         $data = [
-            'titulo'        => 'Series - La Butaca',
-            'generos'       => $generoModel->findAll(),
+            'titulo' => 'Series - La Butaca',
+            'generos' => $generoModel->findAll(),
             'otrosPerfiles' => $otrosPerfiles,
-            
+
             // Variables de seguridad
-            'splash'        => false,
-            'mostrarHero'   => false,
-            'categoria'     => 'Series',
-            'carrusel'      => [],
-            'secciones'     => []
+            'splash' => false,
+            'mostrarHero' => false,
+            'categoria' => 'Series',
+            'carrusel' => [],
+            'secciones' => []
         ];
 
         // 4. Vista
         echo view('frontend/templates/header', $data);
         echo view('frontend/series', $data); // <--- OJO: Llama a 'series.php'
         echo view('frontend/templates/footer', $data);
+    }
+    // FILTRAR CONTENIDO POR PERSONA (ACTOR O DIRECTOR)
+    public function persona($id)
+    {
+        if (!session()->get('is_logged_in')) return redirect()->to('/auth');
+        
+        $nombrePersona = "Filmografía";
+        $peliculas = [];
+
+        // Si es de TMDB (tmdb_person_12345)
+        if (str_starts_with($id, 'tmdb_person_')) {
+            $tmdbID = str_replace('tmdb_person_', '', $id);
+            $apiKey = '6387e3c183c454304108333c56530988';
+            
+            // Pedimos los créditos combinados (Cine y TV)
+            $url = "https://api.themoviedb.org/3/person/{$tmdbID}/combined_credits?api_key={$apiKey}&language=es-ES";
+            
+            // También pedimos info de la persona para el título
+            $urlPerson = "https://api.themoviedb.org/3/person/{$tmdbID}?api_key={$apiKey}&language=es-ES";
+            
+            $arrContextOptions = ["ssl" => ["verify_peer" => false, "verify_peer_name" => false]];
+            $context = stream_context_create($arrContextOptions);
+
+            $jsonPerson = @file_get_contents($urlPerson, false, $context);
+            if ($jsonPerson) {
+                $pData = json_decode($jsonPerson, true);
+                $nombrePersona = $pData['name'];
+            }
+
+            $json = @file_get_contents($url, false, $context);
+            if ($json) {
+                $data = json_decode($json, true);
+                // Procesamos cast (actor) y crew (director)
+                $rawList = array_merge($data['cast'], $data['crew']);
+                
+                // Eliminamos duplicados y filtramos
+                $seen = [];
+                foreach ($rawList as $item) {
+                    if (isset($seen[$item['id']])) continue;
+                    if ($item['media_type'] != 'movie' && $item['media_type'] != 'tv') continue;
+                    $seen[$item['id']] = true;
+
+                    // Formato compatible con tu vista catalogo
+                    $prefix = ($item['media_type'] == 'tv') ? 'tmdb_tv_' : 'tmdb_movie_';
+                    $img = $item['poster_path'] ? "https://image.tmdb.org/t/p/w300" . $item['poster_path'] : base_url('assets/img/no-poster.jpg');
+                    
+                    $peliculas[] = [
+                        'id' => $prefix . $item['id'],
+                        'titulo' => ($item['media_type'] == 'tv') ? ($item['name']??'') : ($item['title']??''),
+                        'imagen' => $img,
+                        'anio' => substr(($item['release_date'] ?? $item['first_air_date'] ?? ''), 0, 4),
+                        'en_mi_lista' => false // Por defecto
+                    ];
+                }
+            }
+        }
+        // Si fuera local, aquí iría la lógica local ($model->getPeliculasPorActor...)
+
+        // Renderizar vista
+        $data = [
+            'titulo' => $nombrePersona . ' - La Butaca',
+            'categoria' => 'Filmografía de ' . $nombrePersona,
+            'peliculas' => $peliculas, // La vista catalogo usará esto
+            'mostrarHero' => false,
+            'splash' => false,
+            'generos' => (new \App\Models\GeneroModel())->findAll(),
+            'otrosPerfiles' => (new \App\Models\UsuarioModel())->where('id !=', session()->get('user_id'))->findAll(),
+            'carrusel' => []
+        ];
+
+        echo view('frontend/templates/header', $data);
+        echo view('frontend/catalogo', $data); // Reutilizamos tu vista de rejilla
+        echo view('frontend/templates/footer', $data);
+    }
+    public function ajaxCargarFila()
+    {
+        $bloque = $this->request->getPost('bloque');
+        $planId = session()->get('plan_id');
+
+        // Definimos el orden de las categorías que quieres que salgan
+        // 0 = Tendencias (Local)
+        // 1 = Novedades 2024-2025 (TMDB)
+        // 2 = Cine de Terror (TMDB)
+        // 3 = Universo Marvel (TMDB)
+        // 4 = Series Populares (TMDB)
+        // 5 = Comedias (TMDB)
+        
+        $html = "";
+        $tituloFila = "";
+        $items = [];
+
+        // RESTRICCIÓN FREE: Si es plan 1, solo mostramos el bloque 0 (Local)
+        if ($planId == 1 && $bloque > 0) {
+            return $this->response->setBody(""); // Dejamos de cargar
+        }
+
+        switch ($bloque) {
+            case 0:
+                $tituloFila = "Tendencias en La Butaca";
+                $model = new ContenidoModel();
+                // Filtramos por edad si es Kids
+                if ($planId == 3) $model->where('edad_recomendada <=', 11);
+                
+                $resultados = $model->getTendencias(12);
+                
+                // Formateamos para la vista
+                foreach ($resultados as $r) {
+                    $img = str_starts_with($r['imagen'], 'http') ? $r['imagen'] : base_url('assets/img/' . $r['imagen']);
+                    $items[] = ['id' => $r['id'], 'titulo' => $r['titulo'], 'imagen' => $img];
+                }
+                break;
+
+            case 1:
+                $tituloFila = "Novedades y Próximos Estrenos";
+                // Buscamos pelis de 2024 y 2025 ordenadas por popularidad
+                $items = $this->fetchTmdbDiscover('movie', ['primary_release_date.gte' => '2024-01-01', 'sort_by' => 'popularity.desc']);
+                break;
+
+            case 2:
+                $tituloFila = "Pasaje del Terror";
+                // Género 27 es Terror en TMDB
+                $items = $this->fetchTmdbDiscover('movie', ['with_genres' => '27', 'sort_by' => 'popularity.desc']);
+                break;
+
+            case 3:
+                $tituloFila = "Universo Marvel";
+                // Company ID 420 es Marvel Studios
+                $items = $this->fetchTmdbDiscover('movie', ['with_companies' => '420', 'sort_by' => 'primary_release_date.desc']);
+                break;
+
+            case 4:
+                $tituloFila = "Series que enganchan";
+                $items = $this->fetchTmdbDiscover('tv', ['sort_by' => 'popularity.desc']);
+                break;
+                
+            default:
+                return $this->response->setBody(""); // No hay más bloques
+        }
+
+        // SI HAY RESULTADOS, GENERAMOS EL HTML DE LA FILA
+        if (!empty($items)) {
+            // Pasamos los datos a una "mini vista" o construimos el HTML aquí
+            // Para simplificar, construyo el HTML aquí mismo (puedes pasarlo a un view fragment)
+            
+            $html .= '<div class="category-row" style="margin-bottom: 40px; opacity:0; transition: opacity 1s;" onload="this.style.opacity=1">';
+            $html .= '  <h3 class="row-title" style="margin-left:4%; font-size:1.4rem; color:#e5e5e5; margin-bottom:10px;">' . esc($tituloFila) . '</h3>';
+            $html .= '  <div class="row-container" style="display:flex; overflow-x:auto; padding: 10px 4%; gap:10px; scrollbar-width:none;">';
+            
+            foreach ($items as $peli) {
+                // FILTRO DE EDAD KIDS (Si viene de TMDB, intentamos filtrar lo básico)
+                // Nota: TMDB Discover no siempre devuelve rating, pero filtramos 'adult'
+                
+                $link = base_url('detalle/' . $peli['id']);
+                
+                $html .= '    <a href="' . $link . '" class="poster-card" style="flex:0 0 auto; width:160px; transition:transform 0.3s;">';
+                $html .= '      <div style="height:240px; border-radius:6px; overflow:hidden;">';
+                $html .= '        <img src="' . $peli['imagen'] . '" style="width:100%; height:100%; object-fit:cover;" loading="lazy">';
+                $html .= '      </div>';
+                // Opcional: Titulo abajo
+                // $html .= ' <div style="font-size:0.9rem; margin-top:5px; white-space:nowrap; overflow:hidden;">'.$peli['titulo'].'</div>';
+                $html .= '    </a>';
+            }
+            
+            $html .= '  </div>';
+            $html .= '</div>';
+        }
+
+        return $this->response->setBody($html);
+    }
+
+    // HELPER PRIVADO PARA TRAER LISTAS DE TMDB
+    private function fetchTmdbDiscover($type, $params = []) {
+        $apiKey = '6387e3c183c454304108333c56530988';
+        
+        // Base params
+        $queryParams = array_merge([
+            'api_key' => $apiKey,
+            'language' => 'es-ES',
+            'include_adult' => 'false', // Importante para seguridad
+            'page' => 1
+        ], $params);
+
+        $queryString = http_build_query($queryParams);
+        $url = "https://api.themoviedb.org/3/discover/{$type}?{$queryString}";
+
+        $arrContextOptions = ["ssl" => ["verify_peer" => false], "http" => ["ignore_errors" => true]];
+        $json = @file_get_contents($url, false, stream_context_create($arrContextOptions));
+        
+        $results = [];
+        if ($json) {
+            $data = json_decode($json, true);
+            if (!empty($data['results'])) {
+                foreach ($data['results'] as $item) {
+                    $prefix = ($type == 'tv') ? 'tmdb_tv_' : 'tmdb_movie_';
+                    $img = $item['poster_path'] ? "https://image.tmdb.org/t/p/w300" . $item['poster_path'] : base_url('assets/img/no-poster.jpg');
+                    $titulo = ($type == 'tv') ? $item['name'] : $item['title'];
+                    
+                    $results[] = [
+                        'id' => $prefix . $item['id'],
+                        'titulo' => $titulo,
+                        'imagen' => $img
+                    ];
+                }
+            }
+        }
+        return $results;
     }
 }

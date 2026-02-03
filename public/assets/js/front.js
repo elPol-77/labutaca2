@@ -99,58 +99,70 @@ $(document).ready(function () {
     $(document).on('mouseleave', '.movie-poster', function () { $('#dynamic-bg').css('opacity', '0.2'); });
 
     $("#global-search").autocomplete({
-        minLength: 1,
+        minLength: 2, // Esperar a 2 letras para no saturar
         source: function (request, response) {
             var csrfName = $('.txt_csrftoken').attr('name');
             var csrfHash = $('.txt_csrftoken').val();
-            let combinedResults = [];
 
             $.ajax({
-                url: BASE_URL + "api/buscador/autocompletar",
-                type: "post", dataType: "json",
-                data: { search: request.term, [csrfName]: csrfHash },
-                success: function (localData) {
-                    if (localData.token) $('.txt_csrftoken').val(localData.token);
-
-                    // 1. Resultados Locales (Tu BD)
-                    if (localData.data) {
-                        combinedResults = combinedResults.concat(localData.data.map(i => ({ ...i, source: 'local' })));
+                // Asegúrate de que esta URL apunta a tu función autocompletar() de Home.php
+                url: BASE_URL + "autocompletar",
+                type: "post",
+                dataType: "json",
+                data: {
+                    search: request.term,
+                    [csrfName]: csrfHash
+                },
+                success: function (resp) {
+                    // Actualizar token CSRF para la siguiente petición
+                    if (resp.token) {
+                        $('.txt_csrftoken').val(resp.token);
                     }
 
-                    // 2. Resultados Externos (OMDb API) - RESTAURADO
-                    fetch(`https://www.omdbapi.com/?apikey=${OMDb_API_KEY}&s=${request.term}`)
-                        .then(r => r.json())
-                        .then(extData => {
-                            if (extData.Response === "True") {
-                                combinedResults = combinedResults.concat(extData.Search.slice(0, 3).map(m => ({
-                                    label: m.Title,
-                                    value: m.imdbID,
-                                    img: (m.Poster !== "N/A" ? m.Poster : BASE_URL + 'assets/img/no-poster.jpg'),
-                                    year: m.Year,
-                                    source: 'external'
-                                })));
-                            }
-                            response(combinedResults);
-                        })
-                        .catch(() => response(combinedResults)); // Si falla OMDb, mostramos lo local
+                    // La magia: PHP ya nos da la lista mezclada y limpia
+                    response(resp.data);
+                },
+                error: function () {
+                    response([]);
                 }
             });
         },
         create: function () {
             $(this).data('ui-autocomplete')._renderItem = function (ul, item) {
-                const badge = item.source === 'local' ?
-                    '<span style="color:#46d369; font-size:0.6rem; border:1px solid #46d369; float:right;">EN CATÁLOGO</span>' :
-                    '<span style="color:#00d2ff; font-size:0.6rem; border:1px solid #00d2ff; float:right;">GLOBAL</span>';
+                // Lógica visual: Si viene de 'local' (tu BD) o 'tmdb' (API)
+                let badge = '';
 
-                return $("<li>").append(`<div class="ui-menu-item-wrapper" style="display:flex; gap:10px;"><img src="${item.img}" style="width:35px; height:50px; object-fit:cover;"><div style="flex:1;"><div>${item.label}</div><div style="font-size:0.75rem; color:#aaa;">${item.year || ''} ${badge}</div></div></div>`).appendTo(ul);
+                if (item.type === 'local') {
+                    badge = '<span style="color:#46d369; font-size:0.6rem; border:1px solid #46d369; padding:1px 4px; border-radius:3px; float:right; margin-left:10px;">EN CATÁLOGO</span>';
+                } else {
+                    badge = '<span style="color:#00d2ff; font-size:0.6rem; border:1px solid #00d2ff; padding:1px 4px; border-radius:3px; float:right; margin-left:10px;">GLOBAL</span>';
+                }
+
+                return $("<li>")
+                    .append(`
+                    <div class="ui-menu-item-wrapper" style="display:flex; gap:10px; align-items:center; padding:5px;">
+                        <img src="${item.img}" style="width:35px; height:52px; object-fit:cover; border-radius:4px; background:#333;">
+                        <div style="flex:1; overflow:hidden;">
+                            <div style="font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                ${item.label.split('(')[0]} 
+                            </div>
+                            <div style="font-size:0.75rem; color:#aaa; display:flex; justify-content:space-between; align-items:center;">
+                                <span>${item.label.match(/\((.*?)\)/)?.[0] || ''}</span>
+                                ${badge}
+                            </div>
+                        </div>
+                    </div>
+                `)
+                    .appendTo(ul);
             };
         },
         select: function (event, ui) {
+            // Redirección limpia usando el ID numérico
+            // Esto llevará a /detalle/12345 y tu controlador sabrá qué hacer
             window.location.href = BASE_URL + "detalle/" + ui.item.value;
             return false;
         }
     });
-
 }); // FIN DEL DOCUMENT READY
 
 
