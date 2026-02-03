@@ -93,8 +93,8 @@
                 { breakpoint: 800, settings: { slidesToShow: 3, slidesToScroll: 1 } },
                 { breakpoint: 500, settings: { slidesToShow: 2, slidesToScroll: 1 } }
             ],
-            prevArrow: '<button type="button" class="slick-prev custom-arrow"><i class="fa fa-chevron-left"></i></button>',
-            nextArrow: '<button type="button" class="slick-next custom-arrow"><i class="fa fa-chevron-right"></i></button>'
+            prevArrow: '<button type="button" ><i class="fa fa-chevron-left"></i></button>',
+            nextArrow: '<button type="button" ><i class="fa fa-chevron-right"></i></button>'
         });
     });
 </script>

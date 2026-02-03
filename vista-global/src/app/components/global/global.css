@@ -1,0 +1,111 @@
+.gallery-wrapper {
+  padding: 40px 4%;
+  min-height: 100vh;
+}
+
+/* REJILLA RESPONSIVA AUTOMÁTICA */
+.movie-grid {
+  display: grid;
+  /* Crea tantas columnas como quepan de 200px mínimo */
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.movie-card {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.3s, z-index 0.3s;
+}
+
+.movie-card:hover {
+  z-index: 100;
+  transform: scale(1.05); /* Pequeño zoom al pasar el ratón */
+}
+
+.poster-visible {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.poster-visible img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Loader centrado abajo */
+.loader-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+
+/* Estilos Hover Popup (Simplificado) */
+.hover-details-card {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 150%;
+  background: #141414;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.9);
+  transition: 0.3s;
+  z-index: 101;
+  overflow: hidden;
+}
+
+.movie-card:hover .hover-details-card {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.hover-backdrop { height: 120px; background-size: cover; }
+.hover-info { padding: 10px; color: white; }
+.hover-info h4 { margin: 0; font-size: 0.9rem; }
+.match-score { color: #46d369; font-size: 0.8rem; font-weight: bold; }
+/* ... Tus estilos anteriores ... */
+
+/* =========================================
+   LAZY LOAD PRO (EFECTO ESQUELETO)
+   ========================================= */
+
+/* 1. El contenedor tiene un fondo gris pulsante mientras carga */
+.poster-visible.skeleton-anim {
+  background-color: #1f1f1f;
+  /* Animación de brillo grisaceo */
+  background-image: linear-gradient(
+    90deg, 
+    #1f1f1f 0px, 
+    #2a2a2a 50%, 
+    #1f1f1f 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shine 1.5s infinite linear;
+}
+
+/* 2. La imagen empieza invisible */
+.poster-visible img {
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+  will-change: opacity;
+}
+
+/* 3. Cuando Angular detecta que cargó, le añade esta clase */
+.poster-visible img.loaded {
+  opacity: 1;
+}
+
+/* Animación del brillo */
+@keyframes skeleton-shine {
+  0% { background-position: -200px 0; }
+  100% { background-position: 200px 0; }
+}
+
+/* ... Resto de tus estilos ... */

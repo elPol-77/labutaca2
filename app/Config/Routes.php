@@ -17,6 +17,10 @@ $routes->get('peliculas', 'Home::paginaPeliculas');
 $routes->get('series', 'Home::series');
 $routes->get('director/(:num)', 'Home::director/$1');
 
+// --- RUTA PARA ANGULAR ---
+$routes->get('global', 'Home::vistaGlobal'); 
+$routes->get('global/(:any)', 'Home::vistaGlobal');
+
 // =============================================================================
 // 2. AUTENTICACIÓN (Perfiles y Login Admin)
 // =============================================================================

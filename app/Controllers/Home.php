@@ -583,6 +583,32 @@ class Home extends BaseController
         echo view('frontend/peliculas', $data);
         echo view('frontend/templates/footer', $data);
     }
+    // =========================================================================
+    // 7. VISTA ANGULAR (ZONA GLOBAL)
+    // =========================================================================
+    public function vistaGlobal()
+    {
+    if (!session()->get('is_logged_in')) return redirect()->to('/auth');
+
+        // BLOQUEO DE SEGURIDAD: Solo Plan 2 (Premium)
+        if (session()->get('plan_id') != 2) {
+            return redirect()->to('/')->with('error', 'Necesitas ser Premium para acceder a la Zona Global.');
+        }
+        $data = [
+            'titulo' => 'Zona Global - La Butaca',
+            // Puedes pasar datos de sesión a Angular si quieres
+            'user_token' => csrf_hash(), 
+            'user_id' => session()->get('user_id')
+        ];
+
+        // Cargamos una vista específica para Angular
+        // Nota: No cargamos header/footer de PHP si Angular va a gestionar su propia navegación,
+        // pero si quieres mantener el menú de PHP, descomenta las líneas.
+        
+        echo view('frontend/templates/header', $data); // Mantener menú superior
+        echo view('frontend/angular_app', $data);      // El contenedor de Angular
+        echo view('frontend/templates/footer', $data); // Mantener pie de página
+    }
 // =========================================================
     // PAGINA SERIES (Igual que Películas)
     // =========================================================

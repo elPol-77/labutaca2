@@ -123,22 +123,6 @@
                 <?php endforeach; ?>
             </div>
 
-            <!-- <script>
-                document.addEventListener("DOMContentLoaded", function() {
-                    $('.slick-row').slick({
-                        dots: false, infinite: true, speed: 500,
-                        slidesToShow: 6, slidesToScroll: 3,
-                        responsive: [
-                            { breakpoint: 1600, settings: { slidesToShow: 5, slidesToScroll: 2 } },
-                            { breakpoint: 1100, settings: { slidesToShow: 4, slidesToScroll: 2 } },
-                            { breakpoint: 800, settings: { slidesToShow: 3, slidesToScroll: 1 } },
-                            { breakpoint: 500, settings: { slidesToShow: 2, slidesToScroll: 1 } }
-                        ],
-                        prevArrow: '<button type="button" class="slick-prev custom-arrow"><i class="fa fa-chevron-left"></i></button>',
-                        nextArrow: '<button type="button" class="slick-next custom-arrow"><i class="fa fa-chevron-right"></i></button>'
-                    });
-                });
-            </script> -->
 
         <?php else: ?>
             <div class="movie-grid" id="grid-container"></div>

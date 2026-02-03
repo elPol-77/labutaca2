@@ -3,7 +3,7 @@
 let paginaActual = 1;
 let cargando = false;
 let finDeContenido = false;
-let generoActualId = null; 
+let generoActualId = null;
 const OMDb_API_KEY = '78a51c36'; // Tu API Key
 let modoGridActivo = false;
 
@@ -46,7 +46,7 @@ $(document).ready(function () {
     // 2. ENRUTADOR DE VISTAS (Peliculas/Series/Género)
     // =========================================================
     if ($('#view-peliculas-full').length > 0) {
-        
+
         const urlParams = new URLSearchParams(window.location.search);
         const generoUrl = urlParams.get('genero');
 
@@ -55,7 +55,7 @@ $(document).ready(function () {
             modoGridActivo = true;
             generoActualId = generoUrl;
             cargarVistaGenero(generoUrl);
-        } 
+        }
         // B. SI ENTRAMOS A LA PORTADA NORMAL
         else {
             modoGridActivo = false;
@@ -63,14 +63,14 @@ $(document).ready(function () {
         }
 
         // C. INTERCEPTOR DEL MENÚ (Click en un género)
-        $(document).on('click', '.trigger-filtro', function(e) {
-            e.preventDefault(); 
+        $(document).on('click', '.trigger-filtro', function (e) {
+            e.preventDefault();
             const genero = $(this).data('genero');
-            
+
             // Actualizamos URL sin recargar
             const newUrl = BASE_URL + "peliculas?genero=" + encodeURIComponent(genero);
-            window.history.pushState({path: newUrl}, '', newUrl);
-            
+            window.history.pushState({ path: newUrl }, '', newUrl);
+
             // Cargamos la nueva vista
             modoGridActivo = true;
             generoActualId = genero;
@@ -111,7 +111,7 @@ $(document).ready(function () {
                 data: { search: request.term, [csrfName]: csrfHash },
                 success: function (localData) {
                     if (localData.token) $('.txt_csrftoken').val(localData.token);
-                    
+
                     // 1. Resultados Locales (Tu BD)
                     if (localData.data) {
                         combinedResults = combinedResults.concat(localData.data.map(i => ({ ...i, source: 'local' })));
@@ -123,10 +123,10 @@ $(document).ready(function () {
                         .then(extData => {
                             if (extData.Response === "True") {
                                 combinedResults = combinedResults.concat(extData.Search.slice(0, 3).map(m => ({
-                                    label: m.Title, 
+                                    label: m.Title,
                                     value: m.imdbID,
                                     img: (m.Poster !== "N/A" ? m.Poster : BASE_URL + 'assets/img/no-poster.jpg'),
-                                    year: m.Year, 
+                                    year: m.Year,
                                     source: 'external'
                                 })));
                             }
@@ -138,10 +138,10 @@ $(document).ready(function () {
         },
         create: function () {
             $(this).data('ui-autocomplete')._renderItem = function (ul, item) {
-                const badge = item.source === 'local' ? 
-                    '<span style="color:#46d369; font-size:0.6rem; border:1px solid #46d369; float:right;">EN CATÁLOGO</span>' : 
+                const badge = item.source === 'local' ?
+                    '<span style="color:#46d369; font-size:0.6rem; border:1px solid #46d369; float:right;">EN CATÁLOGO</span>' :
                     '<span style="color:#00d2ff; font-size:0.6rem; border:1px solid #00d2ff; float:right;">GLOBAL</span>';
-                
+
                 return $("<li>").append(`<div class="ui-menu-item-wrapper" style="display:flex; gap:10px;"><img src="${item.img}" style="width:35px; height:50px; object-fit:cover;"><div style="flex:1;"><div>${item.label}</div><div style="font-size:0.75rem; color:#aaa;">${item.year || ''} ${badge}</div></div></div>`).appendTo(ul);
             };
         },
@@ -201,7 +201,7 @@ function cargarGridPeliculasAPI(genero = null, esScroll = false) {
                 let htmlAcumulado = '';
                 response.data.forEach(peli => {
                     // Usamos tu función maestra para generar el HTML
-                    htmlAcumulado += generarHtmlTarjeta(peli); 
+                    htmlAcumulado += generarHtmlTarjeta(peli);
                 });
                 $('#grid-container').append(htmlAcumulado);
             } else {
@@ -224,16 +224,16 @@ function cargarVistaGenero(generoId) {
     $('#hero-wrapper').hide();
     $('#rows-container').hide();
     $('#grid-expandido').hide().empty();
-    $('#genre-landing-container').hide().empty(); 
+    $('#genre-landing-container').hide().empty();
 
-    $('.nav-link').removeClass('active'); 
+    $('.nav-link').removeClass('active');
 
     let urlApi = BASE_URL + "index.php/api/catalogo?genero=" + generoId;
 
     $.ajax({
         url: urlApi,
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
             $('#loading-initial').hide();
             $('.content').fadeIn();
 
@@ -251,7 +251,7 @@ function renderGenreRows(secciones, nombreGenero) {
     secciones.forEach((sec, idx) => {
         if (sec.data && sec.data.length > 0) {
             const movies = formatData(sec.data);
-            
+
             html += `
             <div class="category-row" style="margin-bottom: 50px; padding-left: 4%;">
                 <div class="header-seccion-genero" style="display:flex; align-items:center; margin-bottom:15px;">
@@ -272,16 +272,16 @@ function renderGenreRows(secciones, nombreGenero) {
     });
 
     $('#genre-landing-container').html(html);
-    
+
     setTimeout(() => {
         $('.slick-row').not('.slick-initialized').slick({
             dots: false, infinite: false, speed: 500, slidesToShow: 6, slidesToScroll: 3,
-            prevArrow: '<button type="button" class="slick-prev custom-arrow"><i class="fa fa-chevron-left"></i></button>',
-            nextArrow: '<button type="button" class="slick-next custom-arrow"><i class="fa fa-chevron-right"></i></button>',
-            responsive: [ 
+            prevArrow: '<button type="button" class=" left-arrow custom-arrow"><i class="fa fa-chevron-left"></i></button>',
+            nextArrow: '<button type="button" class=" right-arrow custom-arrow"><i class="fa fa-chevron-right"></i></button>',
+            responsive: [
                 { breakpoint: 1400, settings: { slidesToShow: 5 } },
-                { breakpoint: 1100, settings: { slidesToShow: 4 } }, 
-                { breakpoint: 500, settings: { slidesToShow: 2 } } 
+                { breakpoint: 1100, settings: { slidesToShow: 4 } },
+                { breakpoint: 500, settings: { slidesToShow: 2 } }
             ]
         });
     }, 100);
@@ -293,7 +293,7 @@ function cargarPortadaNormal() {
     $('#rows-container').show();
     $('#genre-landing-container').hide();
     $('#grid-expandido').hide();
-    
+
     let cleanBase = BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/';
     fetch(cleanBase + 'api/peliculas-landing')
         .then(r => r.json())
@@ -331,7 +331,7 @@ function renderNetflixRows(secciones) {
 // =========================================================
 
 // --- A. GRID EXPANDIDO (VER TODO) ---
-window.abrirGridExpandido = function(tipoId, tituloSeccion) {
+window.abrirGridExpandido = function (tipoId, tituloSeccion) {
     $('.nav-link').removeClass('active');
     if (tipoId == 1) $('a[href*="peliculas"]').addClass('active');
     else if (tipoId == 2) $('a[href*="series"]').addClass('active');
@@ -340,16 +340,16 @@ window.abrirGridExpandido = function(tipoId, tituloSeccion) {
     $('#loading-initial').show();
     $('#grid-expandido').empty();
 
-    let urlApi = BASE_URL + "index.php/api/catalogo?genero=" + generoActualId; 
+    let urlApi = BASE_URL + "index.php/api/catalogo?genero=" + generoActualId;
 
     $.ajax({
         url: urlApi,
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
             $('#loading-initial').hide();
-            
+
             let datosFiltrados = [];
-            if(response.secciones) {
+            if (response.secciones) {
                 response.secciones.forEach(sec => {
                     if (sec.tipo == tipoId) datosFiltrados = sec.data;
                 });
@@ -364,7 +364,7 @@ window.abrirGridExpandido = function(tipoId, tituloSeccion) {
 
             const movies = formatData(datosFiltrados);
             movies.forEach(m => {
-                htmlGrid += generarHtmlTarjeta(m); 
+                htmlGrid += generarHtmlTarjeta(m);
             });
 
             $('#grid-expandido').html(htmlGrid).css('display', 'grid').show();
@@ -372,7 +372,7 @@ window.abrirGridExpandido = function(tipoId, tituloSeccion) {
     });
 };
 
-window.volverALandingGenero = function() {
+window.volverALandingGenero = function () {
     $('.nav-link').removeClass('active');
     $('#grid-expandido').hide();
     $('#genre-landing-container').fadeIn();
@@ -419,8 +419,8 @@ function inicializarCarruseles() {
                 { breakpoint: 800, settings: { slidesToShow: 3, slidesToScroll: 1 } },
                 { breakpoint: 500, settings: { slidesToShow: 2, slidesToScroll: 1 } }
             ],
-            prevArrow: '<button type="button" class="slick-prev custom-arrow"><i class="fa fa-chevron-left"></i></button>',
-            nextArrow: '<button type="button" class="slick-next custom-arrow"><i class="fa fa-chevron-right"></i></button>'
+            prevArrow: '<button type="button" class=" left-arrow custom-arrow"><i class="fa fa-chevron-left"></i></button>',
+            nextArrow: '<button type="button" class=" right-arrow custom-arrow"><i class="fa fa-chevron-right"></i></button>'
         });
     }
 
@@ -509,7 +509,7 @@ function realizarCambioPerfil(id, password) {
 // =========================================================
 function generarHtmlTarjeta(item) {
     let cleanBase = BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/';
-    
+
     // 1. Normalización de datos
     let imgPoster = item.img || item.imagen;
     if (imgPoster && !imgPoster.startsWith('http')) imgPoster = cleanBase + 'assets/img/' + imgPoster;
@@ -523,11 +523,11 @@ function generarHtmlTarjeta(item) {
     let linkVer = item.link_ver || (cleanBase + 'ver/' + item.id);
     let edad = item.age || item.edad_recomendada || "12";
     let desc = item.desc || item.descripcion || "Sin descripción disponible.";
-    
-    let enLista = item.in_list || item.en_mi_lista; 
-    
+
+    let enLista = item.in_list || item.en_mi_lista;
+
     let styleBtnLista = enLista ? 'border-color: var(--accent); color: var(--accent);' : '';
-    let iconClass = enLista ? 'fa-check' : 'fa-heart'; 
+    let iconClass = enLista ? 'fa-check' : 'fa-heart';
 
     // Random Match para simular algoritmo (98% para ti)
     let matchScore = Math.floor(Math.random() * (99 - 80 + 1) + 80);
@@ -569,5 +569,5 @@ function generarHtmlTarjeta(item) {
             </div>
         </div>
     </div>`;
-    
+
 }

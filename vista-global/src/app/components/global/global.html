@@ -1,0 +1,31 @@
+<div class="gallery-wrapper">
+  
+  <div class="movie-grid">
+    <div *ngFor="let m of movies" class="movie-card" (click)="goToDetail(m)">
+      
+      <div class="poster-visible skeleton-anim">
+        
+        <img [src]="getImage(m.poster_path)" 
+             [alt]="m.title" 
+             loading="lazy"
+             (load)="m.loaded = true"
+             [class.loaded]="m.loaded">
+             
+      </div>
+
+      <div class="hover-details-card">
+         <div class="hover-backdrop" [style.background-image]="'url(' + getImage(m.backdrop_path || m.poster_path) + ')'"></div>
+         <div class="hover-info">
+           <h4>{{ m.title || m.name }}</h4>
+           <span class="match-score">{{ m.vote_average * 10 | number:'1.0-0' }}% Match</span>
+         </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loader-container">
+    <div class="spinner-border text-light" role="status"></div>
+  </div>
+
+</div>

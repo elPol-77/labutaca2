@@ -11,10 +11,11 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
-
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css" />
     <link rel="stylesheet" type="text/css"
     href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css" />
+
 
     <link rel="stylesheet" href="<?= base_url('assets/css/front.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/auth.css') ?>">
@@ -43,6 +44,11 @@
             <a href="<?= base_url('peliculas') ?>"
                 class="nav-link <?= ($uri == 'peliculas') ? 'active' : '' ?>">Películas</a>
             <a href="<?= base_url('series') ?>" class="nav-link <?= ($uri == 'series') ? 'active' : '' ?>">Series</a>
+            <?php if (session()->get('plan_id') == 2): ?>
+                <a href="<?= base_url('global') ?>" class="header-icon-btn" title="Zona Global" style="margin-right: 15px;">
+                    <i class="bi bi-globe"></i>
+                </a>
+            <?php endif; ?>
             
         </nav>
 
