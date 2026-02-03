@@ -861,7 +861,7 @@ public function autocompletar()
         // pero si quieres mantener el menú de PHP, descomenta las líneas.
 
         echo view('frontend/templates/header', $data); // Mantener menú superior
-        echo view('frontend/angular_app', $data);      // El contenedor de Angular
+        echo view('frontend/global', $data);      // El contenedor de Angular
         echo view('frontend/templates/footer', $data); // Mantener pie de página
     }
     // =========================================================
@@ -1106,4 +1106,5 @@ public function autocompletar()
         }
         return $results;
     }
+    
 }
