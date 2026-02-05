@@ -22,6 +22,26 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
 }
+/* Ancho de la barra */
+::-webkit-scrollbar {
+  width: 15px;
+}
+
+/* Pista de la barra (fondo) */
+::-webkit-scrollbar-track {
+  background: #272145;
+}
+
+/* Control deslizante (la parte que se mueve) */
+::-webkit-scrollbar-thumb {
+  background: #28292A;
+  border-radius: 10px; 
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #c72830;
+}
+
 
 /* --- FONDO DINÁMICO --- */
 #dynamic-bg {
@@ -936,8 +956,9 @@ body {
 .mini-profile-item img {
     width: 32px; height: 32px; border-radius: 4px; /* Cuadrados redondeados estilo Netflix */
 }
-.mini-profile-item span {
+.mini-profile-item span ,a {
     font-size: 0.9rem; color: #fff;
+    text-decoration: none;
 }
 
 /* Iconos especiales (Añadir/Editar) */

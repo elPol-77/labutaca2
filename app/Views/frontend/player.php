@@ -16,7 +16,9 @@
     <div class="player-container">
         
         <div class="top-controls">
-            <a href="<?= base_url() ?>" class="back-btn">
+            <a href="<?= base_url() ?>" 
+            class="back-btn" 
+            onclick="if(window.history.length > 1) { window.history.back(); return false; }">
                 <i class="fa fa-arrow-left"></i> Volver
             </a>
             <div style="font-weight:bold; color:#aaa;">REPRODUCTOR LA BUTACA</div>

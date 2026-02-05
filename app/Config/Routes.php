@@ -38,6 +38,10 @@ $routes->get('auth/logout', 'Auth::logout');
 $routes->get('profiles', 'Profiles::index');
 $routes->get('profiles/select/(:segment)', 'Profiles::select/$1');
 
+// GESTIÓN DE PERFIL
+$routes->get('perfil', 'Perfil::index');
+$routes->post('perfil/update', 'Perfil::update');
+
 // Login de Administración (Panel Técnico)
 // Estas rutas deben coincidir con el action de tu formulario HTML
 $routes->get('admin/login', 'Admin\Auth::index'); 

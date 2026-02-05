@@ -98,13 +98,23 @@
             </a>
 
             <?php if (session()->get('is_logged_in')): ?>
+                <?php
+                    $avatarSesion = session()->get('avatar');
+
+                    if (empty($avatarSesion)) {
+                        $avatarUrl = 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png';
+                    } elseif (str_starts_with($avatarSesion, 'http')) {
+                        $avatarUrl = $avatarSesion;
+                    } else {
+                        $avatarUrl = base_url('assets/img/avatars/' . $avatarSesion);
+                    }
+                ?>
 
                 <div class="profile-menu-wrapper">
                     <div class="avatar-trigger">
-                        <img src="<?= base_url('assets/img/avatars/' . session()->get('avatar')) ?>"
-                            style="width:40px; height:40px; border-radius:50%; border:2px solid var(--accent); object-fit:cover;">
+                        <img src="<?= $avatarUrl ?>" alt="Avatar"
+                            style="width:40px; height:40px; border-radius:4px; border:1px solid rgba(255,255,255,0.2); object-fit:cover;">
                     </div>
-
                     <div class="profile-dropdown">
 
                         <div class="profile-column border-right">
@@ -136,10 +146,11 @@
                                     <span>Añadir perfil</span>
                                 </div>
 
-                                <div class="mini-profile-item" onclick="alert('Editar perfiles')">
+                                <div class="mini-profile-item">
                                     <div class="edit-profile-icon"><i class="fa fa-pencil"></i></div>
-                                    <span>Editar perfil</span>
+                                    <a href="<?= base_url('perfil') ?>">Editar Perfil</a>
                                 </div>
+                                <div class="dropdown-content">
                             </div>
                         </div>
 

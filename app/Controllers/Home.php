@@ -532,7 +532,7 @@ public function ver($id)
         $data = json_decode($json, true);
         if (isset($data['success']) && $data['success'] === false) return null;
 
-        // 2. VIDEO (Tu lógica de siempre)
+        // VIDEO 
         $videoKey = null;
         if (isset($data['videos']['results'])) {
              foreach ($data['videos']['results'] as $vid) {
@@ -546,7 +546,7 @@ public function ver($id)
         }
         $finalVideoUrl = $videoKey ? "https://www.youtube.com/embed/" . $videoKey . "?autoplay=1&rel=0&modestbranding=1" : "";
 
-        // 3. DIRECTOR (Tu lógica de siempre)
+        // DIRECTOR
         $directorData = null;
         if (isset($data['credits']['crew'])) {
             foreach ($data['credits']['crew'] as $crewMember) {
@@ -560,8 +560,8 @@ public function ver($id)
             $directorData = ['id' => 'tmdb_person_' . $data['created_by'][0]['id'], 'nombre' => $data['created_by'][0]['name']];
         }
 
-        // --- 4. CALCULAR EDAD RECOMENDADA REAL (CRÍTICO PARA KIDS) ---
-        $edad = 12; // Valor por defecto si no encontramos nada
+        // CALCULAR EDAD RECOMENDADA REAL (
+        $edad = 12; 
 
         if ($esSerie && isset($data['content_ratings']['results'])) {
             foreach ($data['content_ratings']['results'] as $rating) {
@@ -602,9 +602,8 @@ public function ver($id)
             'url_video' => $finalVideoUrl,
             'rating' => isset($data['vote_average']) ? round($data['vote_average'], 1) : 0,
             'director_externo' => $directorData, 
-            'nivel_acceso' => 0, // Las externas siempre son nivel 0 (acceso base), el filtro lo hacemos por plan
+            'nivel_acceso' => 0,
             
-            // AQUÍ LA EDAD REAL CALCULADA
             'edad_recomendada' => $edad, 
 
             'generos' => array_map(function ($g) { return ['nombre' => $g['name']]; }, $data['genres'] ?? []),
@@ -619,15 +618,8 @@ public function ver($id)
         ];
     }
 
-    // =========================================================================
-    // 5. BUSCADOR
-    // =========================================================================
-    // =========================================================================
-    // 5. BUSCADOR HÍBRIDO (LOCAL + TMDB)
-    // =========================================================================
-// =========================================================================
-    // 5. BUSCADOR INTELIGENTE (CINE + SERIES + LOCAL)
-    // =========================================================================
+// BUSCADOR
+
 public function autocompletar()
     {
         $request = service('request');

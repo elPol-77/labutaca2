@@ -47,7 +47,9 @@ public function index()
                     'plan_id'      => $user['plan_id'], 
                     'rol'          => $user['rol'],
                     'avatar'       => $user['avatar'],
-                    'is_logged_in' => true
+                    'is_logged_in' => true,
+
+                    'avatar'        => $user['avatar'] ?? 'https://i.pinimg.com/564x/1b/a2/e6/1ba2e6d1d4874546c70c91f1024e17fb.jpg',
                 ]);
                 
                 // Activar Intro

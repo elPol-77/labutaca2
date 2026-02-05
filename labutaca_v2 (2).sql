@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.3
+-- version 5.2.2
 -- https://www.phpmyadmin.net/
 --
--- Servidor: 127.0.0.1
--- Tiempo de generación: 26-01-2026 a las 23:52:52
--- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.2.12
+-- Servidor: localhost
+-- Tiempo de generación: 05-02-2026 a las 12:43:44
+-- Versión del servidor: 8.0.43-0ubuntu0.24.04.2
+-- Versión de PHP: 8.4.14
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -28,9 +28,9 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `actores` (
-  `id` int(11) NOT NULL,
-  `nombre` varchar(150) NOT NULL,
-  `foto` varchar(255) DEFAULT NULL
+  `id` int NOT NULL,
+  `nombre` varchar(150) COLLATE utf8mb4_general_ci NOT NULL,
+  `foto` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -68,7 +68,15 @@ INSERT INTO `actores` (`id`, `nombre`, `foto`) VALUES
 (28, 'Anya Taylor-Joy', 'https://ui-avatars.com/api/?name=Anya+Taylor-Joy&background=random'),
 (29, 'Charlie Day', 'https://ui-avatars.com/api/?name=Charlie+Day&background=random'),
 (30, 'Chris Evans', 'https://ui-avatars.com/api/?name=Chris+Evans&background=random'),
-(31, 'Mark Ruffalo', 'https://ui-avatars.com/api/?name=Mark+Ruffalo&background=random');
+(31, 'Mark Ruffalo', 'https://ui-avatars.com/api/?name=Mark+Ruffalo&background=random'),
+(32, 'Tom Holland', 'https://ui-avatars.com/api/?name=Tom+Holland&background=random'),
+(33, 'Samuel L. Jackson', 'https://ui-avatars.com/api/?name=Samuel+L.+Jackson&background=random'),
+(34, 'Jake Gyllenhaal', 'https://ui-avatars.com/api/?name=Jake+Gyllenhaal&background=random'),
+(35, 'Edward Norton', 'https://ui-avatars.com/api/?name=Edward+Norton&background=random'),
+(36, 'Liv Tyler', 'https://ui-avatars.com/api/?name=Liv+Tyler&background=random'),
+(37, 'Tim Roth', 'https://ui-avatars.com/api/?name=Tim+Roth&background=random'),
+(38, 'Mickey Rourke', 'https://ui-avatars.com/api/?name=Mickey+Rourke&background=random'),
+(39, 'Gwyneth Paltrow', 'https://ui-avatars.com/api/?name=Gwyneth+Paltrow&background=random');
 
 -- --------------------------------------------------------
 
@@ -77,12 +85,12 @@ INSERT INTO `actores` (`id`, `nombre`, `foto`) VALUES
 --
 
 CREATE TABLE `capitulos` (
-  `id` int(11) NOT NULL,
-  `temporada_id` int(11) NOT NULL,
-  `titulo` varchar(200) DEFAULT NULL,
-  `numero` int(11) NOT NULL,
-  `url_video` varchar(500) NOT NULL,
-  `duracion` int(11) DEFAULT NULL
+  `id` int NOT NULL,
+  `temporada_id` int NOT NULL,
+  `titulo` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `numero` int NOT NULL,
+  `url_video` varchar(500) COLLATE utf8mb4_general_ci NOT NULL,
+  `duracion` int DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -107,21 +115,21 @@ INSERT INTO `capitulos` (`id`, `temporada_id`, `titulo`, `numero`, `url_video`, 
 --
 
 CREATE TABLE `contenidos` (
-  `id` int(11) NOT NULL,
-  `tipo_id` int(11) NOT NULL,
-  `titulo` varchar(200) NOT NULL,
-  `descripcion` text DEFAULT NULL,
-  `anio` int(11) DEFAULT NULL,
-  `duracion` int(11) DEFAULT NULL,
-  `imagen` varchar(255) DEFAULT NULL,
-  `imagen_bg` varchar(500) DEFAULT NULL,
-  `url_video` varchar(500) DEFAULT NULL,
-  `nivel_acceso` int(11) DEFAULT 1,
-  `vistas` int(11) DEFAULT 0,
-  `destacada` tinyint(1) DEFAULT 0,
-  `fecha_agregada` datetime DEFAULT current_timestamp(),
-  `edad_recomendada` int(11) NOT NULL,
-  `imdb_rating` decimal(3,1) DEFAULT 0.0
+  `id` int NOT NULL,
+  `tipo_id` int NOT NULL,
+  `titulo` varchar(200) COLLATE utf8mb4_general_ci NOT NULL,
+  `descripcion` text COLLATE utf8mb4_general_ci,
+  `anio` int DEFAULT NULL,
+  `duracion` int DEFAULT NULL,
+  `imagen` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `imagen_bg` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `url_video` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `nivel_acceso` int DEFAULT '1',
+  `vistas` int DEFAULT '0',
+  `destacada` tinyint(1) DEFAULT '0',
+  `fecha_agregada` datetime DEFAULT CURRENT_TIMESTAMP,
+  `edad_recomendada` int NOT NULL,
+  `imdb_rating` decimal(3,1) DEFAULT '0.0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -153,7 +161,10 @@ INSERT INTO `contenidos` (`id`, `tipo_id`, `titulo`, `descripcion`, `anio`, `dur
 (22, 1, 'Gladiator', 'Un general romano traicionado busca venganza como gladiador.', 2000, 155, 'https://image.tmdb.org/t/p/w500/ty8TGRuvJLPUmAR1H1nRIsgwvim.jpg', 'https://images.bauerhosting.com/legacy/empire-tmdb/films/98/images/5vZw7ltCKI0JiOYTtRxaIC3DX0e.jpg?ar=16:9&fit=crop&crop=top', NULL, 2, 2900, 0, '2026-01-22 18:34:27', 16, 0.0),
 (23, 1, 'Batman', 'Gotham City. Crime boss Carl Grissom (Jack Palance) effectively runs the town but there\'s a new crime fighter in town - Batman (Michael Keaton). Grissom\'s right-hand man is Jack Napier (Jack Nicholson), a brutal man who is not entirely sane... After falling out between the two Grissom has Napier set up with the Police and Napier falls to his apparent death in a vat of chemicals. However, he soon reappears as The Joker and starts a reign of terror in Gotham City. Meanwhile, reporter Vicki Vale (Kim Basinger) is in the city to do an article on Batman. She soon starts a relationship with Batman\'s everyday persona, billionaire Bruce Wayne.', 1989, 126, 'https://m.media-amazon.com/images/M/MV5BYzZmZWViM2EtNzhlMi00NzBlLWE0MWEtZDFjMjk3YjIyNTBhXkEyXkFqcGc@._V1_SX300.jpg', 'https://m.media-amazon.com/images/M/MV5BYzZmZWViM2EtNzhlMi00NzBlLWE0MWEtZDFjMjk3YjIyNTBhXkEyXkFqcGc@._V1_SX300.jpg', '', 1, 0, 0, '2026-01-26 21:25:53', 12, 0.0),
 (24, 1, 'The Super Mario Bros. Movie', 'Brooklyn plumbers Mario and Luigi are warped to the magical Mushroom Kingdom, and Mario must team up with Princess Peach, Toad, and Donkey Kong to save Luigi from the evil Bowser.', 2023, 92, 'https://m.media-amazon.com/images/M/MV5BOGZlN2EzOTYtMzUzOS00NTM3LTg0MTQtZDVjZGM4YmJlNWNhXkEyXkFqcGc@._V1_SX300.jpg', 'https://m.media-amazon.com/images/M/MV5BOGZlN2EzOTYtMzUzOS00NTM3LTg0MTQtZDVjZGM4YmJlNWNhXkEyXkFqcGc@._V1_SX300.jpg', '', 1, 0, 0, '2026-01-26 22:12:29', 0, 7.1),
-(25, 1, 'Avengers: Endgame', 'After the devastating events of Avengers: Infinity War (2018), the universe is in ruins due to the efforts of the Mad Titan, Thanos. With the help of remaining allies, the Avengers must assemble once more in order to undo Thanos\'s actions and undo the chaos to the universe, no matter what consequences may be in store, and no matter who they face...', 2019, 181, 'https://m.media-amazon.com/images/M/MV5BMTc5MDE2ODcwNV5BMl5BanBnXkFtZTgwMzI2NzQ2NzM@._V1_SX300.jpg', 'https://m.media-amazon.com/images/M/MV5BMTc5MDE2ODcwNV5BMl5BanBnXkFtZTgwMzI2NzQ2NzM@._V1_SX300.jpg', 'https://www.youtube.com/watch?v=UQ3bqYKnyhM', 2, 0, 1, '2026-01-26 22:15:51', 12, 8.4);
+(25, 1, 'Avengers: Endgame', 'After the devastating events of Avengers: Infinity War (2018), the universe is in ruins due to the efforts of the Mad Titan, Thanos. With the help of remaining allies, the Avengers must assemble once more in order to undo Thanos\'s actions and undo the chaos to the universe, no matter what consequences may be in store, and no matter who they face...', 2019, 181, 'https://m.media-amazon.com/images/M/MV5BMTc5MDE2ODcwNV5BMl5BanBnXkFtZTgwMzI2NzQ2NzM@._V1_SX300.jpg', 'https://m.media-amazon.com/images/M/MV5BMTc5MDE2ODcwNV5BMl5BanBnXkFtZTgwMzI2NzQ2NzM@._V1_SX300.jpg', 'https://www.youtube.com/watch?v=UQ3bqYKnyhM', 2, 0, 1, '2026-01-26 22:15:51', 12, 8.4),
+(27, 1, 'Spider-Man: Far from Home', 'Nuestro amigable superhéroe del vecindario decide unirse a sus mejores amigos Ned, MJ y el resto de la pandilla en unas vacaciones por Europa. Sin embargo, el plan de Peter de dejar atrás el mundo del superhéroe por unas semanas se ve rápidamente frustrado cuando, a regañadientes, acepta ayudar a Nick Fury a desentrañar el misterio de varios ataques de criaturas elementales que están sembrando el caos en todo el continente.', 2019, 129, 'https://m.media-amazon.com/images/M/MV5BMzNhNTE0NWQtN2E1Ny00NjcwLTg1YTctMGY1NmMwODJmY2NmXkEyXkFqcGc@._V1_SX300.jpg', 'https://m.media-amazon.com/images/M/MV5BMzNhNTE0NWQtN2E1Ny00NjcwLTg1YTctMGY1NmMwODJmY2NmXkEyXkFqcGc@._V1_SX300.jpg', 'https://www.youtube.com/watch?v=dAxa7emR1Vc', 1, 0, 0, '2026-02-03 08:24:01', 12, 7.3),
+(28, 1, 'The Incredible Hulk', 'Depicting the events after the Gamma Bomb. \'The Incredible Hulk\' tells the story of Dr Bruce Banner, who seeks a cure to his unique condition, which causes him to turn into a giant green monster under emotional stress. Whilst on the run from military which seeks his capture, Banner comes close to a cure. But all is lost when a new creature emerges: The Abomination.', 2008, 112, 'https://m.media-amazon.com/images/M/MV5BMTUyNzk3MjA1OF5BMl5BanBnXkFtZTcwMTE1Njg2MQ@@._V1_SX300.jpg', 'https://m.media-amazon.com/images/M/MV5BMTUyNzk3MjA1OF5BMl5BanBnXkFtZTcwMTE1Njg2MQ@@._V1_SX300.jpg', '', 1, 0, 0, '2026-02-03 11:43:39', 12, 6.6),
+(29, 1, 'Iron Man 2', 'With the world now aware of his dual life as the armored superhero Iron Man, billionaire inventor Tony Stark faces pressure from the government, the press, and the public to share his technology with the military. Unwilling to let go of his invention, Stark, along with Pepper Potts, and James \"Rhodey\" Rhodes at his side, must forge new alliances - and confront powerful enemies.', 2010, 124, 'https://m.media-amazon.com/images/M/MV5BYWYyOGQzOGYtMGQ1My00ZWYxLTgzZjktZWYzN2IwYjkxYzM0XkEyXkFqcGc@._V1_SX300.jpg', 'https://m.media-amazon.com/images/M/MV5BYWYyOGQzOGYtMGQ1My00ZWYxLTgzZjktZWYzN2IwYjkxYzM0XkEyXkFqcGc@._V1_SX300.jpg', '', 2, 0, 0, '2026-02-03 11:45:02', 12, 6.9);
 
 -- --------------------------------------------------------
 
@@ -162,9 +173,9 @@ INSERT INTO `contenidos` (`id`, `tipo_id`, `titulo`, `descripcion`, `anio`, `dur
 --
 
 CREATE TABLE `contenido_actor` (
-  `contenido_id` int(11) NOT NULL,
-  `actor_id` int(11) NOT NULL,
-  `personaje` varchar(100) DEFAULT NULL
+  `contenido_id` int NOT NULL,
+  `actor_id` int NOT NULL,
+  `personaje` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -205,7 +216,16 @@ INSERT INTO `contenido_actor` (`contenido_id`, `actor_id`, `personaje`) VALUES
 (24, 29, ''),
 (25, 10, ''),
 (25, 30, ''),
-(25, 31, '');
+(25, 31, ''),
+(27, 32, ''),
+(27, 33, ''),
+(27, 34, ''),
+(28, 35, ''),
+(28, 36, ''),
+(28, 37, ''),
+(29, 10, ''),
+(29, 38, ''),
+(29, 39, '');
 
 -- --------------------------------------------------------
 
@@ -214,8 +234,8 @@ INSERT INTO `contenido_actor` (`contenido_id`, `actor_id`, `personaje`) VALUES
 --
 
 CREATE TABLE `contenido_director` (
-  `contenido_id` int(11) NOT NULL,
-  `director_id` int(11) NOT NULL
+  `contenido_id` int NOT NULL,
+  `director_id` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -231,17 +251,20 @@ INSERT INTO `contenido_director` (`contenido_id`, `director_id`) VALUES
 (6, 6),
 (7, 7),
 (8, 7),
+(16, 7),
 (9, 8),
 (10, 9),
 (12, 10),
-(13, 12),
 (14, 11),
-(16, 7),
+(13, 12),
 (24, 13),
 (24, 14),
 (24, 15),
 (25, 16),
-(25, 17);
+(25, 17),
+(27, 18),
+(28, 19),
+(29, 20);
 
 -- --------------------------------------------------------
 
@@ -250,8 +273,8 @@ INSERT INTO `contenido_director` (`contenido_id`, `director_id`) VALUES
 --
 
 CREATE TABLE `contenido_genero` (
-  `contenido_id` int(11) NOT NULL,
-  `genero_id` int(11) NOT NULL
+  `contenido_id` int NOT NULL,
+  `genero_id` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -260,58 +283,66 @@ CREATE TABLE `contenido_genero` (
 
 INSERT INTO `contenido_genero` (`contenido_id`, `genero_id`) VALUES
 (1, 1),
-(1, 2),
-(1, 3),
-(2, 2),
 (3, 1),
-(3, 3),
-(3, 4),
 (4, 1),
-(4, 2),
-(4, 3),
-(5, 4),
-(6, 3),
-(6, 4),
 (7, 1),
-(7, 6),
 (8, 1),
-(8, 3),
-(9, 4),
-(9, 6),
-(10, 4),
-(10, 6),
-(11, 2),
-(11, 3),
-(12, 4),
-(12, 6),
-(13, 5),
-(13, 7),
 (14, 1),
-(14, 3),
-(15, 2),
-(15, 5),
-(16, 3),
-(16, 4),
-(17, 4),
-(17, 5),
-(18, 5),
-(18, 10),
 (19, 1),
-(19, 3),
-(20, 4),
-(20, 9),
-(21, 4),
-(21, 9),
 (22, 1),
-(22, 4),
 (23, 1),
+(25, 1),
+(27, 1),
+(28, 1),
+(29, 1),
+(1, 2),
+(2, 2),
+(4, 2),
+(11, 2),
+(15, 2),
 (23, 2),
 (24, 2),
-(24, 5),
-(24, 7),
-(25, 1),
 (25, 2),
-(25, 3);
+(27, 2),
+(28, 2),
+(1, 3),
+(3, 3),
+(4, 3),
+(6, 3),
+(8, 3),
+(11, 3),
+(14, 3),
+(16, 3),
+(19, 3),
+(25, 3),
+(28, 3),
+(29, 3),
+(3, 4),
+(5, 4),
+(6, 4),
+(9, 4),
+(10, 4),
+(12, 4),
+(16, 4),
+(17, 4),
+(20, 4),
+(21, 4),
+(22, 4),
+(13, 5),
+(15, 5),
+(17, 5),
+(18, 5),
+(24, 5),
+(7, 6),
+(9, 6),
+(10, 6),
+(12, 6),
+(13, 7),
+(24, 7),
+(27, 7),
+(20, 9),
+(21, 9),
+(18, 10);
 
 -- --------------------------------------------------------
 
@@ -320,8 +351,8 @@ INSERT INTO `contenido_genero` (`contenido_id`, `genero_id`) VALUES
 --
 
 CREATE TABLE `contenido_idioma` (
-  `contenido_id` int(11) NOT NULL,
-  `idioma_id` int(11) NOT NULL
+  `contenido_id` int NOT NULL,
+  `idioma_id` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -330,17 +361,11 @@ CREATE TABLE `contenido_idioma` (
 
 INSERT INTO `contenido_idioma` (`contenido_id`, `idioma_id`) VALUES
 (1, 1),
-(1, 2),
 (2, 1),
-(2, 2),
 (3, 1),
-(3, 2),
 (4, 1),
-(4, 2),
 (5, 1),
-(5, 2),
 (6, 1),
-(6, 2),
 (7, 1),
 (8, 1),
 (9, 1),
@@ -356,7 +381,13 @@ INSERT INTO `contenido_idioma` (`contenido_id`, `idioma_id`) VALUES
 (19, 1),
 (20, 1),
 (21, 1),
-(22, 1);
+(22, 1),
+(1, 2),
+(2, 2),
+(3, 2),
+(4, 2),
+(5, 2),
+(6, 2);
 
 -- --------------------------------------------------------
 
@@ -365,9 +396,9 @@ INSERT INTO `contenido_idioma` (`contenido_id`, `idioma_id`) VALUES
 --
 
 CREATE TABLE `directores` (
-  `id` int(11) NOT NULL,
-  `nombre` varchar(150) NOT NULL,
-  `foto` varchar(255) DEFAULT NULL
+  `id` int NOT NULL,
+  `nombre` varchar(150) COLLATE utf8mb4_general_ci NOT NULL,
+  `foto` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -391,7 +422,10 @@ INSERT INTO `directores` (`id`, `nombre`, `foto`) VALUES
 (14, 'Michael Jelenic', 'https://ui-avatars.com/api/?name=Michael+Jelenic&background=random'),
 (15, 'Pierre Leduc', 'https://ui-avatars.com/api/?name=Pierre+Leduc&background=random'),
 (16, 'Anthony Russo', 'https://ui-avatars.com/api/?name=Anthony+Russo&background=random'),
-(17, 'Joe Russo', 'https://ui-avatars.com/api/?name=Joe+Russo&background=random');
+(17, 'Joe Russo', 'https://ui-avatars.com/api/?name=Joe+Russo&background=random'),
+(18, 'Jon Watts', 'https://ui-avatars.com/api/?name=Jon+Watts&background=random'),
+(19, 'Louis Leterrier', 'https://ui-avatars.com/api/?name=Louis+Leterrier&background=random'),
+(20, 'Jon Favreau', 'https://ui-avatars.com/api/?name=Jon+Favreau&background=random');
 
 -- --------------------------------------------------------
 
@@ -400,8 +434,8 @@ INSERT INTO `directores` (`id`, `nombre`, `foto`) VALUES
 --
 
 CREATE TABLE `generos` (
-  `id` int(11) NOT NULL,
-  `nombre` varchar(50) NOT NULL
+  `id` int NOT NULL,
+  `nombre` varchar(50) COLLATE utf8mb4_general_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -428,9 +462,9 @@ INSERT INTO `generos` (`id`, `nombre`) VALUES
 --
 
 CREATE TABLE `idiomas` (
-  `id` int(11) NOT NULL,
-  `nombre` varchar(50) NOT NULL,
-  `codigo` varchar(5) NOT NULL
+  `id` int NOT NULL,
+  `nombre` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `codigo` varchar(5) COLLATE utf8mb4_general_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -448,9 +482,9 @@ INSERT INTO `idiomas` (`id`, `nombre`, `codigo`) VALUES
 --
 
 CREATE TABLE `mi_lista` (
-  `usuario_id` int(11) NOT NULL,
-  `contenido_id` int(11) NOT NULL,
-  `fecha_agregado` datetime DEFAULT current_timestamp()
+  `usuario_id` int NOT NULL,
+  `contenido_id` int NOT NULL,
+  `fecha_agregado` datetime DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -458,9 +492,16 @@ CREATE TABLE `mi_lista` (
 --
 
 INSERT INTO `mi_lista` (`usuario_id`, `contenido_id`, `fecha_agregado`) VALUES
+(2, 14, '2026-02-03 07:43:58'),
+(2, 23, '2026-02-03 07:44:09'),
 (3, 2, '2026-01-22 16:09:36'),
 (3, 3, '2026-01-21 17:46:21'),
 (3, 4, '2026-01-22 16:02:41'),
+(3, 10, '2026-02-03 08:02:15'),
+(3, 13, '2026-02-05 11:35:20'),
+(3, 14, '2026-02-03 09:30:46'),
+(3, 20, '2026-02-03 07:51:13'),
+(3, 24, '2026-02-03 07:37:35'),
 (4, 13, '2026-01-22 23:09:23'),
 (4, 15, '2026-01-22 23:09:19');
 
@@ -471,10 +512,10 @@ INSERT INTO `mi_lista` (`usuario_id`, `contenido_id`, `fecha_agregado`) VALUES
 --
 
 CREATE TABLE `planes` (
-  `id` int(11) NOT NULL,
-  `nombre` varchar(50) NOT NULL,
+  `id` int NOT NULL,
+  `nombre` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
   `precio` decimal(10,2) NOT NULL,
-  `calidad` varchar(50) DEFAULT 'HD'
+  `calidad` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'HD'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -493,12 +534,12 @@ INSERT INTO `planes` (`id`, `nombre`, `precio`, `calidad`) VALUES
 --
 
 CREATE TABLE `resenas` (
-  `id` int(11) NOT NULL,
-  `usuario_id` int(11) NOT NULL,
-  `contenido_id` int(11) NOT NULL,
-  `puntuacion` int(11) NOT NULL,
-  `comentario` text DEFAULT NULL,
-  `fecha` datetime DEFAULT current_timestamp()
+  `id` int NOT NULL,
+  `usuario_id` int NOT NULL,
+  `contenido_id` int NOT NULL,
+  `puntuacion` int NOT NULL,
+  `comentario` text COLLATE utf8mb4_general_ci,
+  `fecha` datetime DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -508,10 +549,10 @@ CREATE TABLE `resenas` (
 --
 
 CREATE TABLE `temporadas` (
-  `id` int(11) NOT NULL,
-  `contenido_id` int(11) NOT NULL,
-  `nombre` varchar(100) DEFAULT NULL,
-  `numero` int(11) NOT NULL
+  `id` int NOT NULL,
+  `contenido_id` int NOT NULL,
+  `nombre` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `numero` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -533,8 +574,8 @@ INSERT INTO `temporadas` (`id`, `contenido_id`, `nombre`, `numero`) VALUES
 --
 
 CREATE TABLE `tipos_contenido` (
-  `id` int(11) NOT NULL,
-  `nombre` varchar(50) NOT NULL
+  `id` int NOT NULL,
+  `nombre` varchar(50) COLLATE utf8mb4_general_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -552,14 +593,14 @@ INSERT INTO `tipos_contenido` (`id`, `nombre`) VALUES
 --
 
 CREATE TABLE `usuarios` (
-  `id` int(11) NOT NULL,
-  `username` varchar(50) NOT NULL,
-  `email` varchar(100) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `rol` enum('admin','usuario') DEFAULT 'usuario',
-  `plan_id` int(11) DEFAULT 1,
-  `avatar` varchar(255) DEFAULT 'default.png',
-  `fecha_registro` datetime DEFAULT current_timestamp()
+  `id` int NOT NULL,
+  `username` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `email` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `password` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `rol` enum('admin','usuario') COLLATE utf8mb4_general_ci DEFAULT 'usuario',
+  `plan_id` int DEFAULT '1',
+  `avatar` varchar(255) COLLATE utf8mb4_general_ci DEFAULT 'default.png',
+  `fecha_registro` datetime DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -568,9 +609,9 @@ CREATE TABLE `usuarios` (
 
 INSERT INTO `usuarios` (`id`, `username`, `email`, `password`, `rol`, `plan_id`, `avatar`, `fecha_registro`) VALUES
 (1, 'Admin', 'admin@labutaca.com', '$2y$10$NWRxl6ZoScpFC8lckYI7O.WyAdnbAFUox/xSwYa64T5jLoslIDlCq', 'admin', 2, 'avatar_admin.jpg', '2026-01-21 14:29:51'),
-(2, 'Invitado', 'invitado@labutaca.com', '$2y$10$NWRxl6ZoScpFC8lckYI7O.WyAdnbAFUox/xSwYa64T5jLoslIDlCq', 'usuario', 1, 'avatar_user.jpg', '2026-01-21 14:29:51'),
-(3, 'prueba', 'prueba@labutaca.com', '$2y$10$NWRxl6ZoScpFC8lckYI7O.WyAdnbAFUox/xSwYa64T5jLoslIDlCq', 'usuario', 2, 'default.png', '2026-01-21 15:53:11'),
-(4, 'Peque', 'peque@labutaca.com', '$2y$10$NWRxl6ZoScpFC8lckYI7O.WyAdnbAFUox/xSwYa64T5jLoslIDlCq', 'usuario', 3, 'kids_avatar.png', '2026-01-22 11:35:40'),
+(2, 'FreeUser', 'invitado@labutaca.com', '$2y$10$NWRxl6ZoScpFC8lckYI7O.WyAdnbAFUox/xSwYa64T5jLoslIDlCq', 'usuario', 1, 'https://images.ecestaticos.com/an3NIKmUWjvoxIwgQ4K3J0pqAqo=/0x0:828x470/1200x1200/filters:fill(white):format(jpg)/f.elconfidencial.com%2Foriginal%2F280%2F050%2F590%2F2800505903fc39bbeaf82f750b823ec3.jpg', '2026-01-21 14:29:51'),
+(3, 'PremiumUser', 'prueba@labutaca.com', '$2y$10$NWRxl6ZoScpFC8lckYI7O.WyAdnbAFUox/xSwYa64T5jLoslIDlCq', 'usuario', 2, 'https://upload.wikimedia.org/wikipedia/en/9/90/HeathJoker.png', '2026-01-21 15:53:11'),
+(4, 'KidsUser', 'peque@labutaca.com', '$2y$10$NWRxl6ZoScpFC8lckYI7O.WyAdnbAFUox/xSwYa64T5jLoslIDlCq', 'usuario', 3, 'https://media.revistagq.com/photos/62a8546d6b74c0e2031238a6/16:9/w_1280,c_limit/buzz.jpg', '2026-01-22 11:35:40'),
 (6, 'pruebanueva', 'pruebanueva', '1234', 'admin', 2, 'default.png', '2026-01-26 21:25:17');
 
 --
@@ -695,67 +736,67 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `actores`
 --
 ALTER TABLE `actores`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 
 --
 -- AUTO_INCREMENT de la tabla `capitulos`
 --
 ALTER TABLE `capitulos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT de la tabla `contenidos`
 --
 ALTER TABLE `contenidos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT de la tabla `directores`
 --
 ALTER TABLE `directores`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT de la tabla `generos`
 --
 ALTER TABLE `generos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT de la tabla `idiomas`
 --
 ALTER TABLE `idiomas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `planes`
 --
 ALTER TABLE `planes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `resenas`
 --
 ALTER TABLE `resenas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `temporadas`
 --
 ALTER TABLE `temporadas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `tipos_contenido`
 --
 ALTER TABLE `tipos_contenido`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- Restricciones para tablas volcadas
