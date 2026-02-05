@@ -11,10 +11,10 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css" />
     <link rel="stylesheet" type="text/css"
-    href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css" />
+        href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css" />
 
 
     <link rel="stylesheet" href="<?= base_url('assets/css/front.css') ?>">
@@ -49,7 +49,7 @@
                     <i class="bi bi-globe"></i>
                 </a>
             <?php endif; ?>
-            
+
         </nav>
 
         <div style="display:flex; align-items:center; gap: 10px;">
@@ -99,15 +99,15 @@
 
             <?php if (session()->get('is_logged_in')): ?>
                 <?php
-                    $avatarSesion = session()->get('avatar');
+                $avatarSesion = session()->get('avatar');
 
-                    if (empty($avatarSesion)) {
-                        $avatarUrl = 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png';
-                    } elseif (str_starts_with($avatarSesion, 'http')) {
-                        $avatarUrl = $avatarSesion;
-                    } else {
-                        $avatarUrl = base_url('assets/img/avatars/' . $avatarSesion);
-                    }
+                if (empty($avatarSesion)) {
+                    $avatarUrl = 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png';
+                } elseif (str_starts_with($avatarSesion, 'http')) {
+                    $avatarUrl = $avatarSesion;
+                } else {
+                    $avatarUrl = base_url('assets/img/avatars/' . $avatarSesion);
+                }
                 ?>
 
                 <div class="profile-menu-wrapper">
@@ -132,12 +132,28 @@
                             <div class="profiles-list">
                                 <?php if (!empty($otrosPerfiles)): ?>
                                     <?php foreach ($otrosPerfiles as $p): ?>
+
+                                        <?php
+                                        // --- LÓGICA DE FOTO PARA CADA PERFIL DEL LISTADO ---
+                                        $fotoPerfil = $p['avatar'];
+
+                                        if (empty($fotoPerfil)) {
+                                            $fotoPerfil = 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png';
+                                        } elseif (!str_starts_with($fotoPerfil, 'http')) {
+                                            // Si es un archivo local, le pegamos la ruta de assets
+                                            $fotoPerfil = base_url('assets/img/avatars/' . $fotoPerfil);
+                                        }
+                                        ?>
+
                                         <div class="mini-profile-item"
                                             onclick="attemptLogin(<?= $p['id'] ?>, '<?= $p['username'] ?>', <?= $p['plan_id'] ?>)">
-                                            <img src="https://ui-avatars.com/api/?name=<?= $p['username'] ?>&background=random&color=fff"
-                                                alt="<?= esc($p['username']) ?>">
+
+                                            <img src="<?= $fotoPerfil ?>" alt="<?= esc($p['username']) ?>"
+                                                style="width: 32px; height: 32px; border-radius: 4px; object-fit: cover;">
+
                                             <span><?= esc($p['username']) ?></span>
                                         </div>
+
                                     <?php endforeach; ?>
                                 <?php endif; ?>
 
@@ -148,18 +164,17 @@
 
                                 <div class="mini-profile-item">
                                     <div class="edit-profile-icon"><i class="fa fa-pencil"></i></div>
-                                    <a href="<?= base_url('perfil') ?>">Editar Perfil</a>
+                                    <a href="<?= base_url('perfil') ?>"
+                                        style="text-decoration: none; color: inherit;">Editar Perfil</a>
                                 </div>
-                                <div class="dropdown-content">
                             </div>
+
                         </div>
-
                     </div>
-                </div>
 
-            <?php else: ?>
-                <a href="#" onclick="openLogin(null, 'Usuario')"
-                    style="color:white; font-weight:bold; text-decoration:none;">Entrar</a>
-            <?php endif; ?>
-        </div>
+                <?php else: ?>
+                    <a href="#" onclick="openLogin(null, 'Usuario')"
+                        style="color:white; font-weight:bold; text-decoration:none;">Entrar</a>
+                <?php endif; ?>
+            </div>
     </header>

@@ -259,9 +259,10 @@ class Home extends BaseController
     // =========================================================================
     // 3. REPRODUCTOR UNIVERSAL (SOPORTA BASE DE DATOS + TMDB)
     // =========================================================================
-public function ver($id)
+    public function ver($id)
     {
-        if (!session()->get('is_logged_in')) return redirect()->to('/auth');
+        if (!session()->get('is_logged_in'))
+            return redirect()->to('/auth');
         $model = new ContenidoModel();
 
         // =========================================================
@@ -300,7 +301,7 @@ public function ver($id)
         if ($esTmdb) {
             // ¡AQUÍ ESTÁ LA SOLUCIÓN! Pasamos $tipoBusqueda ('tv' o 'movie')
             $datosExternos = $this->obtenerDetalleExterno($idLimpio, $tipoBusqueda);
-            
+
             if ($datosExternos && !empty($datosExternos['url_video'])) {
                 // Reconstruimos el prefijo correcto
                 $prefix = ($tipoBusqueda === 'tv') ? 'tmdb_tv_' : 'tmdb_movie_';
@@ -309,22 +310,22 @@ public function ver($id)
                     'id' => $prefix . $datosExternos['id'],
                     'titulo' => $datosExternos['titulo'],
                     'url_video' => $datosExternos['url_video'],
-                    'nivel_acceso' => 0, 
+                    'nivel_acceso' => 0,
                     'edad_recomendada' => $datosExternos['edad_recomendada'],
                     'descripcion' => $datosExternos['descripcion']
                 ];
             }
-        } 
+        }
         // SI NO ES TMDB -> Buscamos en Local
         else {
             $contenido = $model->find($idLimpio);
-            
+
             // Fallback (por si acaso entra un ID numérico que no es local)
             if (!$contenido) {
                 // Intentamos buscar fuera como peli por defecto
                 $datosExternos = $this->obtenerDetalleExterno($idLimpio, 'movie');
                 if ($datosExternos && !empty($datosExternos['url_video'])) {
-                     $contenido = [
+                    $contenido = [
                         'id' => 'tmdb_movie_' . $datosExternos['id'],
                         'titulo' => $datosExternos['titulo'],
                         'url_video' => $datosExternos['url_video'],
@@ -345,14 +346,17 @@ public function ver($id)
         $puedeVer = true; // Por defecto sí (externas)
 
         if (!$esTmdb) {
-             // Si es local, comprobamos los planes estrictos
-             $puedeVer = false;
-             $planUsuario = session()->get('plan_id');
-             $nivelAcceso = $contenido['nivel_acceso'];
-             // (Tu lógica de permisos local se mantiene igual)
-             if ($planUsuario == 2) $puedeVer = true;
-             elseif ($planUsuario == 3 && ($nivelAcceso == 3 || $nivelAcceso == 1)) $puedeVer = true;
-             elseif ($planUsuario == 1 && $nivelAcceso == 1) $puedeVer = true;
+            // Si es local, comprobamos los planes estrictos
+            $puedeVer = false;
+            $planUsuario = session()->get('plan_id');
+            $nivelAcceso = $contenido['nivel_acceso'];
+            // (Tu lógica de permisos local se mantiene igual)
+            if ($planUsuario == 2)
+                $puedeVer = true;
+            elseif ($planUsuario == 3 && ($nivelAcceso == 3 || $nivelAcceso == 1))
+                $puedeVer = true;
+            elseif ($planUsuario == 1 && $nivelAcceso == 1)
+                $puedeVer = true;
         }
 
         if (!$puedeVer) {
@@ -380,9 +384,10 @@ public function ver($id)
     // =========================================================================
     // 4. DETALLE HÍBRIDO (INTELIGENTE)
     // =========================================================================
- public function detalle($id)
+    public function detalle($id)
     {
-        if (!session()->get('is_logged_in')) return redirect()->to('/auth');
+        if (!session()->get('is_logged_in'))
+            return redirect()->to('/auth');
 
         $userId = session()->get('user_id');
         $model = new ContenidoModel();
@@ -393,11 +398,17 @@ public function ver($id)
         $idLimpio = $id;
 
         if (str_starts_with($id, 'tmdb_tv_')) {
-            $esTmdb = true; $tipoBusqueda = 'tv'; $idLimpio = str_replace('tmdb_tv_', '', $id);
+            $esTmdb = true;
+            $tipoBusqueda = 'tv';
+            $idLimpio = str_replace('tmdb_tv_', '', $id);
         } elseif (str_starts_with($id, 'tmdb_movie_')) {
-            $esTmdb = true; $tipoBusqueda = 'movie'; $idLimpio = str_replace('tmdb_movie_', '', $id);
+            $esTmdb = true;
+            $tipoBusqueda = 'movie';
+            $idLimpio = str_replace('tmdb_movie_', '', $id);
         } elseif (str_starts_with($id, 'tmdb_')) {
-            $esTmdb = true; $tipoBusqueda = 'movie'; $idLimpio = str_replace('tmdb_', '', $id);
+            $esTmdb = true;
+            $tipoBusqueda = 'movie';
+            $idLimpio = str_replace('tmdb_', '', $id);
         }
 
         $contenido = null;
@@ -409,7 +420,7 @@ public function ver($id)
         if ($esTmdb) {
             // Buscamos en la API (y calculamos la edad real)
             $contenido = $this->obtenerDetalleExterno($idLimpio, $tipoBusqueda);
-            
+
             if ($contenido) {
                 $esExterno = true;
                 $prefix = ($tipoBusqueda === 'tv') ? 'tmdb_tv_' : 'tmdb_movie_';
@@ -443,7 +454,7 @@ public function ver($id)
         if ($planUsuario == 3) {
             // Si la edad recomendada es mayor de 11, lo echamos fuera
             if ($contenido['edad_recomendada'] > 11) {
-                 return redirect()->to('/')->with('error', 'Este contenido no es adecuado para tu edad.');
+                return redirect()->to('/')->with('error', 'Este contenido no es adecuado para tu edad.');
             }
         }
 
@@ -451,10 +462,10 @@ public function ver($id)
         if ($planUsuario == 1 && $esLocal && $contenido['nivel_acceso'] > 1) {
             $puedeVer = false; // Aquí le dejamos ver la ficha, pero saldrá el candado
         }
-        
+
         // REGLA D: Usuario KIDS intentando ver contenido LOCAL DE ADULTOS
         if ($planUsuario == 3 && $esLocal && $contenido['edad_recomendada'] > 11) {
-             return redirect()->to('/')->with('error', 'Este contenido no es adecuado para tu edad.');
+            return redirect()->to('/')->with('error', 'Este contenido no es adecuado para tu edad.');
         }
 
         // =========================================================
@@ -481,7 +492,10 @@ public function ver($id)
             'director' => $director,
             'es_externo' => $esExterno,
             'generos' => $generoModel->orderBy('nombre', 'ASC')->findAll(),
-            'otrosPerfiles' => $userModel->where('id !=', $userId)->findAll(),
+            'otrosPerfiles' => $userModel->where('id !=', $userId) // No soy yo
+                ->where('id >=', 2)       // Desde el 2
+                ->where('id <=', 4)       // Hasta el 4
+                ->findAll(),
             'splash' => false,
             'mostrarHero' => false,
             'carrusel' => []
@@ -495,13 +509,13 @@ public function ver($id)
     // --- FUNCIÓN AUXILIAR: TRADUCIR API OMDb A TU FORMATO ---
 // --- FUNCIÓN AUXILIAR: API TMDB (MODO PRO) ---
     // --- SOPORTE HÍBRIDO (CINE Y SERIES) ---
-   // Aceptamos un segundo parámetro: $tipoEspecifico ('movie' o 'tv')
-   private function obtenerDetalleExterno($tmdbID, $tipoEspecifico = null)
+    // Aceptamos un segundo parámetro: $tipoEspecifico ('movie' o 'tv')
+    private function obtenerDetalleExterno($tmdbID, $tipoEspecifico = null)
     {
-        $apiKey = '6387e3c183c454304108333c56530988'; 
+        $apiKey = '6387e3c183c454304108333c56530988';
         $lang = 'es-ES';
 
-       $arrContextOptions = ["ssl" => ["verify_peer" => false, "verify_peer_name" => false], "http" => ["ignore_errors" => true]];
+        $arrContextOptions = ["ssl" => ["verify_peer" => false, "verify_peer_name" => false], "http" => ["ignore_errors" => true]];
         $context = stream_context_create($arrContextOptions);
 
         $json = null;
@@ -528,19 +542,27 @@ public function ver($id)
             }
         }
 
-        if (!$json) return null;
+        if (!$json)
+            return null;
         $data = json_decode($json, true);
-        if (isset($data['success']) && $data['success'] === false) return null;
+        if (isset($data['success']) && $data['success'] === false)
+            return null;
 
         // VIDEO 
         $videoKey = null;
         if (isset($data['videos']['results'])) {
-             foreach ($data['videos']['results'] as $vid) {
-                if ($vid['site'] === 'YouTube' && $vid['type'] === 'Trailer') { $videoKey = $vid['key']; break; }
+            foreach ($data['videos']['results'] as $vid) {
+                if ($vid['site'] === 'YouTube' && $vid['type'] === 'Trailer') {
+                    $videoKey = $vid['key'];
+                    break;
+                }
             }
             if (!$videoKey) {
                 foreach ($data['videos']['results'] as $vid) {
-                    if ($vid['site'] === 'YouTube') { $videoKey = $vid['key']; break; }
+                    if ($vid['site'] === 'YouTube') {
+                        $videoKey = $vid['key'];
+                        break;
+                    }
                 }
             }
         }
@@ -552,7 +574,7 @@ public function ver($id)
             foreach ($data['credits']['crew'] as $crewMember) {
                 if ($crewMember['job'] === 'Director') {
                     $directorData = ['id' => 'tmdb_person_' . $crewMember['id'], 'nombre' => $crewMember['name']];
-                    break; 
+                    break;
                 }
             }
         }
@@ -561,7 +583,7 @@ public function ver($id)
         }
 
         // CALCULAR EDAD RECOMENDADA REAL (
-        $edad = 12; 
+        $edad = 12;
 
         if ($esSerie && isset($data['content_ratings']['results'])) {
             foreach ($data['content_ratings']['results'] as $rating) {
@@ -601,12 +623,13 @@ public function ver($id)
             'imagen_bg' => !empty($data['backdrop_path']) ? $baseBackdrop . $data['backdrop_path'] : '',
             'url_video' => $finalVideoUrl,
             'rating' => isset($data['vote_average']) ? round($data['vote_average'], 1) : 0,
-            'director_externo' => $directorData, 
+            'director_externo' => $directorData,
             'nivel_acceso' => 0,
-            
-            'edad_recomendada' => $edad, 
 
-            'generos' => array_map(function ($g) { return ['nombre' => $g['name']]; }, $data['genres'] ?? []),
+            'edad_recomendada' => $edad,
+
+            'generos' => array_map(function ($g) {
+                return ['nombre' => $g['name']]; }, $data['genres'] ?? []),
             'actores' => array_map(function ($a) use ($baseImg) {
                 return [
                     'id' => 'tmdb_person_' . $a['id'],
@@ -618,9 +641,9 @@ public function ver($id)
         ];
     }
 
-// BUSCADOR
+    // BUSCADOR
 
-public function autocompletar()
+    public function autocompletar()
     {
         $request = service('request');
         $postData = $request->getPost();
@@ -658,21 +681,21 @@ public function autocompletar()
                     : base_url('assets/img/' . $peli['imagen']);
 
                 $data[] = [
-                    "value" => $peli['id'], 
+                    "value" => $peli['id'],
                     "label" => $peli['titulo'],
                     "img" => $imgUrl,
-                    "type" => "local" 
+                    "type" => "local"
                 ];
             }
 
             // ---------------------------------------------------------
             // 2. BÚSQUEDA EXTERNA (TMDB - CINE Y SERIES)
             // ---------------------------------------------------------
-            
+
             // SEGURIDAD: Si es Plan Free (1), NO buscamos fuera.
             if (count($data) < 10 && $planId != 1) { // <--- AQUÍ ESTÁ EL CAMBIO DE SEGURIDAD
-                
-                $apiKey = '6387e3c183c454304108333c56530988'; 
+
+                $apiKey = '6387e3c183c454304108333c56530988';
                 $query = urlencode($search);
 
                 // include_adult=false filtra contenido explícito para todos (incluido Kids)
@@ -692,10 +715,13 @@ public function autocompletar()
 
                     if (!empty($tmdbResults['results'])) {
                         foreach ($tmdbResults['results'] as $item) {
-                            if (count($data) >= 10) break;
+                            if (count($data) >= 10)
+                                break;
 
-                            if ($item['media_type'] != 'movie' && $item['media_type'] != 'tv') continue;
-                            if (in_array($item['id'], $idsLocales)) continue;
+                            if ($item['media_type'] != 'movie' && $item['media_type'] != 'tv')
+                                continue;
+                            if (in_array($item['id'], $idsLocales))
+                                continue;
 
                             // --- NORMALIZACIÓN ---
                             if ($item['media_type'] == 'tv') {
@@ -717,7 +743,7 @@ public function autocompletar()
                                 : base_url('assets/img/no-poster.jpg');
 
                             $data[] = [
-                                "value" => $prefix . $item['id'], 
+                                "value" => $prefix . $item['id'],
                                 "label" => $titulo . ($anio ? " ($anio)" : "") . $tipoLabel,
                                 "img" => $poster,
                                 "type" => "tmdb"
@@ -895,8 +921,9 @@ public function autocompletar()
     // FILTRAR CONTENIDO POR PERSONA (ACTOR O DIRECTOR)
     public function persona($id)
     {
-        if (!session()->get('is_logged_in')) return redirect()->to('/auth');
-        
+        if (!session()->get('is_logged_in'))
+            return redirect()->to('/auth');
+
         $nombrePersona = "Filmografía";
         $peliculas = [];
 
@@ -904,13 +931,13 @@ public function autocompletar()
         if (str_starts_with($id, 'tmdb_person_')) {
             $tmdbID = str_replace('tmdb_person_', '', $id);
             $apiKey = '6387e3c183c454304108333c56530988';
-            
+
             // Pedimos los créditos combinados (Cine y TV)
             $url = "https://api.themoviedb.org/3/person/{$tmdbID}/combined_credits?api_key={$apiKey}&language=es-ES";
-            
+
             // También pedimos info de la persona para el título
             $urlPerson = "https://api.themoviedb.org/3/person/{$tmdbID}?api_key={$apiKey}&language=es-ES";
-            
+
             $arrContextOptions = ["ssl" => ["verify_peer" => false, "verify_peer_name" => false]];
             $context = stream_context_create($arrContextOptions);
 
@@ -925,21 +952,23 @@ public function autocompletar()
                 $data = json_decode($json, true);
                 // Procesamos cast (actor) y crew (director)
                 $rawList = array_merge($data['cast'], $data['crew']);
-                
+
                 // Eliminamos duplicados y filtramos
                 $seen = [];
                 foreach ($rawList as $item) {
-                    if (isset($seen[$item['id']])) continue;
-                    if ($item['media_type'] != 'movie' && $item['media_type'] != 'tv') continue;
+                    if (isset($seen[$item['id']]))
+                        continue;
+                    if ($item['media_type'] != 'movie' && $item['media_type'] != 'tv')
+                        continue;
                     $seen[$item['id']] = true;
 
                     // Formato compatible con tu vista catalogo
                     $prefix = ($item['media_type'] == 'tv') ? 'tmdb_tv_' : 'tmdb_movie_';
                     $img = $item['poster_path'] ? "https://image.tmdb.org/t/p/w300" . $item['poster_path'] : base_url('assets/img/no-poster.jpg');
-                    
+
                     $peliculas[] = [
                         'id' => $prefix . $item['id'],
-                        'titulo' => ($item['media_type'] == 'tv') ? ($item['name']??'') : ($item['title']??''),
+                        'titulo' => ($item['media_type'] == 'tv') ? ($item['name'] ?? '') : ($item['title'] ?? ''),
                         'imagen' => $img,
                         'anio' => substr(($item['release_date'] ?? $item['first_air_date'] ?? ''), 0, 4),
                         'en_mi_lista' => false // Por defecto
@@ -977,7 +1006,7 @@ public function autocompletar()
         // 3 = Universo Marvel (TMDB)
         // 4 = Series Populares (TMDB)
         // 5 = Comedias (TMDB)
-        
+
         $html = "";
         $tituloFila = "";
         $items = [];
@@ -992,10 +1021,11 @@ public function autocompletar()
                 $tituloFila = "Tendencias en La Butaca";
                 $model = new ContenidoModel();
                 // Filtramos por edad si es Kids
-                if ($planId == 3) $model->where('edad_recomendada <=', 11);
-                
+                if ($planId == 3)
+                    $model->where('edad_recomendada <=', 11);
+
                 $resultados = $model->getTendencias(12);
-                
+
                 // Formateamos para la vista
                 foreach ($resultados as $r) {
                     $img = str_starts_with($r['imagen'], 'http') ? $r['imagen'] : base_url('assets/img/' . $r['imagen']);
@@ -1025,7 +1055,7 @@ public function autocompletar()
                 $tituloFila = "Series que enganchan";
                 $items = $this->fetchTmdbDiscover('tv', ['sort_by' => 'popularity.desc']);
                 break;
-                
+
             default:
                 return $this->response->setBody(""); // No hay más bloques
         }
@@ -1034,17 +1064,17 @@ public function autocompletar()
         if (!empty($items)) {
             // Pasamos los datos a una "mini vista" o construimos el HTML aquí
             // Para simplificar, construyo el HTML aquí mismo (puedes pasarlo a un view fragment)
-            
+
             $html .= '<div class="category-row" style="margin-bottom: 40px; opacity:0; transition: opacity 1s;" onload="this.style.opacity=1">';
             $html .= '  <h3 class="row-title" style="margin-left:4%; font-size:1.4rem; color:#e5e5e5; margin-bottom:10px;">' . esc($tituloFila) . '</h3>';
             $html .= '  <div class="row-container" style="display:flex; overflow-x:auto; padding: 10px 4%; gap:10px; scrollbar-width:none;">';
-            
+
             foreach ($items as $peli) {
                 // FILTRO DE EDAD KIDS (Si viene de TMDB, intentamos filtrar lo básico)
                 // Nota: TMDB Discover no siempre devuelve rating, pero filtramos 'adult'
-                
+
                 $link = base_url('detalle/' . $peli['id']);
-                
+
                 $html .= '    <a href="' . $link . '" class="poster-card" style="flex:0 0 auto; width:160px; transition:transform 0.3s;">';
                 $html .= '      <div style="height:240px; border-radius:6px; overflow:hidden;">';
                 $html .= '        <img src="' . $peli['imagen'] . '" style="width:100%; height:100%; object-fit:cover;" loading="lazy">';
@@ -1053,7 +1083,7 @@ public function autocompletar()
                 // $html .= ' <div style="font-size:0.9rem; margin-top:5px; white-space:nowrap; overflow:hidden;">'.$peli['titulo'].'</div>';
                 $html .= '    </a>';
             }
-            
+
             $html .= '  </div>';
             $html .= '</div>';
         }
@@ -1062,9 +1092,10 @@ public function autocompletar()
     }
 
     // HELPER PRIVADO PARA TRAER LISTAS DE TMDB
-    private function fetchTmdbDiscover($type, $params = []) {
+    private function fetchTmdbDiscover($type, $params = [])
+    {
         $apiKey = '6387e3c183c454304108333c56530988';
-        
+
         // Base params
         $queryParams = array_merge([
             'api_key' => $apiKey,
@@ -1078,7 +1109,7 @@ public function autocompletar()
 
         $arrContextOptions = ["ssl" => ["verify_peer" => false], "http" => ["ignore_errors" => true]];
         $json = @file_get_contents($url, false, stream_context_create($arrContextOptions));
-        
+
         $results = [];
         if ($json) {
             $data = json_decode($json, true);
@@ -1087,7 +1118,7 @@ public function autocompletar()
                     $prefix = ($type == 'tv') ? 'tmdb_tv_' : 'tmdb_movie_';
                     $img = $item['poster_path'] ? "https://image.tmdb.org/t/p/w300" . $item['poster_path'] : base_url('assets/img/no-poster.jpg');
                     $titulo = ($type == 'tv') ? $item['name'] : $item['title'];
-                    
+
                     $results[] = [
                         'id' => $prefix . $item['id'],
                         'titulo' => $titulo,
@@ -1098,5 +1129,5 @@ public function autocompletar()
         }
         return $results;
     }
-    
+
 }

@@ -1,0 +1,11 @@
+# Ignorar logs, sesiones y caché de CodeIgniter
+writable/logs/*
+writable/session/*
+writable/cache/*
+writable/debugbar/*
+
+# Permitir que las carpetas existan pero estén vacías (opcional)
+!writable/logs/index.html
+!writable/session/index.html
+!writable/cache/index.html
+!writable/debugbar/index.html

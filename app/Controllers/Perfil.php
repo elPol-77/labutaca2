@@ -26,30 +26,35 @@ class Perfil extends BaseController
 
     public function index()
     {
-        if (!session()->get('is_logged_in')) return redirect()->to('/auth');
+        if (!session()->get('is_logged_in'))
+            return redirect()->to('/auth');
 
         $userId = session()->get('user_id');
         $planId = session()->get('plan_id');
+
         $userModel = new UsuarioModel();
-        $generoModel = new GeneroModel();
-        
+        $generoModel = new GeneroModel(); 
+
         $usuario = $userModel->find($userId);
+
+
         $otrosPerfiles = $userModel->where('id !=', $userId)
-                                   ->where('id >=', 2) 
-                                   ->where('id <=', 4)
-                                   ->findAll();
+            ->where('id >=', 2)
+            ->where('id <=', 4)
+            ->findAll();
+
         $listaGeneros = $generoModel->orderBy('nombre', 'ASC')->findAll();
 
-        $avataresDisponibles = ($planId == 3) 
-            ? $this->avatars['kids'] 
+        $avataresDisponibles = ($planId == 3)
+            ? $this->avatars['kids']
             : array_merge($this->avatars['general'], $this->avatars['kids']);
 
         $data = [
             'usuario' => $usuario,
             'avatares' => $avataresDisponibles,
-            'generos' => $listaGeneros,
-            'otrosPerfiles' => $otrosPerfiles, 
             'esKids' => ($planId == 3),
+            'generos' => $listaGeneros,      
+            'otrosPerfiles' => $otrosPerfiles, 
             'planes' => [
                 1 => 'Plan Free (Con Anuncios)',
                 2 => 'Plan Premium (Todo incluido)',
@@ -57,27 +62,26 @@ class Perfil extends BaseController
             ]
         ];
 
-        echo view('frontend/templates/header', ['titulo' => 'Editar Perfil']);
+        echo view('frontend/templates/header', $data);
         echo view('frontend/perfil', $data);
         echo view('frontend/templates/footer');
     }
 
     public function update()
     {
-        if (!session()->get('is_logged_in')) return redirect()->to('/auth');
+        if (!session()->get('is_logged_in'))
+            return redirect()->to('/auth');
 
         $userId = session()->get('user_id');
         $planActual = session()->get('plan_id');
         $userModel = new UsuarioModel();
 
-        // 1. Validar reglas básicas
         $rules = [
             'avatar' => 'required'
         ];
 
         if ($planActual != 3) {
-            // <--- CAMBIO: nombre por username
-            $rules['username'] = 'required|min_length[3]'; 
+            $rules['username'] = 'required|min_length[3]';
             $rules['plan_id'] = 'required|in_list[1,2,3]';
         }
 
@@ -85,24 +89,19 @@ class Perfil extends BaseController
             return redirect()->back()->withInput()->with('error', 'Por favor revisa los datos.');
         }
 
-        // 2. Preparar datos
         $dataUpdate = [
             'avatar' => $this->request->getPost('avatar')
         ];
 
         if ($planActual != 3) {
-            // <--- CAMBIO CRÍTICO: Aquí asignamos a la columna 'username'
-            // Y leemos del input HTML llamado 'username'
-            $dataUpdate['username'] = $this->request->getPost('username'); 
+
+            $dataUpdate['username'] = $this->request->getPost('username');
             $dataUpdate['plan_id'] = $this->request->getPost('plan_id');
         }
 
-        // 3. Guardar en Base de Datos
         $userModel->update($userId, $dataUpdate);
 
-        // 4. ACTUALIZAR SESIÓN
         session()->set([
-            // <--- CAMBIO: Actualizamos la sesión con el nuevo username
             'username' => $dataUpdate['username'] ?? session()->get('username'),
             'avatar' => $dataUpdate['avatar'],
             'plan_id' => $dataUpdate['plan_id'] ?? session()->get('plan_id')
