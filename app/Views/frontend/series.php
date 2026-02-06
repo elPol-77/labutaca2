@@ -48,7 +48,7 @@
                                     <?php $enLista = $destacada['en_mi_lista'] ?? false; ?>
                                     <button class="btn-secondary btn-lista-<?= $destacada['id'] ?>" onclick="toggleMiLista('<?= $destacada['id'] ?>')" 
                                         style="background:rgba(255,255,255,0.2); border:none; color:white; padding:12px 25px; border-radius:50px; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:8px;">
-                                        <i class="fa <?= $enLista ? 'fa-check' : 'fa-plus' ?>"></i> Mi Lista
+                                        <i class="fa <?= $enLista ? 'fa-check' : 'fa-heart' ?>"></i> Mi Lista
                                     </button>
                                 </div>
                             </div>
@@ -57,6 +57,7 @@
                 </div>
             <?php endif; ?>
         </div>
+        <br><br>
 
         <div id="rows-container" class="netflix-container" style="padding-bottom: 50px; margin-top: -100px; position:relative; z-index:10;"></div>
 

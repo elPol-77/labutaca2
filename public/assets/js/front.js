@@ -571,7 +571,7 @@ function generarHtmlTarjeta(item) {
                     
                     <div class="hover-meta">
                         <span style="color:#46d369; font-weight:bold;">${matchScore}% para ti</span>
-                        <span class="badge badge-hd">+${edad}</span>
+                        <span class="badge badge-hd">${edad}</span>
                     </div>
                     
                     <p style="font-size:0.75rem; color:#ccc; margin:0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
