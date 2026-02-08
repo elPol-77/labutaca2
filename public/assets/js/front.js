@@ -561,7 +561,7 @@ function generarHtmlTarjeta(item) {
                         <button class="btn-mini-play" onclick="playCinematic('${linkVer}')"><i class="fa fa-play"></i></button>
                         
                         <button class="btn-mini-icon btn-lista-${item.id}" 
-                                onclick="toggle('${item.id}')" 
+                                onclick="toggleMiLista('${item.id}')" 
                                 style="${styleBtnLista}">
                             <i class="fa ${iconClass}"></i>
                         </button>
