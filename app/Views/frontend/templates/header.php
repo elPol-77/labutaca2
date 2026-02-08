@@ -158,7 +158,7 @@
                                 <?php endif; ?>
 
                                 <div class="mini-profile-item" onclick="alert('Funcionalidad próximamente...')">
-                                    <div class="add-profile-icon"><i class="fa fa-plus"></i></div>
+                                    <div class="add-profile-icon"><i class="fa fa-heart"></i></div>
                                     <span>Añadir perfil</span>
                                 </div>
 
