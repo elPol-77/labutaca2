@@ -8,7 +8,7 @@ class Usuario extends ResourceController
 {
     protected $format = 'json';
     
-    // TU API KEY DE TMDB
+    // API KEY DE TMDB
     private $tmdbApiKey = '6387e3c183c454304108333c56530988'; 
 
     public function toggle()
@@ -27,13 +27,12 @@ class Usuario extends ResourceController
 
         try {
             // A. LOGICA DE IMPORTACIÓN AUTOMÁTICA
-            // Limpiamos el ID para obtener solo el número o el ID de IMDB
+            // Limpiamos el ID
             $idLimpio = $this->_limpiarId($idRecibido);
             
             // Verificamos si existe en local
             $db = \Config\Database::connect();
             
-            // Buscamos si ya existe ese ID (si es número) o ese imdb_id (si es tt...)
             $query = $db->table('contenidos')->groupStart()
                         ->where('id', $idLimpio)
                         ->orWhere('imdb_id', $idLimpio)
@@ -41,21 +40,19 @@ class Usuario extends ResourceController
                         ->get()->getRowArray();
 
             if ($query) {
-                // YA EXISTE EN LOCAL
+                // YA EXISTE EN LOCAL: Usamos el ID que ya tiene
                 $contenidoIdReal = $query['id'];
             } else {
-                // NO EXISTE -> IMPORTAMOS DE TMDB
-                $contenidoIdReal = $this->_importarDesdeTMDB($idLimpio, $idRecibido); // Pasamos ambos por si acaso hay pistas en el string original
+                // NO EXISTE: Importamos de TMDB
+                $contenidoIdReal = $this->_importarDesdeTMDB($idLimpio, $idRecibido);
                 
                 if (!$contenidoIdReal) {
-                    return $this->fail('No se pudo importar. ID inválido o problema de conexión.');
+                    return $this->fail('No se pudo importar. ID inválido.');
                 }
             }
 
             // B. GESTIONAR FAVORITOS
             $builder = $db->table('mi_lista');
-
-            // Verificar si ya existe en la lista
             $existeEnLista = $builder->where(['usuario_id' => $userId, 'contenido_id' => $contenidoIdReal])->countAllResults();
 
             $action = '';
@@ -106,21 +103,17 @@ class Usuario extends ResourceController
     }
 
     // =========================================================
-    // HELPER: LIMPIAR ID (LA CLAVE DE TU PROBLEMA)
+    // HELPER: LIMPIAR ID
     // =========================================================
     private function _limpiarId($idSucio) {
-        // 1. Si es un ID de IMDB (empieza por tt), lo dejamos tal cual
         if (strpos((string)$idSucio, 'tt') !== false) {
             return $idSucio; 
         }
-        
-        // 2. Si no es IMDB, eliminamos TODO lo que no sea número
-        // Esto convierte "tmdb_tv_2734" en "2734"
         return preg_replace('/[^0-9]/', '', (string)$idSucio);
     }
 
     // =========================================================
-    // FUNCIÓN DE IMPORTACIÓN INTELIGENTE
+    // FUNCIÓN DE IMPORTACIÓN (SOLO NIVEL PREMIUM POR DEFECTO)
     // =========================================================
     private function _importarDesdeTMDB($externalId, $originalString = '')
     {
@@ -134,7 +127,7 @@ class Usuario extends ResourceController
         $finalTmdbId = $externalId;
         $tipoContenido = 'movie'; // Por defecto
 
-        // PISTA: Si el string original dice "_tv_" o "tv_", forzamos búsqueda de serie primero
+        // Detectar si es serie por el nombre del ID original
         if (strpos($originalString, '_tv_') !== false || strpos($originalString, 'tv_') !== false) {
             $tipoContenido = 'tv';
         }
@@ -158,16 +151,13 @@ class Usuario extends ResourceController
             } catch (\Exception $e) { return false; }
         }
 
-        // --- CASO 2: ID NUMÉRICO (2734) ---
-        // Intentamos primero con el tipo detectado (o movie por defecto)
+        // --- CASO 2: ID NUMÉRICO ---
         $url = "https://api.themoviedb.org/3/{$tipoContenido}/{$finalTmdbId}?api_key={$this->tmdbApiKey}&language=es-ES";
         
         try {
             $response = $client->request('GET', $url, $options);
             
-            // Si falla y no habíamos confirmado el tipo (no era imdb ni tenía prefijo claro), probamos el otro
             if ($response->getStatusCode() !== 200 && strpos($externalId, 'tt') === false) {
-                // Cambiamos de movie a tv o viceversa
                 $tipoContenido = ($tipoContenido == 'movie') ? 'tv' : 'movie';
                 $url = "https://api.themoviedb.org/3/{$tipoContenido}/{$finalTmdbId}?api_key={$this->tmdbApiKey}&language=es-ES";
                 $response = $client->request('GET', $url, $options);
@@ -207,8 +197,10 @@ class Usuario extends ResourceController
                 'anio'             => $anio,
                 'duracion'         => $duracion,
                 'edad_recomendada' => ($data['adult'] ?? false) ? 18 : 12,
-                'nivel_acceso'     => 1,
-                // Guardamos el ID externo original (incluso si era tmdb_tv_2734 guardamos 2734)
+                
+                // 🔥 AQUÍ ESTÁ EL TRUCO 🔥
+                'nivel_acceso'     => 2, // Se guarda como PREMIUM por defecto al importar desde Favs
+                
                 'imdb_id'          => (string)$finalTmdbId, 
                 'imdb_rating'      => isset($data['vote_average']) ? (float)$data['vote_average'] : 0.0,
                 'destacada'        => 0,
