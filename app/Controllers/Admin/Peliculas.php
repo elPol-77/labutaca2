@@ -97,22 +97,41 @@ class Peliculas extends BaseController
     // =================================================================
     // EDITAR (FORMULARIO)
     // =================================================================
-    public function edit($id) {
+public function edit($id) {
+        // 1. Obtener todos los datos del contenido (con relaciones)
         $contenido = $this->model->getDetallesCompletos($id); 
-        if (!$contenido) return redirect()->back()->with('msg', 'No encontrado');
+
+        if (!$contenido) return redirect()->back()->with('msg', 'Contenido no encontrado');
 
         $generoModel = new GeneroModel();
         
+        // 2. Preparar los Strings para los inputs visuales (Solo lectura al cargar)
+        $actoresStr = '';
+        if (!empty($contenido['actores'])) {
+            $nombres = array_column($contenido['actores'], 'nombre');
+            $actoresStr = implode(', ', array_slice($nombres, 0, 10)); // Top 10
+        }
+
+        $directoresStr = '';
+        if (!empty($contenido['director'])) { // Nota: Tu modelo devuelve 'director' (singular) o array según tu implementación
+             // Si getDetallesCompletos devuelve un solo director, ajústalo. 
+             // Aquí asumo que podría venir un array o un objeto. 
+             // Si es array de directores:
+             // $directoresStr = implode(', ', array_column($contenido['directores'], 'nombre'));
+             
+             // Si es el objeto simple que vi en tu modelo anterior:
+             $directoresStr = $contenido['director']['nombre'] ?? '';
+        }
+
         return view('backend/peliculas/form', [
-            'titulo'  => 'Editar ' . $contenido['titulo'],
+            'titulo'  => 'Editar Contenido',
             'action'  => 'edit',
-            'tipo_id' => $this->tipoId,
-            'generos' => $generoModel->orderBy('nombre', 'ASC')->findAll(),
-            'data'    => $contenido,
+            'tipo_id' => $contenido['tipo_id'],
+            'generos' => $generoModel->orderBy('nombre', 'ASC')->findAll(), // Lista completa para los checkboxes
+            'data'    => $contenido, // Datos de la peli (titulo, anio, etc)
             'strings' => [
-                // Estos strings ya no se usan mucho gracias al JSON, pero por compatibilidad:
-                'directores' => isset($contenido['director']) ? $contenido['director']['nombre'] : '',
-                'actores' => '' 
+                'actores'    => $actoresStr,
+                'directores' => $directoresStr
             ]
         ]);
     }

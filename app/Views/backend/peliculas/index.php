@@ -41,7 +41,7 @@ $esSerie = (strpos(current_url(), 'series') !== false);
                     <td><?= ($p['nivel_acceso'] == 1) ? '<span class="badge bg-success">Free</span>' : '<span class="badge bg-warning text-dark">Premium</span>' ?></td>
                     <td><?= ($p['destacada'] == 1) ? '<i class="fa fa-star text-warning" title="Destacada"></i>' : '' ?></td>
                     <td class="text-end pe-4">
-                        <a href="#" class="btn btn-sm btn-outline-primary"><i class="fa fa-edit"></i></a>
+                        <a href="<?= base_url('admin/peliculas/editar/'.$p['id']) ?>" class="btn btn-sm btn-outline-primary"><i class="fa fa-edit"></i></a>
                         <a href="<?= base_url('admin/peliculas/borrar/'.$p['id']) ?>" 
                            class="btn btn-sm btn-outline-danger"
                            onclick="return confirm('¿Seguro que quieres borrar esto?');">
