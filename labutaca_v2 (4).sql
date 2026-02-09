@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.3
+-- version 5.2.2
 -- https://www.phpmyadmin.net/
 --
--- Servidor: 127.0.0.1
--- Tiempo de generación: 08-02-2026 a las 16:56:42
--- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.2.12
+-- Servidor: localhost
+-- Tiempo de generación: 09-02-2026 a las 09:19:35
+-- Versión del servidor: 8.0.43-0ubuntu0.24.04.2
+-- Versión de PHP: 8.4.14
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -28,9 +28,9 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `actores` (
-  `id` int(11) NOT NULL,
-  `nombre` varchar(150) NOT NULL,
-  `foto` varchar(255) DEFAULT NULL
+  `id` int NOT NULL,
+  `nombre` varchar(150) COLLATE utf8mb4_general_ci NOT NULL,
+  `foto` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -76,7 +76,53 @@ INSERT INTO `actores` (`id`, `nombre`, `foto`) VALUES
 (36, 'Liv Tyler', 'https://ui-avatars.com/api/?name=Liv+Tyler&background=random'),
 (37, 'Tim Roth', 'https://ui-avatars.com/api/?name=Tim+Roth&background=random'),
 (38, 'Mickey Rourke', 'https://ui-avatars.com/api/?name=Mickey+Rourke&background=random'),
-(39, 'Gwyneth Paltrow', 'https://ui-avatars.com/api/?name=Gwyneth+Paltrow&background=random');
+(39, 'Gwyneth Paltrow', 'https://ui-avatars.com/api/?name=Gwyneth+Paltrow&background=random'),
+(40, 'Robert Pattinson', 'https://image.tmdb.org/t/p/original/8A4PS5iG7GWEAVFftyqMZKl3qcr.jpg'),
+(41, 'Zoë Kravitz', 'https://image.tmdb.org/t/p/original/iRsOS82q5WRAZBquTgtgzDQf01S.jpg'),
+(42, 'Jeffrey Wright', 'https://image.tmdb.org/t/p/original/yGcuHGW4glqRpOPxgiCvjcren7F.jpg'),
+(43, 'Colin Farrell', 'https://image.tmdb.org/t/p/original/oyQVfpowL9eSudYhwoPGkd9WxS7.jpg'),
+(44, 'Paul Dano', 'https://image.tmdb.org/t/p/original/zEJJsm0z07EPNl2Pi1h67xuCmcA.jpg'),
+(45, 'John Turturro', 'https://image.tmdb.org/t/p/original/6O9W9cJW0kCqMzYeLupV9oH0ftn.jpg'),
+(46, 'Andy Serkis', 'https://image.tmdb.org/t/p/original/eNGqhebQ4cDssjVeNFrKtUvweV5.jpg'),
+(47, 'Peter Sarsgaard', 'https://image.tmdb.org/t/p/original/5UANyM4co2nwYPgSEmGeNlZRm7V.jpg'),
+(48, 'Barry Keoghan', 'https://image.tmdb.org/t/p/original/ngoitknM6hw8fffLywyvjzy6Iti.jpg'),
+(49, 'Jayme Lawson', 'https://image.tmdb.org/t/p/original/ntwbhdUeW8K5KYJENqyiSZcsIj9.jpg'),
+(50, 'Gil Perez-Abraham', 'https://image.tmdb.org/t/p/original/obJ2pGNaRJ8mtIEPshw3ocIfcIj.jpg'),
+(51, 'Peter McDonald', 'https://image.tmdb.org/t/p/original/ahacAWWP4zzuVumOUB8hZoJcHTA.jpg'),
+(52, 'Con O\'Neill', 'https://image.tmdb.org/t/p/original/7Fnj1dB9kStTuy29eEVK4IuOxWO.jpg'),
+(53, 'Alex Ferns', 'https://image.tmdb.org/t/p/original/3V3L7MJGURXU6lVaqai80zFT4Wa.jpg'),
+(54, 'Rupert Penry-Jones', 'https://image.tmdb.org/t/p/original/50mfkdU5TY8nHuz7vXCz60ywg2c.jpg'),
+(55, 'Sigourney Weaver', 'https://image.tmdb.org/t/p/original/wTSnfktNBLd6kwQxgvkqYw6vEon.jpg'),
+(56, 'Stephen Lang', 'https://image.tmdb.org/t/p/original/gnO5VfkDgA2fsHweD0622LUY3Hu.jpg'),
+(57, 'Michelle Rodríguez', 'https://image.tmdb.org/t/p/original/wVcbrae4eRqGMFZz8Eh52Dl1biP.jpg'),
+(58, 'Giovanni Ribisi', 'https://image.tmdb.org/t/p/original/8EAiS9D3YtGOrwNM0OrwmDpWK7s.jpg'),
+(59, 'Joel David Moore', 'https://image.tmdb.org/t/p/original/mMVhVglj6BZFuvqAXnEibce08k7.jpg'),
+(60, 'CCH Pounder', 'https://image.tmdb.org/t/p/original/mr6BLDN75T8DJl9dNK3hN4YwqJa.jpg'),
+(61, 'Wes Studi', 'https://image.tmdb.org/t/p/original/dAO2bY2NCceYLZiJaBjBdY19Hox.jpg'),
+(62, 'Laz Alonso', 'https://image.tmdb.org/t/p/original/nmgOd3X2Xn3jIp9OLCRJzLExRWN.jpg'),
+(63, 'Dileep Rao', 'https://image.tmdb.org/t/p/original/jRNn8SZqFXuI5wOOlHwYsWh0hXs.jpg'),
+(64, 'Matt Gerald', 'https://image.tmdb.org/t/p/original/six7c3aZpiEomHjj4ZYokq8Vgtx.jpg'),
+(65, 'Sean Anthony Moran', 'https://image.tmdb.org/t/p/original/9bsNN91o9iNVLK3W7js99kvg26L.jpg'),
+(66, 'Jason Whyte', 'https://image.tmdb.org/t/p/original/lCZ5Z3RJG6BxP05FPf7kCoQGZdI.jpg'),
+(67, 'Scott Lawrence', 'https://image.tmdb.org/t/p/original/8lwnmlHN6QPK75NwfufsIFZZhmB.jpg'),
+(68, 'David Harbour', 'https://image.tmdb.org/t/p/original/qMFtMWlYVtFVyBoBhX5IoA5sN5a.jpg'),
+(69, 'Gaten Matarazzo', 'https://image.tmdb.org/t/p/original/alVT7oDp8N5G9WLIApI9jqeuqHq.jpg'),
+(70, 'Caleb McLaughlin', 'https://image.tmdb.org/t/p/original/4jVS3EziBn7bf97ErxkW7jsdiLM.jpg'),
+(71, 'Noah Schnapp', 'https://image.tmdb.org/t/p/original/6NIffxe2yZm6OmOwulY19govKRs.jpg'),
+(72, 'Sadie Sink', 'https://image.tmdb.org/t/p/original/o6DZF6dgQjLC96qEqCw23AoY2HN.jpg'),
+(73, 'Natalia Dyer', 'https://image.tmdb.org/t/p/original/bOe1IMrtMYjXhtsBW19M4vypLiT.jpg'),
+(74, 'Charlie Heaton', 'https://image.tmdb.org/t/p/original/8Se6WZuvRmoB990bT29OPgVAyBo.jpg'),
+(75, 'Joe Keery', 'https://image.tmdb.org/t/p/original/ayIAVLMfZGEGIFwAo3pPnY7p59.jpg'),
+(76, 'Maya Hawke', 'https://image.tmdb.org/t/p/original/9jX7HdSHocuZxOrzDCEC49qy9po.jpg'),
+(77, 'Brett Gelman', 'https://image.tmdb.org/t/p/original/ub2IuMWFNQGYghHTPq0lpmn2Ue0.jpg'),
+(78, 'Priah Ferguson', 'https://image.tmdb.org/t/p/original/cDk4YhC46OFdNz0sDhUjllKer7d.jpg'),
+(79, 'Cara Buono', 'https://image.tmdb.org/t/p/original/QQv5pitEXvrGR4sgECvNDLwhTG.jpg'),
+(80, 'Tom Hiddleston', 'https://image.tmdb.org/t/p/original/mclHxMm8aPlCPKptP67257F5GPo.jpg'),
+(81, 'Sophia Di Martino', 'https://image.tmdb.org/t/p/original/qZdFp18btpQJfDoknxr7DgfRpcB.jpg'),
+(82, 'Wunmi Mosaku', 'https://image.tmdb.org/t/p/original/mWDsVCo9sBcekrsjUTsoCFLhtYt.jpg'),
+(83, 'Eugene Cordero', 'https://image.tmdb.org/t/p/original/waruLSR8lXBjhAFL0J6ihuVY62d.jpg'),
+(84, 'Ke Huy Quan', 'https://image.tmdb.org/t/p/original/iestHyn7PLuVowj5Jaa1SGPboQ4.jpg'),
+(85, 'Owen Wilson', 'https://image.tmdb.org/t/p/original/lFxHIlcywMlYpe6wkW39sfBrqag.jpg');
 
 -- --------------------------------------------------------
 
@@ -85,12 +131,12 @@ INSERT INTO `actores` (`id`, `nombre`, `foto`) VALUES
 --
 
 CREATE TABLE `capitulos` (
-  `id` int(11) NOT NULL,
-  `temporada_id` int(11) NOT NULL,
-  `titulo` varchar(200) DEFAULT NULL,
-  `numero` int(11) NOT NULL,
-  `url_video` varchar(500) NOT NULL,
-  `duracion` int(11) DEFAULT NULL
+  `id` int NOT NULL,
+  `temporada_id` int NOT NULL,
+  `titulo` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `numero` int NOT NULL,
+  `url_video` varchar(500) COLLATE utf8mb4_general_ci NOT NULL,
+  `duracion` int DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -115,22 +161,22 @@ INSERT INTO `capitulos` (`id`, `temporada_id`, `titulo`, `numero`, `url_video`, 
 --
 
 CREATE TABLE `contenidos` (
-  `id` int(11) NOT NULL,
-  `tipo_id` int(11) NOT NULL,
-  `titulo` varchar(200) NOT NULL,
-  `descripcion` text DEFAULT NULL,
-  `anio` int(11) DEFAULT NULL,
-  `duracion` int(11) DEFAULT NULL,
-  `imagen` varchar(255) DEFAULT NULL,
-  `imagen_bg` varchar(500) DEFAULT NULL,
-  `url_video` varchar(500) DEFAULT NULL,
-  `nivel_acceso` int(11) DEFAULT 1,
-  `vistas` int(11) DEFAULT 0,
-  `destacada` tinyint(1) DEFAULT 0,
-  `fecha_agregada` datetime DEFAULT current_timestamp(),
-  `edad_recomendada` int(11) NOT NULL,
-  `imdb_rating` decimal(3,1) DEFAULT 0.0,
-  `imdb_id` varchar(20) DEFAULT NULL
+  `id` int NOT NULL,
+  `tipo_id` int NOT NULL,
+  `titulo` varchar(200) COLLATE utf8mb4_general_ci NOT NULL,
+  `descripcion` text COLLATE utf8mb4_general_ci,
+  `anio` int DEFAULT NULL,
+  `duracion` int DEFAULT NULL,
+  `imagen` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `imagen_bg` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `url_video` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `nivel_acceso` int DEFAULT '1',
+  `vistas` int DEFAULT '0',
+  `destacada` tinyint(1) DEFAULT '0',
+  `fecha_agregada` datetime DEFAULT CURRENT_TIMESTAMP,
+  `edad_recomendada` int NOT NULL,
+  `imdb_rating` decimal(3,1) DEFAULT '0.0',
+  `imdb_id` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -138,7 +184,7 @@ CREATE TABLE `contenidos` (
 --
 
 INSERT INTO `contenidos` (`id`, `tipo_id`, `titulo`, `descripcion`, `anio`, `duracion`, `imagen`, `imagen_bg`, `url_video`, `nivel_acceso`, `vistas`, `destacada`, `fecha_agregada`, `edad_recomendada`, `imdb_rating`, `imdb_id`) VALUES
-(1, 1, 'Avatar: Fuego y Ceniza', 'Tercera entrega...', 2025, 170, 'https://m.media-amazon.com/images/M/MV5BZDYxY2I1OGMtN2Y4MS00ZmU1LTgyNDAtODA0MzAyYjI0N2Y2XkEyXkFqcGc@._V1_.jpg', 'https://media.revistagq.com/photos/61c4ad4459ab05088d9a50e0/16:9/w_2560%2Cc_limit/avatar%25202.jpg', 'https://youtu.be/lhLsr9S3bgQ', 2, 0, 0, '2026-01-08 17:40:01', 12, 0.0, NULL),
+(1, 1, 'Avatar: Fuego y ceniza', 'Tercera entrega...', 2025, 170, 'https://m.media-amazon.com/images/M/MV5BZDYxY2I1OGMtN2Y4MS00ZmU1LTgyNDAtODA0MzAyYjI0N2Y2XkEyXkFqcGc@._V1_.jpg', 'https://media.revistagq.com/photos/61c4ad4459ab05088d9a50e0/16:9/w_2560%2Cc_limit/avatar%25202.jpg', 'https://youtu.be/lhLsr9S3bgQ', 2, 0, 0, '2026-01-08 17:40:01', 12, 0.0, NULL),
 (2, 1, 'Una película de Minecraft', 'Adaptación del juego...', 2025, 125, 'https://m.media-amazon.com/images/M/MV5BYzFjMzNjOTktNDBlNy00YWZhLWExYTctZDcxNDA4OWVhOTJjXkEyXkFqcGc@._V1_.jpg', 'https://m.media-amazon.com/images/S/pv-target-images/fdf356b8fdbdb136e5b2e2ac41aa037e908e03d2e8f057c403f1c78859df4896.jpg', 'https://youtu.be/iJQs4FPg6jY?si=ePOLmzRLeqTgkk0h', 2, 0, 0, '2026-01-08 17:40:01', 7, 0.0, NULL),
 (3, 1, 'Dune: Parte Dos', 'Paul Atreides...', 2024, 155, 'https://image.tmdb.org/t/p/original/xOMo8BRK7PfcJv9JCnx7s5hj0PX.jpg', 'https://wallpaperswide.com/download/dune_part_two_2_2024_movie-wallpaper-5120x2880.jpg', 'https://youtu.be/U2Qp5pL3ovA', 2, 0, 0, '2026-01-08 17:40:01', 12, 0.0, NULL),
 (4, 1, 'Spider-Man: Across the Spider-Verse', 'Miles Morales...', 2023, 140, 'https://m.media-amazon.com/images/M/MV5BNThiZjA3MjItZGY5Ni00ZmJhLWEwN2EtOTBlYTA4Y2E0M2ZmXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg', 'https://image.tmdb.org/t/p/original/4HodYYKEIsGOdinkGi2Ucz6X9i0.jpg', 'https://www.youtube.com/watch?v=shW9i6k8cB0&pp=ygUXYWNyb3NzIHRoZSBzcGlkZXIgdmVyc2XSBwkJhwoBhyohjO8%3D', 1, 0, 0, '2026-01-08 17:40:01', 7, 0.0, NULL),
@@ -148,7 +194,7 @@ INSERT INTO `contenidos` (`id`, `tipo_id`, `titulo`, `descripcion`, `anio`, `dur
 (8, 1, 'Inception', 'Un ladrón que roba secretos corporativos a través del uso de la tecnología de compartir sueños.', 2010, 148, 'https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg', 'https://image.tmdb.org/t/p/original/s3TBrRGB1iav7gFOCNx3H31MoES.jpg', NULL, 2, 1200, 0, '2026-01-22 18:34:27', 12, 0.0, NULL),
 (9, 1, 'Pulp Fiction', 'Las vidas de dos mafiosos, un boxeador, la esposa de un gángster y un par de bandidos se entrelazan.', 1994, 154, 'https://m.media-amazon.com/images/M/MV5BYTViYTE3ZGQtNDBlMC00ZTAyLTkyODMtZGRiZDg0MjA2YThkXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg', 'https://wallpaperswide.com/download/pulp_fiction-wallpaper-1280x720.jpg', NULL, 2, 900, 1, '2026-01-22 18:34:27', 18, 0.0, NULL),
 (10, 2, 'Breaking Bad', 'Un profesor de química con cáncer se convierte en fabricante de metanfetamina.', 2008, NULL, 'https://image.tmdb.org/t/p/w500/ggFHVNu6YYI5L9pCfOacjizRGt.jpg', 'https://wallpaperswide.com/download/breaking_bad-wallpaper-2560x1440.jpg', NULL, 2, 5000, 1, '2026-01-22 18:34:27', 16, 0.0, NULL),
-(11, 2, 'The Mandalorian', 'Las aventuras de un pistolero solitario en los confines de la galaxia.', 2019, NULL, 'https://image.tmdb.org/t/p/w500/sWgBv7LV2PRoQgkxwlibdGXKz1S.jpg', 'https://wallpaperswide.com/download/the_mandalorian-wallpaper-3554x1999.jpg', NULL, 2, 3000, 0, '2026-01-22 18:34:27', 12, 0.0, NULL),
+(11, 2, 'The Mandalorian', 'Las aventuras de un pistolero solitario en los confines de la galaxia.', 2019, NULL, 'https://image.tmdb.org/t/p/w500/sWgBv7LV2PRoQgkxwlibdGXKz1S.jpg', 'https://wallpaperswide.com/download/the_mandalorian-wallpaper-3554x1999.jpg', NULL, 1, 3000, 0, '2026-01-22 18:34:27', 12, 0.0, NULL),
 (12, 1, 'Joker', 'Arthur Fleck busca su identidad mientras deambula por las calles de Gotham.', 2019, 122, 'https://m.media-amazon.com/images/M/MV5BNzY3OWQ5NDktNWQ2OC00ZjdlLThkMmItMDhhNDk3NTFiZGU4XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg', 'https://media.revistagq.com/photos/5dad88a910270d00086c7e7f/16:9/w_2191,h_1232,c_limit/joker%20historia%20real%20goetz%20ny.jpeg', NULL, 2, 2200, 0, '2026-01-22 18:34:27', 18, 0.0, NULL),
 (13, 1, 'Shrek', 'Un ogro hace un trato con un lord para recuperar su pantano.', 2001, 90, 'https://image.tmdb.org/t/p/w500/dyhaB19AICF7TO7CK2aD6KfymnQ.jpg', 'https://wallpaperswide.com/download/shrek_shrek_forever_after_movie-wallpaper-3554x1999.jpg', NULL, 3, 5000, 1, '2026-01-22 18:34:27', 0, 0.0, NULL),
 (14, 1, 'Matrix', 'Un hacker descubre la verdad sobre su realidad y su papel en la guerra contra las máquinas.', 1999, 136, 'https://m.media-amazon.com/images/M/MV5BN2NmN2VhMTQtMDNiOS00NDlhLTliMjgtODE2ZTY0ODQyNDRhXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg', 'https://as1.ftcdn.net/jpg/01/76/02/34/1000_F_176023426_fo7EV2AzzvE6FTjh983dhXUTARF4mmaH.jpg', NULL, 1, 1800, 0, '2026-01-22 18:34:27', 12, 0.0, NULL),
@@ -165,7 +211,10 @@ INSERT INTO `contenidos` (`id`, `tipo_id`, `titulo`, `descripcion`, `anio`, `dur
 (25, 1, 'Avengers: Endgame', 'After the devastating events of Avengers: Infinity War (2018), the universe is in ruins due to the efforts of the Mad Titan, Thanos. With the help of remaining allies, the Avengers must assemble once more in order to undo Thanos\'s actions and undo the chaos to the universe, no matter what consequences may be in store, and no matter who they face...', 2019, 181, 'https://m.media-amazon.com/images/M/MV5BMTc5MDE2ODcwNV5BMl5BanBnXkFtZTgwMzI2NzQ2NzM@._V1_SX300.jpg', 'https://m.media-amazon.com/images/M/MV5BMTc5MDE2ODcwNV5BMl5BanBnXkFtZTgwMzI2NzQ2NzM@._V1_SX300.jpg', 'https://www.youtube.com/watch?v=UQ3bqYKnyhM', 2, 0, 1, '2026-01-26 22:15:51', 12, 8.4, NULL),
 (27, 1, 'Spider-Man: Far from Home', 'Nuestro amigable superhéroe del vecindario decide unirse a sus mejores amigos Ned, MJ y el resto de la pandilla en unas vacaciones por Europa. Sin embargo, el plan de Peter de dejar atrás el mundo del superhéroe por unas semanas se ve rápidamente frustrado cuando, a regañadientes, acepta ayudar a Nick Fury a desentrañar el misterio de varios ataques de criaturas elementales que están sembrando el caos en todo el continente.', 2019, 129, 'https://m.media-amazon.com/images/M/MV5BMzNhNTE0NWQtN2E1Ny00NjcwLTg1YTctMGY1NmMwODJmY2NmXkEyXkFqcGc@._V1_SX300.jpg', 'https://m.media-amazon.com/images/M/MV5BMzNhNTE0NWQtN2E1Ny00NjcwLTg1YTctMGY1NmMwODJmY2NmXkEyXkFqcGc@._V1_SX300.jpg', 'https://www.youtube.com/watch?v=dAxa7emR1Vc', 1, 0, 0, '2026-02-03 08:24:01', 12, 7.3, NULL),
 (28, 1, 'The Incredible Hulk', 'Depicting the events after the Gamma Bomb. \'The Incredible Hulk\' tells the story of Dr Bruce Banner, who seeks a cure to his unique condition, which causes him to turn into a giant green monster under emotional stress. Whilst on the run from military which seeks his capture, Banner comes close to a cure. But all is lost when a new creature emerges: The Abomination.', 2008, 112, 'https://m.media-amazon.com/images/M/MV5BMTUyNzk3MjA1OF5BMl5BanBnXkFtZTcwMTE1Njg2MQ@@._V1_SX300.jpg', 'https://m.media-amazon.com/images/M/MV5BMTUyNzk3MjA1OF5BMl5BanBnXkFtZTcwMTE1Njg2MQ@@._V1_SX300.jpg', '', 1, 0, 0, '2026-02-03 11:43:39', 12, 6.6, NULL),
-(29, 1, 'Iron Man 2', 'With the world now aware of his dual life as the armored superhero Iron Man, billionaire inventor Tony Stark faces pressure from the government, the press, and the public to share his technology with the military. Unwilling to let go of his invention, Stark, along with Pepper Potts, and James \"Rhodey\" Rhodes at his side, must forge new alliances - and confront powerful enemies.', 2010, 124, 'https://m.media-amazon.com/images/M/MV5BYWYyOGQzOGYtMGQ1My00ZWYxLTgzZjktZWYzN2IwYjkxYzM0XkEyXkFqcGc@._V1_SX300.jpg', 'https://m.media-amazon.com/images/M/MV5BYWYyOGQzOGYtMGQ1My00ZWYxLTgzZjktZWYzN2IwYjkxYzM0XkEyXkFqcGc@._V1_SX300.jpg', '', 2, 0, 0, '2026-02-03 11:45:02', 12, 6.9, NULL);
+(29, 1, 'Iron Man 2', 'With the world now aware of his dual life as the armored superhero Iron Man, billionaire inventor Tony Stark faces pressure from the government, the press, and the public to share his technology with the military. Unwilling to let go of his invention, Stark, along with Pepper Potts, and James \"Rhodey\" Rhodes at his side, must forge new alliances - and confront powerful enemies.', 2010, 124, 'https://m.media-amazon.com/images/M/MV5BYWYyOGQzOGYtMGQ1My00ZWYxLTgzZjktZWYzN2IwYjkxYzM0XkEyXkFqcGc@._V1_SX300.jpg', 'https://m.media-amazon.com/images/M/MV5BYWYyOGQzOGYtMGQ1My00ZWYxLTgzZjktZWYzN2IwYjkxYzM0XkEyXkFqcGc@._V1_SX300.jpg', '', 2, 0, 0, '2026-02-03 11:45:02', 12, 6.9, NULL),
+(30, 2, 'Ley y orden: Unidad de Víctimas Especiales', '‘Ley y Orden: Unidad de Víctimas Especiales’ es una serie de televisión estadounidense grabada en Nueva York donde es también principalmente producida. Con el estilo de la original ‘Ley y Orden’ los episodios son usualmente \"sacados de los titulares\" o basados libremente en verdaderos asesinatos que han recibido la atención de los medios.', 1999, 0, 'https://image.tmdb.org/t/p/w500/kvo558UKEhp8v3JoRGCSIx3Xxab.jpg', 'https://image.tmdb.org/t/p/original/obtdxPgmfykYwVnvuYXC5f2xKlQ.jpg', NULL, 2, 0, 0, '2026-02-09 08:01:56', 12, 7.9, '2734'),
+(33, 1, 'Avatar', 'Año 2154. Jake Sully, un exmarine en silla de ruedas, es enviado al planeta Pandora, donde se ha creado el programa Avatar, gracias al cual los seres humanos pueden controlar de forma remota un cuerpo biológico con apariencia y genética de la especie nativa. Pronto se encontrará con la encrucijada entre seguir las órdenes de sus superiores o defender al mundo que le ha acogido y siente como suyo.', 2009, 161, 'https://image.tmdb.org/t/p/original/t5T3LPbLLgP2OP6kloM9p2PXpJL.jpg', 'https://image.tmdb.org/t/p/original/vL5LR6WdxWPjLPFRLe133jXWsh5.jpg', 'https://www.youtube.com/watch?v=AZS_d_hS2dM', 1, 0, 0, '2026-02-09 09:09:04', 12, 7.6, '19995'),
+(35, 2, 'Loki', 'Loki es llevado ante la misteriosa organización llamada AVT (Autoridad de Variación Temporal) después de los acontecimientos  ocurridos en  \"Avengers: Endgame (2019)\" y  se le da a elegir  enfrentarse a ser borrado de la existencia debido a que es una \"variante de tiempo\" o ayudar a arreglar la línea de tiempo y detener una amenaza mayor.', 2021, 0, 'https://image.tmdb.org/t/p/original/53aonG0QS3ynbYuuwhPtyoOwTDD.jpg', 'https://image.tmdb.org/t/p/original/N1hWzVPpZ8lIQvQskgdQogxdsc.jpg', 'https://www.youtube.com/watch?v=uz1CREWyISo', 1, 0, 0, '2026-02-09 09:18:10', 12, 8.2, '84958');
 
 -- --------------------------------------------------------
 
@@ -174,9 +223,9 @@ INSERT INTO `contenidos` (`id`, `tipo_id`, `titulo`, `descripcion`, `anio`, `dur
 --
 
 CREATE TABLE `contenido_actor` (
-  `contenido_id` int(11) NOT NULL,
-  `actor_id` int(11) NOT NULL,
-  `personaje` varchar(100) DEFAULT NULL
+  `contenido_id` int NOT NULL,
+  `actor_id` int NOT NULL,
+  `personaje` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -226,7 +275,28 @@ INSERT INTO `contenido_actor` (`contenido_id`, `actor_id`, `personaje`) VALUES
 (28, 37, ''),
 (29, 10, ''),
 (29, 38, ''),
-(29, 39, '');
+(29, 39, ''),
+(33, 1, 'Jake Sully'),
+(33, 2, 'Neytiri'),
+(33, 55, 'Dr. Grace Augustine'),
+(33, 56, 'Colonel Miles Quaritch'),
+(33, 57, 'Trudy Chacon'),
+(33, 58, 'Parker Selfridge'),
+(33, 59, 'Norm Spellman'),
+(33, 60, 'Mo\'at'),
+(33, 61, 'Eytukan'),
+(33, 62, 'Tsu\'Tey'),
+(33, 63, 'Dr. Max Patel'),
+(33, 64, 'Corporal Lyle Wainfleet'),
+(33, 65, 'Private Fike'),
+(33, 66, 'Cryo Vault Med Tech'),
+(33, 67, 'Venture Star Crew Chief'),
+(35, 80, 'Loki Laufeyson'),
+(35, 81, 'Sylvie / The Variant'),
+(35, 82, 'Hunter B-15'),
+(35, 83, 'Casey / Hunter K-5E'),
+(35, 84, 'Ouroboros \'OB\''),
+(35, 85, 'Mobius M. Mobius');
 
 -- --------------------------------------------------------
 
@@ -235,8 +305,8 @@ INSERT INTO `contenido_actor` (`contenido_id`, `actor_id`, `personaje`) VALUES
 --
 
 CREATE TABLE `contenido_director` (
-  `contenido_id` int(11) NOT NULL,
-  `director_id` int(11) NOT NULL
+  `contenido_id` int NOT NULL,
+  `director_id` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -245,6 +315,7 @@ CREATE TABLE `contenido_director` (
 
 INSERT INTO `contenido_director` (`contenido_id`, `director_id`) VALUES
 (1, 1),
+(33, 1),
 (2, 2),
 (3, 3),
 (4, 4),
@@ -252,12 +323,12 @@ INSERT INTO `contenido_director` (`contenido_id`, `director_id`) VALUES
 (6, 6),
 (7, 7),
 (8, 7),
+(16, 7),
 (9, 8),
 (10, 9),
 (12, 10),
-(13, 12),
 (14, 11),
-(16, 7),
+(13, 12),
 (24, 13),
 (24, 14),
 (24, 15),
@@ -265,7 +336,8 @@ INSERT INTO `contenido_director` (`contenido_id`, `director_id`) VALUES
 (25, 17),
 (27, 18),
 (28, 19),
-(29, 20);
+(29, 20),
+(35, 24);
 
 -- --------------------------------------------------------
 
@@ -274,8 +346,8 @@ INSERT INTO `contenido_director` (`contenido_id`, `director_id`) VALUES
 --
 
 CREATE TABLE `contenido_genero` (
-  `contenido_id` int(11) NOT NULL,
-  `genero_id` int(11) NOT NULL
+  `contenido_id` int NOT NULL,
+  `genero_id` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -284,66 +356,72 @@ CREATE TABLE `contenido_genero` (
 
 INSERT INTO `contenido_genero` (`contenido_id`, `genero_id`) VALUES
 (1, 1),
-(1, 2),
-(1, 3),
-(2, 2),
 (3, 1),
-(3, 3),
-(3, 4),
 (4, 1),
-(4, 2),
-(4, 3),
-(5, 4),
-(6, 3),
-(6, 4),
 (7, 1),
-(7, 6),
 (8, 1),
-(8, 3),
-(9, 4),
-(9, 6),
-(10, 4),
-(10, 6),
-(11, 2),
-(11, 3),
-(12, 4),
-(12, 6),
-(13, 5),
-(13, 7),
 (14, 1),
-(14, 3),
-(15, 2),
-(15, 5),
-(16, 3),
-(16, 4),
-(17, 4),
-(17, 5),
-(18, 5),
-(18, 10),
 (19, 1),
-(19, 3),
-(20, 4),
-(20, 9),
-(21, 4),
-(21, 9),
 (22, 1),
-(22, 4),
 (23, 1),
+(25, 1),
+(27, 1),
+(28, 1),
+(29, 1),
+(33, 1),
+(1, 2),
+(2, 2),
+(4, 2),
+(11, 2),
+(15, 2),
 (23, 2),
 (24, 2),
-(24, 5),
-(24, 7),
-(25, 1),
 (25, 2),
-(25, 3),
-(27, 1),
 (27, 2),
-(27, 7),
-(28, 1),
 (28, 2),
+(33, 2),
+(1, 3),
+(3, 3),
+(4, 3),
+(6, 3),
+(8, 3),
+(11, 3),
+(14, 3),
+(16, 3),
+(19, 3),
+(25, 3),
 (28, 3),
-(29, 1),
-(29, 3);
+(29, 3),
+(33, 3),
+(3, 4),
+(5, 4),
+(6, 4),
+(9, 4),
+(10, 4),
+(12, 4),
+(16, 4),
+(17, 4),
+(20, 4),
+(21, 4),
+(22, 4),
+(35, 4),
+(13, 5),
+(15, 5),
+(17, 5),
+(18, 5),
+(24, 5),
+(7, 6),
+(9, 6),
+(10, 6),
+(12, 6),
+(13, 7),
+(24, 7),
+(27, 7),
+(20, 9),
+(21, 9),
+(18, 10),
+(33, 10),
+(35, 14);
 
 -- --------------------------------------------------------
 
@@ -352,8 +430,8 @@ INSERT INTO `contenido_genero` (`contenido_id`, `genero_id`) VALUES
 --
 
 CREATE TABLE `contenido_idioma` (
-  `contenido_id` int(11) NOT NULL,
-  `idioma_id` int(11) NOT NULL
+  `contenido_id` int NOT NULL,
+  `idioma_id` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -362,17 +440,11 @@ CREATE TABLE `contenido_idioma` (
 
 INSERT INTO `contenido_idioma` (`contenido_id`, `idioma_id`) VALUES
 (1, 1),
-(1, 2),
 (2, 1),
-(2, 2),
 (3, 1),
-(3, 2),
 (4, 1),
-(4, 2),
 (5, 1),
-(5, 2),
 (6, 1),
-(6, 2),
 (7, 1),
 (8, 1),
 (9, 1),
@@ -388,7 +460,13 @@ INSERT INTO `contenido_idioma` (`contenido_id`, `idioma_id`) VALUES
 (19, 1),
 (20, 1),
 (21, 1),
-(22, 1);
+(22, 1),
+(1, 2),
+(2, 2),
+(3, 2),
+(4, 2),
+(5, 2),
+(6, 2);
 
 -- --------------------------------------------------------
 
@@ -397,9 +475,9 @@ INSERT INTO `contenido_idioma` (`contenido_id`, `idioma_id`) VALUES
 --
 
 CREATE TABLE `directores` (
-  `id` int(11) NOT NULL,
-  `nombre` varchar(150) NOT NULL,
-  `foto` varchar(255) DEFAULT NULL
+  `id` int NOT NULL,
+  `nombre` varchar(150) COLLATE utf8mb4_general_ci NOT NULL,
+  `foto` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -426,7 +504,11 @@ INSERT INTO `directores` (`id`, `nombre`, `foto`) VALUES
 (17, 'Joe Russo', 'https://ui-avatars.com/api/?name=Joe+Russo&background=random'),
 (18, 'Jon Watts', 'https://ui-avatars.com/api/?name=Jon+Watts&background=random'),
 (19, 'Louis Leterrier', 'https://ui-avatars.com/api/?name=Louis+Leterrier&background=random'),
-(20, 'Jon Favreau', 'https://ui-avatars.com/api/?name=Jon+Favreau&background=random');
+(20, 'Jon Favreau', 'https://ui-avatars.com/api/?name=Jon+Favreau&background=random'),
+(21, 'Matt Reeves', 'https://image.tmdb.org/t/p/original/5rA459xpMt6IeJG7ZqvhLbSozEH.jpg'),
+(22, 'Ross Duffer', 'https://image.tmdb.org/t/p/original/7wdhSHgMLry5jBKJT1mdLT3BYaZ.jpg'),
+(23, 'Matt Duffer', 'https://image.tmdb.org/t/p/original/kXO5CnSxC0znMAICGxnPeuGP73U.jpg'),
+(24, 'Michael Waldron', 'https://image.tmdb.org/t/p/original/5hf8B7h92GhSSch0FVNSfWMyEG2.jpg');
 
 -- --------------------------------------------------------
 
@@ -435,8 +517,8 @@ INSERT INTO `directores` (`id`, `nombre`, `foto`) VALUES
 --
 
 CREATE TABLE `generos` (
-  `id` int(11) NOT NULL,
-  `nombre` varchar(50) NOT NULL
+  `id` int NOT NULL,
+  `nombre` varchar(50) COLLATE utf8mb4_general_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -454,7 +536,11 @@ INSERT INTO `generos` (`id`, `nombre`) VALUES
 (8, 'Thriller'),
 (9, 'Romance'),
 (10, 'Fantasía'),
-(11, 'Comedia Española');
+(11, 'Comedia Española'),
+(12, 'Misterio'),
+(13, 'Suspense'),
+(14, 'Sci-Fi & Fantasy'),
+(15, 'Action & Adventure');
 
 -- --------------------------------------------------------
 
@@ -463,9 +549,9 @@ INSERT INTO `generos` (`id`, `nombre`) VALUES
 --
 
 CREATE TABLE `idiomas` (
-  `id` int(11) NOT NULL,
-  `nombre` varchar(50) NOT NULL,
-  `codigo` varchar(5) NOT NULL
+  `id` int NOT NULL,
+  `nombre` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `codigo` varchar(5) COLLATE utf8mb4_general_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -483,9 +569,9 @@ INSERT INTO `idiomas` (`id`, `nombre`, `codigo`) VALUES
 --
 
 CREATE TABLE `mi_lista` (
-  `usuario_id` int(11) NOT NULL,
-  `contenido_id` int(11) NOT NULL,
-  `fecha_agregado` datetime DEFAULT current_timestamp()
+  `usuario_id` int NOT NULL,
+  `contenido_id` int NOT NULL,
+  `fecha_agregado` datetime DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -506,6 +592,7 @@ INSERT INTO `mi_lista` (`usuario_id`, `contenido_id`, `fecha_agregado`) VALUES
 (3, 20, '2026-02-03 07:51:13'),
 (3, 24, '2026-02-03 07:37:35'),
 (3, 27, '2026-02-05 16:21:40'),
+(3, 30, '2026-02-09 07:01:56'),
 (4, 13, '2026-01-22 23:09:23'),
 (4, 15, '2026-01-22 23:09:19');
 
@@ -516,10 +603,10 @@ INSERT INTO `mi_lista` (`usuario_id`, `contenido_id`, `fecha_agregado`) VALUES
 --
 
 CREATE TABLE `planes` (
-  `id` int(11) NOT NULL,
-  `nombre` varchar(50) NOT NULL,
+  `id` int NOT NULL,
+  `nombre` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
   `precio` decimal(10,2) NOT NULL,
-  `calidad` varchar(50) DEFAULT 'HD'
+  `calidad` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'HD'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -538,12 +625,12 @@ INSERT INTO `planes` (`id`, `nombre`, `precio`, `calidad`) VALUES
 --
 
 CREATE TABLE `resenas` (
-  `id` int(11) NOT NULL,
-  `usuario_id` int(11) NOT NULL,
-  `contenido_id` int(11) NOT NULL,
-  `puntuacion` int(11) NOT NULL,
-  `comentario` text DEFAULT NULL,
-  `fecha` datetime DEFAULT current_timestamp()
+  `id` int NOT NULL,
+  `usuario_id` int NOT NULL,
+  `contenido_id` int NOT NULL,
+  `puntuacion` int NOT NULL,
+  `comentario` text COLLATE utf8mb4_general_ci,
+  `fecha` datetime DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -553,10 +640,10 @@ CREATE TABLE `resenas` (
 --
 
 CREATE TABLE `temporadas` (
-  `id` int(11) NOT NULL,
-  `contenido_id` int(11) NOT NULL,
-  `nombre` varchar(100) DEFAULT NULL,
-  `numero` int(11) NOT NULL
+  `id` int NOT NULL,
+  `contenido_id` int NOT NULL,
+  `nombre` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `numero` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -578,8 +665,8 @@ INSERT INTO `temporadas` (`id`, `contenido_id`, `nombre`, `numero`) VALUES
 --
 
 CREATE TABLE `tipos_contenido` (
-  `id` int(11) NOT NULL,
-  `nombre` varchar(50) NOT NULL
+  `id` int NOT NULL,
+  `nombre` varchar(50) COLLATE utf8mb4_general_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -597,14 +684,14 @@ INSERT INTO `tipos_contenido` (`id`, `nombre`) VALUES
 --
 
 CREATE TABLE `usuarios` (
-  `id` int(11) NOT NULL,
-  `username` varchar(50) NOT NULL,
-  `email` varchar(100) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `rol` enum('admin','usuario') DEFAULT 'usuario',
-  `plan_id` int(11) DEFAULT 1,
-  `avatar` varchar(255) DEFAULT 'default.png',
-  `fecha_registro` datetime DEFAULT current_timestamp()
+  `id` int NOT NULL,
+  `username` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `email` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `password` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `rol` enum('admin','usuario') COLLATE utf8mb4_general_ci DEFAULT 'usuario',
+  `plan_id` int DEFAULT '1',
+  `avatar` varchar(255) COLLATE utf8mb4_general_ci DEFAULT 'default.png',
+  `fecha_registro` datetime DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -614,7 +701,7 @@ CREATE TABLE `usuarios` (
 INSERT INTO `usuarios` (`id`, `username`, `email`, `password`, `rol`, `plan_id`, `avatar`, `fecha_registro`) VALUES
 (1, 'Admin', 'admin@labutaca.com', '$2y$10$NWRxl6ZoScpFC8lckYI7O.WyAdnbAFUox/xSwYa64T5jLoslIDlCq', 'admin', 2, 'avatar_admin.jpg', '2026-01-21 14:29:51'),
 (2, 'FreeUser', 'invitado@labutaca.com', '$2y$10$NWRxl6ZoScpFC8lckYI7O.WyAdnbAFUox/xSwYa64T5jLoslIDlCq', 'usuario', 1, 'https://images.ecestaticos.com/an3NIKmUWjvoxIwgQ4K3J0pqAqo=/0x0:828x470/1200x1200/filters:fill(white):format(jpg)/f.elconfidencial.com%2Foriginal%2F280%2F050%2F590%2F2800505903fc39bbeaf82f750b823ec3.jpg', '2026-01-21 14:29:51'),
-(3, 'PremiumUser', 'prueba@labutaca.com', '$2y$10$NWRxl6ZoScpFC8lckYI7O.WyAdnbAFUox/xSwYa64T5jLoslIDlCq', 'usuario', 2, 'https://upload.wikimedia.org/wikipedia/en/9/90/HeathJoker.png', '2026-01-21 15:53:11'),
+(3, 'PremiumUser', 'prueba@labutaca.com', '$2y$10$NWRxl6ZoScpFC8lckYI7O.WyAdnbAFUox/xSwYa64T5jLoslIDlCq', 'usuario', 2, 'https://i.blogs.es/b0add0/breaking-bad/500_333.jpeg', '2026-01-21 15:53:11'),
 (4, 'KidsUser', 'peque@labutaca.com', '$2y$10$NWRxl6ZoScpFC8lckYI7O.WyAdnbAFUox/xSwYa64T5jLoslIDlCq', 'usuario', 3, 'https://media.revistagq.com/photos/62a8546d6b74c0e2031238a6/16:9/w_1280,c_limit/buzz.jpg', '2026-01-22 11:35:40'),
 (6, 'pruebanueva', 'pruebanueva', '1234', 'admin', 2, 'default.png', '2026-01-26 21:25:17');
 
@@ -740,67 +827,67 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `actores`
 --
 ALTER TABLE `actores`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=86;
 
 --
 -- AUTO_INCREMENT de la tabla `capitulos`
 --
 ALTER TABLE `capitulos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT de la tabla `contenidos`
 --
 ALTER TABLE `contenidos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
 
 --
 -- AUTO_INCREMENT de la tabla `directores`
 --
 ALTER TABLE `directores`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT de la tabla `generos`
 --
 ALTER TABLE `generos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT de la tabla `idiomas`
 --
 ALTER TABLE `idiomas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `planes`
 --
 ALTER TABLE `planes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `resenas`
 --
 ALTER TABLE `resenas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `temporadas`
 --
 ALTER TABLE `temporadas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `tipos_contenido`
 --
 ALTER TABLE `tipos_contenido`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- Restricciones para tablas volcadas

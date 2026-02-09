@@ -5,99 +5,85 @@
 <?= view('backend/templates/header') ?>
 
 <style>
-    .ui-autocomplete {
-        z-index: 9999 !important;
-        max-height: 300px;
+    /* Estilos para el Autocomplete con Foto */
+    .ui-autocomplete { 
+        z-index: 1050 !important;
+        max-height: 300px; 
+        overflow-y: auto; 
+        background: white;
+        border: 1px solid #ccc;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .ui-menu-item { border-bottom: 1px solid #eee; }
+    .ui-menu-item-wrapper { display: flex; align-items: center; gap: 15px; padding: 8px; cursor: pointer; }
+    .ui-menu-item-wrapper:hover { background-color: #f8f9fa; }
+    .ui-menu-item-wrapper img { width: 45px; height: 68px; object-fit: cover; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+    .checkbox-container {
+        max-height: 250px;
         overflow-y: auto;
-        overflow-x: hidden;
+        border: 1px solid #dee2e6;
+        padding: 15px;
+        border-radius: 0.375rem;
+        background: #fff;
     }
-
-    .ui-menu-item-wrapper {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 5px;
-    }
-
-    .ui-menu-item-wrapper img {
-        width: 30px;
-        height: 45px;
-        object-fit: cover;
-        border-radius: 3px;
-    }
-
-    .ui-state-active {
-        background: #0d6efd !important;
-        border: 1px solid #0d6efd !important;
-        color: white !important;
+    .new-genre-badge {
+        background-color: #fff3cd;
+        border: 1px solid #ffecb5;
+        padding: 2px 8px;
+        border-radius: 4px;
+        margin-bottom: 5px;
     }
 </style>
 
 <div class="row justify-content-center">
-    <div class="col-md-10">
-
-        <h2 class="mb-4">
-            <?= (isset($tipo_id) && $tipo_id == 2) ? 'Agregar Nueva Serie' : 'Agregar Nueva Película' ?>
-        </h2>
+    <div class="col-md-12">
+        <h2 class="mb-4"><?= (isset($tipo_id) && $tipo_id == 2) ? 'Nueva Serie' : 'Nueva Película' ?></h2>
 
         <div class="card mb-4 border-primary">
             <div class="card-body bg-light">
-                <label class="fw-bold text-primary mb-2"><i class="fa fa-magic"></i> Importación Automática
-                    (OMDb)</label>
+                <label class="fw-bold text-primary mb-2"><i class="fa fa-magic"></i> Importación TMDB</label>
                 <div class="input-group">
                     <span class="input-group-text bg-white"><i class="fa fa-search"></i></span>
-                    <input type="text" id="imdb_autocomplete" class="form-control form-control-lg"
-                        placeholder="Escribe el título aquí (ej: Batman, Breaking Bad)...">
+                    <input type="text" id="tmdb_autocomplete" class="form-control" placeholder="Busca título para rellenar...">
                 </div>
-                <small class="text-muted">Selecciona una opción de la lista para rellenar <b>automáticamente</b> ficha,
-                    actores, directores y rating.</small>
+                <small class="text-muted">Importa: Ficha, Reparto, <b>Géneros traducidos</b> y <b>Edad recomendada</b>.</small>
             </div>
         </div>
-        <?php if (session()->has('errors')): ?>
-            <div class="alert alert-danger shadow-sm">
-                <ul class="mb-0">
-                    <?php foreach (session('errors') as $error): ?>
-                        <li><i class="fa fa-exclamation-circle"></i> <?= esc($error) ?></li>
-                    <?php endforeach ?>
-                </ul>
-            </div>
-        <?php endif; ?>
-        <form
-            action="<?= base_url((isset($tipo_id) && $tipo_id == 2) ? 'admin/series/store' : 'admin/peliculas/store') ?>"
-            method="post" enctype="multipart/form-data">
 
+        <?php 
+            $urlAction = (isset($action) && $action == 'edit') 
+                ? base_url('admin/peliculas/update/' . $data['id']) 
+                : base_url((isset($tipo_id) && $tipo_id == 2) ? 'admin/series/store' : 'admin/peliculas/store');
+        ?>
+        <form id="formContenido" action="<?= $urlAction ?>" method="post" enctype="multipart/form-data">
             <?= csrf_field() ?>
-
-            <input type="hidden" name="generos_texto" id="generos_texto">
-            <input type="hidden" name="directores_texto" id="directores_texto">
-            <input type="hidden" name="actores_texto" id="actores_texto">
-            <input type="hidden" name="imdb_rating" id="imdb_rating_input">
-
-            <input type="hidden" name="url_imagen_externa" id="url_imagen_externa">
-            <input type="hidden" name="url_bg_externa" id="url_bg_externa">
+            <input type="hidden" name="imdb_id" id="imdb_id" value="<?= $data['imdb_id'] ?? '' ?>"> 
+            <input type="hidden" name="actores_json" id="actores_json">
+            <input type="hidden" name="directores_json" id="directores_json">
 
             <div class="row">
                 <div class="col-md-8">
                     <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-white fw-bold">Datos de la Ficha</div>
+                        <div class="card-header bg-white fw-bold">1. Ficha Técnica</div>
                         <div class="card-body">
                             <div class="mb-3">
-                                <label>Título</label>
-                                <input type="text" name="titulo" id="titulo" class="form-control" required>
+                                <label class="fw-bold">Título</label>
+                                <input type="text" name="titulo" id="titulo" class="form-control" value="<?= $data['titulo'] ?? '' ?>" required>
                             </div>
-
                             <div class="row">
                                 <div class="col-md-4 mb-3">
                                     <label>Año</label>
-                                    <input type="number" name="anio" id="anio" class="form-control" required>
+                                    <input type="number" name="anio" id="anio" class="form-control" value="<?= $data['anio'] ?? '' ?>" required>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label>Duración (min)</label>
-                                    <input type="number" name="duracion" id="duracion" class="form-control">
+                                    <input type="number" name="duracion" id="duracion" class="form-control" value="<?= $data['duracion'] ?? '' ?>">
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label>Edad Recomendada</label>
-                                    <select name="edad_recomendada" class="form-select">
+                                    <select name="edad_recomendada" id="edad_recomendada" class="form-select">
+                                        <option value="12">Seleccionar...</option>
                                         <option value="0">TP (Todos)</option>
                                         <option value="7">+7 Años</option>
                                         <option value="12" selected>+12 Años</option>
@@ -106,15 +92,61 @@
                                     </select>
                                 </div>
                             </div>
-
                             <div class="mb-3">
                                 <label>Sinopsis</label>
-                                <textarea name="descripcion" id="descripcion" class="form-control" rows="4"></textarea>
+                                <textarea name="descripcion" id="descripcion" class="form-control" rows="3"><?= $data['descripcion'] ?? '' ?></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-white fw-bold">2. Reparto y Categorías</div>
+                        <div class="card-body">
+                            
+                            <div class="mb-3">
+                                <label class="fw-bold text-success d-flex justify-content-between">
+                                    <span>Géneros</span>
+                                    <span class="badge bg-secondary" style="cursor:pointer" onclick="$('.genero-checkbox').prop('checked', false)">Limpiar</span>
+                                </label>
+                                
+                                <div class="checkbox-container">
+                                    <div class="row" id="container_generos_db">
+                                        <?php 
+                                            $selectedIds = [];
+                                            if(isset($data['generos']) && is_array($data['generos'])) {
+                                                $selectedIds = array_column($data['generos'], 'id');
+                                            }
+                                        ?>
+                                        <?php foreach($generos as $g): ?>
+                                            <div class="col-md-4 col-sm-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input genero-checkbox" 
+                                                           type="checkbox" 
+                                                           name="generos[]" 
+                                                           value="<?= $g['id'] ?>" 
+                                                           id="gen_<?= $g['id'] ?>"
+                                                           data-nombre="<?= strtolower($g['nombre']) ?>"
+                                                           <?= in_array($g['id'], $selectedIds) ? 'checked' : '' ?>>
+                                                    <label class="form-check-label" for="gen_<?= $g['id'] ?>">
+                                                        <?= esc($g['nombre']) ?>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <hr class="my-2">
+                                    <label class="small text-muted mb-2">Nuevos detectados:</label>
+                                    <div class="row" id="container_generos_nuevos"></div>
+                                </div>
                             </div>
 
                             <div class="mb-3">
-                                <label>URL Video (YouTube / MP4)</label>
-                                <input type="text" name="url_video" class="form-control" placeholder="https://...">
+                                <label class="fw-bold text-info">Director(es)</label>
+                                <input type="text" id="directores_visual" class="form-control" readonly style="background: #e9ecef;">
+                            </div>
+                            <div class="mb-3">
+                                <label class="fw-bold text-warning">Reparto (Top 10)</label>
+                                <input type="text" id="actores_visual" class="form-control" readonly style="background: #e9ecef;">
                             </div>
                         </div>
                     </div>
@@ -122,166 +154,237 @@
 
                 <div class="col-md-4">
                     <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-white fw-bold">Configuración</div>
+                        <div class="card-header bg-white fw-bold">3. Multimedia</div>
+                        <div class="card-body text-center">
+                            <img id="preview_poster" src="https://via.placeholder.com/200x300?text=Poster" class="img-fluid rounded shadow mb-3" style="max-height: 250px;">
+                            
+                            <div class="mb-3 text-start">
+                                <label class="fw-bold small">URL Póster</label>
+                                <input type="text" name="url_imagen_externa" id="url_imagen_externa" class="form-control form-control-sm" onchange="actualizarPreview(this.value)">
+                            </div>
+                            <div class="mb-3 text-start">
+                                <label class="fw-bold small">URL Fondo</label>
+                                <input type="text" name="url_bg_externa" id="url_bg_externa" class="form-control form-control-sm">
+                            </div>
+                            <div class="mb-3 text-start">
+                                <label class="fw-bold small text-danger"><i class="fa fa-youtube"></i> Trailer</label>
+                                <input type="text" name="url_video" id="url_video" class="form-control form-control-sm">
+                            </div>
+                            <hr>
+                            <label class="small text-muted">Subir imagen local:</label>
+                            <input type="file" name="imagen" class="form-control form-control-sm">
+                        </div>
+                    </div>
+
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-white fw-bold">4. Configuración</div>
                         <div class="card-body">
                             <div class="mb-3">
-                                <label>Tipo</label>
-                                <select name="tipo_id" class="form-select">
-                                    <option value="1" <?= (isset($tipo_id) && $tipo_id == 1) ? 'selected' : '' ?>>Película
-                                    </option>
-                                    <option value="2" <?= (isset($tipo_id) && $tipo_id == 2) ? 'selected' : '' ?>>Serie
-                                    </option>
-                                </select>
+                                <label>Puntuación</label>
+                                <input type="text" name="imdb_rating" id="imdb_rating" class="form-control" value="<?= $data['imdb_rating'] ?? '' ?>">
                             </div>
-
                             <div class="mb-3">
-                                <label>Plan de Acceso</label>
-                                <select name="nivel_acceso" class="form-select">
-                                    <option value="1">Gratis</option>
+                                <label>Plan</label>
+                                <select name="nivel_acceso" id="nivel_acceso" class="form-select">
+                                    <option value="1" selected>Gratis</option>
                                     <option value="2">Premium</option>
                                 </select>
                             </div>
-
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" name="destacada" value="1"
-                                    id="checkDestacada">
-                                <label class="form-check-label" for="checkDestacada">Destacada (Carrusel)</label>
-                            </div>
-
-                            <hr>
-
-                            <div class="mb-2">
-                                <label class="small text-muted">Géneros Detectados</label>
-                                <input type="text" id="generos_visual" class="form-control form-control-sm" readonly
-                                    style="background:#e9ecef;">
-                            </div>
-                            <div class="mb-2">
-                                <label class="small text-muted">Rating IMDb</label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-warning text-dark fw-bold"><i
-                                            class="fa fa-star"></i></span>
-                                    <input type="text" id="imdb_rating_visual" class="form-control" readonly
-                                        style="background:#fff;">
-                                </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="destacada" value="1" id="destacada">
+                                <label class="form-check-label">Destacada</label>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-white fw-bold">Imágenes</div>
-                        <div class="card-body text-center">
-                            <img id="preview_poster" src="https://via.placeholder.com/150x220?text=Sin+Imagen"
-                                style="width: 100%; max-width:150px; border-radius: 5px; margin-bottom: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-
-                            <div class="text-start mt-3">
-                                <label class="small">Subir Póster (Opcional)</label>
-                                <input type="file" name="imagen" class="form-control form-control-sm">
-                            </div>
-                            <div class="text-start mt-2">
-                                <label class="small">Subir Fondo (Opcional)</label>
-                                <input type="file" name="imagen_bg" class="form-control form-control-sm">
-                            </div>
-                        </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg fw-bold">Guardar</button>
                     </div>
                 </div>
-            </div>
-
-            <div class="d-grid gap-2 mb-5">
-                <button type="submit" class="btn btn-success btn-lg fw-bold shadow">
-                    <i class="fa fa-save"></i> Guardar Contenido
-                </button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
+    function actualizarPreview(url) {
+        $('#preview_poster').attr('src', (url && url.length > 5) ? url : 'https://via.placeholder.com/200x300?text=Sin+Imagen');
+    }
+
+    function limpiarFormulario() {
+        $('#titulo, #anio, #duracion, #descripcion, #actores_visual, #directores_visual, #imdb_rating, #url_imagen_externa, #url_bg_externa, #url_video, #imdb_id').val('');
+        $('#actores_json, #directores_json').val('');
+        $('#edad_recomendada').val('12'); // Reset por defecto
+        $('.genero-checkbox').prop('checked', false);
+        $('#container_generos_nuevos').empty();
+        actualizarPreview('');
+    }
+
+    // 📖 DICCIONARIO PARA TRADUCIR GÉNEROS EN EL FRONTEND
+    const mapaGeneros = {
+        'action': 'acción',
+        'adventure': 'aventura',
+        'science fiction': 'ciencia ficción',
+        'sci-fi': 'ciencia ficción',
+        'animation': 'animación',
+        'comedy': 'comedia',
+        'crime': 'crimen',
+        'documentary': 'documental',
+        'drama': 'drama',
+        'family': 'familiar',
+        'fantasy': 'fantasía',
+        'history': 'historia',
+        'horror': 'terror',
+        'music': 'música',
+        'mystery': 'misterio',
+        'romance': 'romance',
+        'thriller': 'terror', // Mapeo especial thriller -> terror
+        'war': 'bélica',
+        'western': 'western',
+        'tv movie': 'película de tv'
+    };
+
     $(document).ready(function () {
-        const apiKey = '78a51c36'; // TU API KEY
+        const apiKey = '6387e3c183c454304108333c56530988'; 
+        const baseUrlImg = 'https://image.tmdb.org/t/p/original';
+        let tipoBusqueda = '<?= (isset($tipo_id) && $tipo_id == 2) ? 'tv' : 'movie' ?>';
+        if (window.location.href.indexOf("series") > -1) tipoBusqueda = 'tv';
 
-        // === CORRECCIÓN AQUÍ ===
-        // 1. Usamos 'let' en vez de 'const' para poder cambiarlo.
-        // 2. Primero intentamos leer lo que dice PHP.
-        let tipoBusqueda = '<?= (isset($tipo_id) && $tipo_id == 2) ? 'series' : 'movie' ?>';
-
-        // 3. SEGURO ANTI-FALLOS: Si la URL del navegador dice "series", forzamos que busque series.
-        if (window.location.href.indexOf("series") > -1) {
-            tipoBusqueda = 'series';
-        }
-
-        console.log("Modo de búsqueda OMDb: " + tipoBusqueda); // Míralo en la consola (F12)
-
-        $("#imdb_autocomplete").autocomplete({
+        // AUTOCOMPLETE
+        var $input = $("#tmdb_autocomplete").autocomplete({
             minLength: 3,
             source: function (request, response) {
                 $.ajax({
-                    url: "https://www.omdbapi.com/",
+                    url: `https://api.themoviedb.org/3/search/${tipoBusqueda}`,
                     dataType: "json",
-                    data: {
-                        apikey: apiKey,
-                        s: request.term,
-                        type: tipoBusqueda // Ahora enviará 'series' si estás en la URL de series
-                    },
+                    data: { api_key: apiKey, query: request.term, language: 'es-ES', include_adult: false },
                     success: function (data) {
-                        if (data.Response === "True") {
-                            response($.map(data.Search, function (item) {
+                        if (data.results) {
+                            response($.map(data.results, function (item) {
+                                let title = (tipoBusqueda === 'movie') ? item.title : item.name;
+                                let year = (tipoBusqueda === 'movie') ? (item.release_date || '') : (item.first_air_date || '');
                                 return {
-                                    label: item.Title,
-                                    value: item.Title,
-                                    imdbID: item.imdbID,
-                                    poster: item.Poster,
-                                    year: item.Year
+                                    label: title, value: title, id: item.id,
+                                    poster: item.poster_path, year: year.substring(0, 4)
                                 }
                             }));
-                        } else {
-                            response([{ label: "No se encontraron resultados (" + tipoBusqueda + ")", value: "" }]);
                         }
                     }
                 });
             },
-            create: function () {
-                $(this).data('ui-autocomplete')._renderItem = function (ul, item) {
-                    if (!item.imdbID) return $("<li>").append(item.label).appendTo(ul);
-                    const img = (item.poster !== "N/A") ? item.poster : "https://via.placeholder.com/30x45";
-                    return $("<li>").append(`<div class="ui-menu-item-wrapper"><img src="${img}"><div><strong>${item.label}</strong> <br> <span style="color:#aaa; font-size:0.8em">${item.year}</span></div></div>`).appendTo(ul);
-                };
-            },
             select: function (event, ui) {
-                if (!ui.item.imdbID) return false;
+                if (!ui.item.id) return false;
+                limpiarFormulario();
 
-                // LLAMADA FINAL PARA RELLENAR TODO
-                fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${ui.item.imdbID}&plot=full`)
+                // PEDIMOS DATOS + CERTIFICACIÓN (release_dates / content_ratings)
+                let append = 'credits,videos';
+                if(tipoBusqueda === 'movie') append += ',release_dates';
+                else append += ',content_ratings';
+
+                fetch(`https://api.themoviedb.org/3/${tipoBusqueda}/${ui.item.id}?api_key=${apiKey}&language=es-ES&append_to_response=${append}`)
                     .then(r => r.json())
                     .then(data => {
-                        // 1. Campos Básicos
-                        $('#titulo').val(data.Title);
-                        $('#anio').val(parseInt(data.Year));
-                        $('#duracion').val(parseInt(data.Runtime) || 0);
-                        $('#descripcion').val(data.Plot);
+                        // --- BÁSICOS ---
+                        let titulo = (tipoBusqueda === 'movie') ? data.title : data.name;
+                        let anio = (tipoBusqueda === 'movie') ? data.release_date : data.first_air_date;
+                        $('#titulo').val(titulo);
+                        $('#anio').val(anio ? anio.substring(0, 4) : '');
+                        $('#descripcion').val(data.overview);
+                        $('#imdb_id').val(data.id);
+                        $('#imdb_rating').val(data.vote_average.toFixed(1));
+                        
+                        let duracion = (tipoBusqueda === 'movie') ? data.runtime : (data.episode_run_time?.[0] || 0);
+                        $('#duracion').val(duracion);
 
-                        // 2. Datos para procesar en Backend (Inputs Ocultos)
-                        $('#generos_texto').val(data.Genre);
-                        $('#directores_texto').val(data.Director);
-                        $('#actores_texto').val(data.Actors);
+                        // --- GÉNEROS (CON TRADUCCIÓN VISUAL) ---
+                        if(data.genres) {
+                            data.genres.forEach(g => {
+                                let nombreOriginal = g.name.toLowerCase();
+                                // Traducir usando el diccionario o dejar original
+                                let nombreBuscado = mapaGeneros[nombreOriginal] || nombreOriginal;
 
-                        // 3. Rating
-                        let rating = parseFloat(data.imdbRating) || 0;
-                        $('#imdb_rating_input').val(rating);
-                        $('#imdb_rating_visual').val(rating);
+                                // Buscar checkbox por data-nombre
+                                let $existingCheck = $(`.genero-checkbox[data-nombre="${nombreBuscado}"]`);
+                                
+                                if($existingCheck.length > 0) {
+                                    $existingCheck.prop('checked', true); // ¡Lo encontramos!
+                                } else {
+                                    // Si no existe, crear uno nuevo
+                                    let label = g.name;
+                                    // Si hay traducción, la mostramos para que el usuario sepa
+                                    if(mapaGeneros[nombreOriginal]) label = `${mapaGeneros[nombreOriginal]} (${g.name})`;
 
-                        // 4. Feedback Visual
-                        $('#generos_visual').val(data.Genre).css('background-color', '#d1e7dd');
-
-                        // 5. Imágenes
-                        if (data.Poster !== "N/A") {
-                            $('#url_imagen_externa').val(data.Poster);
-                            $('#url_bg_externa').val(data.Poster);
-                            $('#preview_poster').attr('src', data.Poster).show();
+                                    let newCheckHtml = `
+                                        <div class="col-md-6 new-genre-badge">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="generos[]" value="${label}" checked>
+                                                <label class="form-check-label fw-bold text-primary">${label} (Nuevo)</label>
+                                            </div>
+                                        </div>`;
+                                    $('#container_generos_nuevos').append(newCheckHtml);
+                                }
+                            });
                         }
+
+                        // --- EDAD RECOMENDADA (LÓGICA AUTOMÁTICA) ---
+                        let cert = null;
+                        if(tipoBusqueda === 'movie' && data.release_dates) {
+                            // Buscar certificación en España (ES)
+                            let esData = data.release_dates.results.find(r => r.iso_3166_1 === 'ES');
+                            if(!esData) esData = data.release_dates.results.find(r => r.iso_3166_1 === 'US'); // Fallback USA
+                            if(esData && esData.release_dates.length > 0) cert = esData.release_dates[0].certification;
+                        } else if (tipoBusqueda === 'tv' && data.content_ratings) {
+                            let esData = data.content_ratings.results.find(r => r.iso_3166_1 === 'ES');
+                            if(!esData) esData = data.content_ratings.results.find(r => r.iso_3166_1 === 'US');
+                            if(esData) cert = esData.rating;
+                        }
+
+                        // Mapear la certificación (texto) al valor del select (0, 7, 12, 16, 18)
+                        if(cert) {
+                            let edadVal = '12'; // Default
+                            cert = cert.toLowerCase();
+                            
+                            // Lógica de mapeo
+                            if(['a', 'tp', 'g', 'tv-y', 'tv-g', '0'].includes(cert)) edadVal = '0';
+                            else if(['7', 'pg', 'tv-pg'].includes(cert)) edadVal = '7';
+                            else if(['12', '12a', 'pg-13', 'tv-14'].includes(cert)) edadVal = '12';
+                            else if(['16', '15'].includes(cert)) edadVal = '16';
+                            else if(['18', 'r', 'nc-17', 'tv-ma'].includes(cert)) edadVal = '18';
+
+                            $('#edad_recomendada').val(edadVal);
+                        }
+
+                        // --- CRÉDITOS & MULTIMEDIA ---
+                        if(data.credits) {
+                            let directoresRaw = (tipoBusqueda === 'movie') 
+                                ? data.credits.crew.filter(c => c.job === 'Director')
+                                : (data.created_by || []);
+                            let directoresData = directoresRaw.slice(0, 3).map(d => ({ name: d.name, photo: d.profile_path ? baseUrlImg + d.profile_path : '' }));
+                            $('#directores_json').val(JSON.stringify(directoresData));
+                            $('#directores_visual').val(directoresData.map(d => d.name).join(', '));
+
+                            let actoresData = data.credits.cast.slice(0, 15).map(a => ({ name: a.name, character: a.character, photo: a.profile_path ? baseUrlImg + a.profile_path : '' }));
+                            $('#actores_json').val(JSON.stringify(actoresData));
+                            $('#actores_visual').val(actoresData.map(a => a.name).join(', '));
+                        }
+                        if(data.videos?.results) {
+                            let trailer = data.videos.results.find(v => v.site === 'YouTube' && v.type === 'Trailer') || data.videos.results[0];
+                            if(trailer) $('#url_video').val(`https://www.youtube.com/watch?v=${trailer.key}`);
+                        }
+                        if (data.poster_path) {
+                            let poster = baseUrlImg + data.poster_path;
+                            $('#url_imagen_externa').val(poster);
+                            actualizarPreview(poster);
+                        }
+                        if (data.backdrop_path) $('#url_bg_externa').val(baseUrlImg + data.backdrop_path);
                     });
             }
         });
+
+        // PARCHE VISUAL PARA AUTOCOMPLETE
+        $input.autocomplete("instance")._renderItem = function (ul, item) {
+            const imgUrl = (item.poster) ? `https://image.tmdb.org/t/p/w92${item.poster}` : "https://via.placeholder.com/45x68?text=NO";
+            return $("<li>").append(`<div class="ui-menu-item-wrapper"><img src="${imgUrl}"><div><strong>${item.label}</strong> <br> <small class="text-muted">${item.year}</small></div></div>`).appendTo(ul);
+        };
     });
 </script>
-
-<?= view('backend/templates/footer') ?>

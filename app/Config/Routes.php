@@ -19,7 +19,7 @@ $routes->get('series', 'Serie::index');
 $routes->post('serie/ajax-fila', 'Serie::ajaxCargarFila');
 $routes->post('serie/ajax-expandir-fila', 'Serie::ajaxExpandirFila');
 $routes->get('director/(:num)', 'Home::director/$1');
-$routes->post('autocompletar', 'Home::autocompletar');
+$routes->post('autocompletar', 'Api\Catalogo::autocompletar');
 $routes->get('persona/(:segment)', 'Home::persona/$1');
 $routes->post('ajax/cargar-fila', 'Home::ajaxCargarFila');
 
@@ -66,7 +66,7 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function ($routes)
     $routes->post('usuario/toggle-lista', 'Usuario::toggle');
     $routes->get('mi-lista', 'Usuario::getLista');
     $routes->get('destacada-random', 'Catalogo::getDestacadaRandom');
-    $routes->get('peliculas-landing', 'Catalogo::getPeliculasLanding'); // <--- AÑADE ESTA
+    $routes->get('peliculas-landing', 'Catalogo::getPeliculasLanding'); 
 
     // BUSCADOR (Esta es la ruta crítica corregida)
     // Al estar dentro del grupo 'api', la URL final será: /api/buscador/autocompletar

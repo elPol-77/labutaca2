@@ -28,7 +28,8 @@ class Serie extends BaseController
         if ($esFree) {
             $model = new ContenidoModel();
             // Seleccionamos 1 serie aleatoria de la base de datos
-            $r = $model->where('tipo_id', 2) // Solo series
+            $r = $model->where('tipo_id', 2)
+                        ->where('nivel_acceso', 1) // Solo series
                        ->orderBy('RAND()')   // Aleatorio
                        ->first();            // SOLO UNA
 
@@ -254,7 +255,7 @@ class Serie extends BaseController
             // ---------------------------------------------------------
             if (!$saltarBloque) {
                 if ($config['tipo'] === 'local') {
-                    $items = $this->obtenerLocal($esKids, $config['params'] ?? []);
+                    $items = $this->obtenerLocal($esKids, $esFree, $config['params'] ?? []);
                 } else {
                     // AQUÍ ESTÁ EL CAMBIO CLAVE: Pasamos $esKids para filtrar
                     $items = $this->fetchTmdbDiscover($config['params'], $esKids);
@@ -389,14 +390,16 @@ class Serie extends BaseController
 
     // --- HELPER LOCAL MEJORADO (Soporta filtro por género) ---
     // --- HELPER LOCAL CORREGIDO (CON JOIN) ---
-    private function obtenerLocal($esKids, $params = [])
+    private function obtenerLocal($esKids,$esFree, $params = [])
     {
         $model = new ContenidoModel();
         
         // Seleccionamos la tabla contenidos
         $q = $model->select('contenidos.*'); // Asegura traer campos de contenidos
         $q->where('contenidos.tipo_id', 2); // 2 = Series
-
+        if ($esFree) {
+        $q->where('contenidos.nivel_acceso', 1); 
+        }
         // Filtro de edad para Kids
         if ($esKids) {
             $q->where('contenidos.edad_recomendada <=', 11);
@@ -456,7 +459,7 @@ class Serie extends BaseController
             'include_adult' => 'false',
             'page' => 1
         ], $params);
-
+        
         if ($esKids) {
             // 1. OBLIGATORIO: Solo Animación (ID 16)
             // Si ya venían géneros, le pegamos el 16. Si no, lo ponemos.
