@@ -15,6 +15,7 @@ $routes->get('ver/(:segment)', 'Home::ver/$1');
 $routes->get('mi-lista', 'Home::miLista');
 $routes->get('peliculas', 'Home::paginaPeliculas');
 $routes->get('series', 'Serie::index');
+$routes->get('ayuda', 'Home::ayuda');
 
 // Rutas AJAX Series
 $routes->post('serie/ajax-fila', 'Serie::ajaxCargarFila');
@@ -24,6 +25,11 @@ $routes->get('director/(:num)', 'Home::director/$1');
 $routes->post('autocompletar', 'Api\Catalogo::autocompletar'); // Tu buscador arreglado
 $routes->get('persona/(:segment)', 'Home::persona/$1');
 $routes->post('ajax/cargar-fila', 'Home::ajaxCargarFila');
+
+// --- GESTIÓN DE CUENTA Y CONFIGURACIÓN ---
+$routes->get('cuenta', 'Cuenta::index');
+$routes->post('cuenta/cambiar-password', 'Cuenta::cambiar_password');
+$routes->post('cuenta/cancelar-suscripcion', 'Cuenta::cancelar_suscripcion');
 
 // --- RUTA PARA ANGULAR (Si la usas) ---
 $routes->get('global', 'Home::vistaGlobal');
@@ -35,10 +41,25 @@ $routes->get('global/(:any)', 'Home::vistaGlobal');
 // Login de Usuarios
 $routes->get('auth', 'Auth::index');
 $routes->get('login', 'Auth::index');
-$routes->post('auth/login', 'Auth::login');
+$routes->get('auth', 'Auth::index');
+$routes->get('login', 'Auth::index');
+
+$routes->post('auth/ajax_login_perfil', 'Auth::login'); 
+
+$routes->post('auth/login_general', 'Auth::login_general');
+$routes->post('auth/register', 'Auth::register');
+// --- REGISTRO Y PAGOS ---
+$routes->get('registro', 'Auth::registro');
+$routes->post('auth/crear', 'Auth::crear_usuario');
+
+$routes->get('pasarela', 'Auth::pasarela_pago');      // Muestra la tarjeta
+$routes->post('auth/pagar', 'Auth::procesar_pago');   // Procesa el botón "Pagar"
+$routes->get('pasarela-upgrade', 'Perfil::pasarela_upgrade');
+$routes->post('perfil/pagar-upgrade', 'Perfil::procesar_upgrade');
+
+// Logout
 $routes->get('logout', 'Auth::logout');
 $routes->get('auth/logout', 'Auth::logout');
-
 // Selección de perfiles
 $routes->get('profiles', 'Profiles::index');
 $routes->get('profiles/select/(:segment)', 'Profiles::select/$1');
@@ -81,15 +102,15 @@ $routes->group('admin', ['filter' => 'adminAuth', 'namespace' => 'App\Controller
 
     // --- GESTIÓN DE PELÍCULAS ---
     $routes->group('peliculas', function ($routes) {
-        $routes->get('/', 'Peliculas::index');           // Listado
-        $routes->get('create', 'Peliculas::create');     // Formulario Crear
-        $routes->post('store', 'Peliculas::store');      // Guardar Nuevo
+        $routes->get('/', 'Peliculas::index');
+        $routes->get('create', 'Peliculas::create');
+        $routes->post('store', 'Peliculas::store');
         
-        // 👇 RUTAS NUEVAS AÑADIDAS 👇
-        $routes->get('editar/(:num)', 'Peliculas::edit/$1');    // Formulario Editar
-        $routes->post('update/(:num)', 'Peliculas::update/$1'); // Guardar Edición
+        // Rutas de edición
+        $routes->get('editar/(:num)', 'Peliculas::edit/$1');
+        $routes->post('update/(:num)', 'Peliculas::update/$1');
         
-        $routes->get('borrar/(:num)', 'Peliculas::delete/$1');  // Borrar
+        $routes->get('borrar/(:num)', 'Peliculas::delete/$1');
     });
 
     // --- GESTIÓN DE SERIES ---
@@ -98,15 +119,19 @@ $routes->group('admin', ['filter' => 'adminAuth', 'namespace' => 'App\Controller
         $routes->get('create', 'Series::create');
         $routes->post('store', 'Series::store');
 
-        // 👇 RUTAS NUEVAS AÑADIDAS 👇
+        // Rutas de edición
         $routes->get('editar/(:num)', 'Series::edit/$1');
         $routes->post('update/(:num)', 'Series::update/$1');
 
         $routes->get('borrar/(:num)', 'Series::delete/$1');
     });
 
-    // --- GESTIÓN DE USUARIOS ---
+    // --- GESTIÓN DE USUARIOS (CORREGIDO) ---
     $routes->get('usuarios', 'Usuarios::index');
+    
+    // 👇 Rutas NUEVAS que faltaban 👇
+    $routes->get('usuarios/editar/(:num)', 'Usuarios::edit/$1');
+    $routes->post('usuarios/update/(:num)', 'Usuarios::update/$1');
+    
     $routes->get('usuarios/borrar/(:num)', 'Usuarios::delete/$1');
-    $routes->post('usuarios/cambiar-rol', 'Usuarios::cambiarRol');
 });

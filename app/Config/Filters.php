@@ -45,10 +45,14 @@ class Filters extends BaseFilters
             // 'honeypot',
             'csrf' => [
                 'except' => [
-                    'admin/peliculas/store', // Excepción para guardar pelis
-                    'admin/series/store',    // Excepción para guardar series
-                    'api/*'                  // Excepción para la API y el buscador
+                    'admin/peliculas/store',      // Guardar nueva película
+                    'admin/peliculas/update/*',   // <--- ¡NUEVO! Actualizar película (cualquier ID)
+                    'admin/series/store',         // Guardar nueva serie
+                    'admin/series/update/*',
+                    'admin/usuarios/update/*',      
+                    'api/*'                       // API y Buscador
                 ]
+            
             ],
             // 'invalidchars',
         ],

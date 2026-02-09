@@ -1,5 +1,8 @@
 <?php
-
+// DEBUG TEMPORAL: Ver si llegan datos
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST)) {
+    die('ERROR CRÍTICO: Se ha enviado un formulario POST pero llega VACÍO. El problema es "post_max_size" en php.ini');
+}
 use CodeIgniter\Boot;
 use Config\Paths;
 

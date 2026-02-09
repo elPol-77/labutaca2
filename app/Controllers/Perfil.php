@@ -26,89 +26,144 @@ class Perfil extends BaseController
         ]
     ];
 
-    public function index()
-    {
-        if (!session()->get('is_logged_in'))
-            return redirect()->to('/auth');
-
-        $userId = session()->get('user_id');
-        $planId = session()->get('plan_id');
-
-        $userModel = new UsuarioModel();
-        $generoModel = new GeneroModel(); 
-
-        $usuario = $userModel->find($userId);
-
-
-        $otrosPerfiles = $userModel->where('id !=', $userId)
-            ->where('id >=', 2)
-            ->where('id <=', 4)
-            ->findAll();
-
-        $listaGeneros = $generoModel->orderBy('nombre', 'ASC')->findAll();
-
-        $avataresDisponibles = ($planId == 3)
-            ? $this->avatars['kids']
-            : array_merge($this->avatars['general'], $this->avatars['kids']);
-
-        $data = [
-            'usuario' => $usuario,
-            'avatares' => $avataresDisponibles,
-            'esKids' => ($planId == 3),
-            'generos' => $listaGeneros,      
-            'otrosPerfiles' => $otrosPerfiles, 
-            'planes' => [
-                1 => 'Plan Free (Con Anuncios)',
-                2 => 'Plan Premium (Todo incluido)',
-                3 => 'Perfil Kids (Contenido Infantil)'
-            ]
-        ];
-
-        echo view('frontend/templates/header', $data);
-        echo view('frontend/perfil', $data);
-        echo view('frontend/templates/footer');
+ public function index()
+{
+    if (!session()->get('is_logged_in')) {
+        return redirect()->to('/auth');
     }
+
+    $userId = session()->get('user_id');
+    $userModel = new UsuarioModel();
+    $generoModel = new GeneroModel();
+
+    // 1. Buscamos el usuario
+    $usuario = $userModel->find($userId);
+
+    // --- CORRECCIÓN CRÍTICA ---
+    // Si el usuario no existe en la BD (aunque haya sesión), abortamos.
+    if (!$usuario) {
+        session()->destroy();
+        return redirect()->to('/auth')->with('error_general', 'Sesión no válida o usuario inexistente.');
+    }
+
+    $planId = $usuario['plan_id']; // Usamos el plan real de la BD, no el de sesión por si acaso
+
+    $otrosPerfiles = $userModel->where('id !=', $userId)
+        ->where('id >=', 2)
+        ->where('id <=', 4)
+        ->findAll();
+
+    $listaGeneros = $generoModel->orderBy('nombre', 'ASC')->findAll();
+
+    $avataresDisponibles = ($planId == 3)
+        ? $this->avatars['kids']
+        : array_merge($this->avatars['general'], $this->avatars['kids']);
+
+    $data = [
+        'usuario'       => $usuario,
+        'avatares'      => $avataresDisponibles,
+        'esKids'        => ($planId == 3),
+        'generos'       => $listaGeneros,
+        'otrosPerfiles' => $otrosPerfiles,
+        'planes'        => [
+            1 => 'Plan Free (Con Anuncios)',
+            2 => 'Plan Premium (Todo incluido)',
+            3 => 'Perfil Kids (Contenido Infantil)'
+        ]
+    ];
+
+    // Cargamos las vistas de forma estándar
+    return view('frontend/templates/header', $data)
+         . view('frontend/perfil', $data)
+         . view('frontend/templates/footer');
+}
 
     public function update()
     {
-        if (!session()->get('is_logged_in'))
-            return redirect()->to('/auth');
+        // 1. RECOGER DATOS
+        $idUsuario = session()->get('user_id');
+        $nuevoPlan = $this->request->getPost('plan_id');
+        $nuevoUser = $this->request->getPost('username');
+        $nuevoAvatar = $this->request->getPost('avatar');
 
-        $userId = session()->get('user_id');
-        $planActual = session()->get('plan_id');
-        $userModel = new UsuarioModel();
+        // 2. OBTENER PLAN ACTUAL (Para comparar)
+        $model = new UsuarioModel();
+        $usuarioActual = $model->find($idUsuario);
+        $planActual = $usuarioActual['plan_id'];
 
-        $rules = [
-            'avatar' => 'required'
+        // 3. DETECTAR SI ES UNA MEJORA A PREMIUM (UPGRADE)
+        // Si antes era Free (1) y ahora elige Premium (2) -> PASARELA
+        if ($planActual == 1 && $nuevoPlan == 2) {
+
+            // Guardamos los datos que quiere cambiar en sesión temporal
+            session()->set('temp_upgrade_data', [
+                'id' => $idUsuario,
+                'username' => $nuevoUser,
+                'plan_id' => 2, // Forzamos premium
+                'avatar' => $nuevoAvatar
+            ]);
+
+            // Redirigimos a una ruta especial de pago para upgrades
+            return redirect()->to('/pasarela-upgrade');
+        }
+
+        // 4. SI NO ES UPGRADE (Es solo cambio de nombre, avatar o downgrade) -> GUARDAR DIRECTO
+        $data = [
+            'username' => $nuevoUser,
+            'avatar' => $nuevoAvatar,
         ];
 
-        if ($planActual != 3) {
-            $rules['username'] = 'required|min_length[3]';
-            $rules['plan_id'] = 'required|in_list[1,2,3]';
+        // Solo actualizamos el plan si se ha enviado (y no es el caso upgrade de arriba)
+        if ($nuevoPlan) {
+            $data['plan_id'] = $nuevoPlan;
         }
 
-        if (!$this->validate($rules)) {
-            return redirect()->back()->withInput()->with('error', 'Por favor revisa los datos.');
-        }
+        $model->update($idUsuario, $data);
 
-        $dataUpdate = [
-            'avatar' => $this->request->getPost('avatar')
-        ];
-
-        if ($planActual != 3) {
-
-            $dataUpdate['username'] = $this->request->getPost('username');
-            $dataUpdate['plan_id'] = $this->request->getPost('plan_id');
-        }
-
-        $userModel->update($userId, $dataUpdate);
-
+        // Actualizamos la sesión con los nuevos datos para ver los cambios al instante
         session()->set([
-            'username' => $dataUpdate['username'] ?? session()->get('username'),
-            'avatar' => $dataUpdate['avatar'],
-            'plan_id' => $dataUpdate['plan_id'] ?? session()->get('plan_id')
+            'username' => $nuevoUser,
+            'avatar' => $nuevoAvatar,
+            'plan_id' => $nuevoPlan ?? $planActual
         ]);
 
         return redirect()->to('/perfil')->with('success', 'Perfil actualizado correctamente.');
+    }
+    // Vista de pago específica para upgrades (o reutilizamos la otra)
+    public function pasarela_upgrade()
+    {
+        if(!session()->has('temp_upgrade_data')) return redirect()->to('/perfil');
+        
+        // Podemos reutilizar la vista 'auth/payment_gateway' pasándole datos
+        // o crear una nueva si quieres textos distintos. Reutilicemos por ahora:
+        $user = session()->get('temp_upgrade_data');
+        return view('auth/payment_gateway', ['user' => $user, 'is_upgrade' => true]);
+    }
+
+    // Procesa el pago del upgrade
+    public function procesar_upgrade()
+    {
+        if(!session()->has('temp_upgrade_data')) return redirect()->to('/perfil');
+
+        $datos = session()->get('temp_upgrade_data');
+        $model = new UsuarioModel();
+
+        // Actualizamos de verdad
+        $model->update($datos['id'], [
+            'username' => $datos['username'],
+            'plan_id'  => $datos['plan_id'],
+            'avatar'   => $datos['avatar']
+        ]);
+
+        // Actualizamos sesión
+        session()->set([
+            'username' => $datos['username'],
+            'plan_id'  => $datos['plan_id'],
+            'avatar'   => $datos['avatar']
+        ]);
+
+        session()->remove('temp_upgrade_data');
+
+        return redirect()->to('/perfil')->with('success', '¡Pago realizado! Ahora eres Premium.');
     }
 }

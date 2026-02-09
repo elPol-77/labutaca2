@@ -1129,5 +1129,10 @@ class Home extends BaseController
         }
         return $results;
     }
+    public function ayuda()
+    {
+        $data = ['titulo' => 'Centro de Ayuda - La Butaca'];
+        return view('frontend/help', $data);
+    }
 
 }

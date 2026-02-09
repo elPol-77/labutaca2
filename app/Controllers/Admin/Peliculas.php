@@ -139,33 +139,92 @@ public function edit($id) {
     // =================================================================
     // ACTUALIZAR (UPDATE)
     // =================================================================
-    public function update($id) {
-        if (!$this->validate(['titulo' => 'required', 'anio' => 'required'])) {
+   public function update($id = null)
+    {
+        if (!$id) return redirect()->to('admin/peliculas')->with('msg', 'Error: ID no proporcionado');
+
+        // 1. VALIDACIÓN (¡OJO AQUÍ!)
+        // Quitamos 'is_unique' del título para que te deje guardar el mismo nombre
+        // O usamos la regla compleja: 'is_unique[contenidos.titulo,id,{id}]'
+        $reglas = [
+            'titulo' => "required", 
+            'anio'   => 'required|numeric'
+        ];
+
+        if (!$this->validate($reglas)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        $data = $this->recogerDatosDelFormulario();
-        
+        // 2. RECOGER DATOS BÁSICOS
+        $data = [
+            'titulo'           => $this->request->getPost('titulo'),
+            'anio'             => $this->request->getPost('anio'),
+            'duracion'         => $this->request->getPost('duracion'),
+            'descripcion'      => $this->request->getPost('descripcion'),
+            'url_video'        => $this->request->getPost('url_video'),
+            'nivel_acceso'     => $this->request->getPost('nivel_acceso'),
+            'edad_recomendada' => $this->request->getPost('edad_recomendada'),
+            'imdb_rating'      => $this->request->getPost('imdb_rating'),
+            'imdb_id'          => $this->request->getPost('imdb_id'),
+            'destacada'        => $this->request->getPost('destacada') ? 1 : 0,
+        ];
+
+        // 3. GESTIÓN DE IMÁGENES (Solo actualizamos si suben nuevas)
+        $imgPoster = $this->request->getFile('imagen');
+        $imgBg     = $this->request->getFile('imagen_bg');
+        $urlExternaPoster = $this->request->getPost('url_imagen_externa');
+        $urlExternaBg     = $this->request->getPost('url_bg_externa');
+
+        // Prioridad: 1. Archivo subido -> 2. URL Externa -> 3. No tocar (mantener actual)
+        if ($imgPoster && $imgPoster->isValid() && !$imgPoster->hasMoved()) {
+            $newName = $imgPoster->getRandomName();
+            $imgPoster->move(FCPATH . 'assets/img', $newName);
+            $data['imagen'] = $newName;
+        } elseif (!empty($urlExternaPoster)) {
+            $data['imagen'] = $urlExternaPoster;
+        }
+
+        if ($imgBg && $imgBg->isValid() && !$imgBg->hasMoved()) {
+            $newName = $imgBg->getRandomName();
+            $imgBg->move(FCPATH . 'assets/img', $newName);
+            $data['imagen_bg'] = $newName;
+        } elseif (!empty($urlExternaBg)) {
+            $data['imagen_bg'] = $urlExternaBg;
+        }
+
+        // 4. TRANSACCIÓN DE BASE DE DATOS (Para que sea seguro)
         $db = \Config\Database::connect();
         $db->transStart();
 
-        // A. Actualizar Datos Básicos
+        // A. Actualizar tabla principal
         $this->model->update($id, $data);
 
-        // B. Limpiar Relaciones Antiguas
+        // B. LIMPIEZA DE RELACIONES (¡CRUCIAL!)
+        // Antes de meter los nuevos géneros/actores, borramos los viejos de este ID
         $db->table('contenido_genero')->where('contenido_id', $id)->delete();
-        $db->table('contenido_director')->where('contenido_id', $id)->delete();
         $db->table('contenido_actor')->where('contenido_id', $id)->delete();
+        $db->table('contenido_director')->where('contenido_id', $id)->delete();
 
-        // C. Insertar Nuevas Relaciones
-        $this->procesarGeneros($id, $this->request->getPost('generos'));
+        // C. RE-INSERTAR RELACIONES
+        // Usamos los mismos métodos privados que en el store()
+        $this->procesarGeneros($id, $this->request->getPost('generos')); 
         $this->procesarDirectores($id, $this->request->getPost('directores_json'));
         $this->procesarActores($id, $this->request->getPost('actores_json'));
 
         $db->transComplete();
 
-        $ruta = ($this->tipoId == 1) ? 'admin/peliculas' : 'admin/series';
-        return redirect()->to($ruta)->with('msg', 'Actualizado correctamente.');
+        if ($db->transStatus() === false) {
+            return redirect()->back()->withInput()->with('msg', 'Error al actualizar en BDD');
+        }
+
+        // Consultamos qué tipo es realmente este contenido para saber dónde volver
+        $contenidoActual = $this->model->select('tipo_id')->find($id);
+
+        // Si tipo_id es 2 vamos a Series, si no (1) a Películas
+        $ruta = ($contenidoActual['tipo_id'] == 2) ? 'admin/series' : 'admin/peliculas';
+
+        return redirect()->to($ruta)->with('msg', 'Contenido actualizado correctamente.');
+    
     }
 
     public function delete($id) {

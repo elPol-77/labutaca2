@@ -41,6 +41,15 @@
         <h2 class="mb-4">
             <?= (isset($action) && $action == 'edit') ? 'Editar Contenido' : ((isset($tipo_id) && $tipo_id == 2) ? 'Nueva Serie' : 'Nueva Película') ?>
         </h2>
+        <?php if (session()->has('errors')): ?>
+    <div class="alert alert-danger">
+        <ul>
+            <?php foreach (session('errors') as $error): ?>
+                <li><?= esc($error) ?></li>
+            <?php endforeach ?>
+        </ul>
+    </div>
+<?php endif; ?>
 
         <div class="card mb-4 border-primary">
             <div class="card-body bg-light">

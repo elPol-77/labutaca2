@@ -119,4 +119,25 @@
         z-index: 10; /* Para que quede por encima de los demás */
     }
 </style>
-</style>
+<script>
+    // Detectar cambios en los radio buttons de plan
+    const radios = document.querySelectorAll('input[name="plan_id"]');
+    const submitBtn = document.querySelector('button[type="submit"]');
+    
+    // Asumimos que plan 1 es Free y 2 es Premium
+    const currentPlan = <?= $usuario['plan_id'] ?>;
+
+    radios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if(this.value == 2 && currentPlan == 1) {
+                submitBtn.innerText = "Ir al Pago (9.99€)";
+                submitBtn.style.background = "#e50914"; // Rojo Netflix
+                submitBtn.style.color = "white";
+            } else {
+                submitBtn.innerText = "Guardar";
+                submitBtn.style.background = "white";
+                submitBtn.style.color = "black";
+            }
+        });
+    });
+</script>
