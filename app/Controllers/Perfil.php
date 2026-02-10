@@ -78,49 +78,41 @@ class Perfil extends BaseController
          . view('frontend/templates/footer');
 }
 
-    public function update()
+   public function update()
     {
-        // 1. RECOGER DATOS
+        // 🟢 ESTA PARTE LA TIENES PERFECTA, LA DEJAMOS IGUAL
         $idUsuario = session()->get('user_id');
         $nuevoPlan = $this->request->getPost('plan_id');
         $nuevoUser = $this->request->getPost('username');
         $nuevoAvatar = $this->request->getPost('avatar');
 
-        // 2. OBTENER PLAN ACTUAL (Para comparar)
         $model = new UsuarioModel();
         $usuarioActual = $model->find($idUsuario);
         $planActual = $usuarioActual['plan_id'];
 
-        // 3. DETECTAR SI ES UNA MEJORA A PREMIUM (UPGRADE)
-        // Si antes era Free (1) y ahora elige Premium (2) -> PASARELA
+        // DETECTAR SI ES UPGRADE A PREMIUM
         if ($planActual == 1 && $nuevoPlan == 2) {
-
-            // Guardamos los datos que quiere cambiar en sesión temporal
             session()->set('temp_upgrade_data', [
                 'id' => $idUsuario,
                 'username' => $nuevoUser,
-                'plan_id' => 2, // Forzamos premium
+                'plan_id' => 2,
                 'avatar' => $nuevoAvatar
             ]);
-
-            // Redirigimos a una ruta especial de pago para upgrades
             return redirect()->to('/pasarela-upgrade');
         }
 
-        // 4. SI NO ES UPGRADE (Es solo cambio de nombre, avatar o downgrade) -> GUARDAR DIRECTO
+        // SI NO ES UPGRADE, ACTUALIZACIÓN NORMAL
         $data = [
             'username' => $nuevoUser,
             'avatar' => $nuevoAvatar,
         ];
 
-        // Solo actualizamos el plan si se ha enviado (y no es el caso upgrade de arriba)
         if ($nuevoPlan) {
             $data['plan_id'] = $nuevoPlan;
         }
 
         $model->update($idUsuario, $data);
 
-        // Actualizamos la sesión con los nuevos datos para ver los cambios al instante
         session()->set([
             'username' => $nuevoUser,
             'avatar' => $nuevoAvatar,
@@ -129,41 +121,83 @@ class Perfil extends BaseController
 
         return redirect()->to('/perfil')->with('success', 'Perfil actualizado correctamente.');
     }
-    // Vista de pago específica para upgrades (o reutilizamos la otra)
+
+    // =========================================================================
+    // 🟡 AQUÍ EMPIEZA LA INTEGRACIÓN DE STRIPE (UPGRADE)
+    // =========================================================================
+
     public function pasarela_upgrade()
     {
         if(!session()->has('temp_upgrade_data')) return redirect()->to('/perfil');
         
-        // Podemos reutilizar la vista 'auth/payment_gateway' pasándole datos
-        // o crear una nueva si quieres textos distintos. Reutilicemos por ahora:
         $user = session()->get('temp_upgrade_data');
+        // Pasamos 'is_upgrade' para que la vista sepa que debe cambiar el texto del botón y el enlace de cancelar
         return view('auth/payment_gateway', ['user' => $user, 'is_upgrade' => true]);
     }
 
-    // Procesa el pago del upgrade
     public function procesar_upgrade()
     {
         if(!session()->has('temp_upgrade_data')) return redirect()->to('/perfil');
 
+        // 1. Configurar Stripe
+        \Stripe\Stripe::setApiKey('sk_test_51Syx7APTBNyzobQjQCTV8NYXHjek1Vl1ltougcjbvEkhoprL5NdIH2OqrgvDjyQyMPyOuDZqkqGLUzQEJDFJacNV00p5nd9p91');
+
+        try {
+            // 2. Crear sesión de pago
+            $session = \Stripe\Checkout\Session::create([
+                'payment_method_types' => ['card'],
+                'line_items' => [[
+                    'price_data' => [
+                        'currency' => 'eur',
+                        'product_data' => [
+                            'name' => 'Upgrade a Plan PREMIUM',
+                        ],
+                        'unit_amount' => 999, // 9.99 EUR
+                    ],
+                    'quantity' => 1,
+                ]],
+                'mode' => 'payment',
+                // Rutas de retorno específicas para el perfil
+                'success_url' => base_url('perfil/confirmar_upgrade?session_id={CHECKOUT_SESSION_ID}'),
+                'cancel_url'  => base_url('perfil'), // Si cancela, vuelve a su perfil
+            ]);
+
+            return redirect()->to($session->url);
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error con Stripe: ' . $e->getMessage());
+        }
+    }
+
+    // 🟢 NUEVO MÉTODO: Se ejecuta SOLO si el pago fue exitoso
+    public function confirmar_upgrade()
+    {
+        $sessionId = $this->request->getGet('session_id');
+
+        if (!$sessionId || !session()->has('temp_upgrade_data')) {
+            return redirect()->to('/perfil');
+        }
+
         $datos = session()->get('temp_upgrade_data');
         $model = new UsuarioModel();
 
-        // Actualizamos de verdad
+        // 1. Actualizamos la Base de Datos
         $model->update($datos['id'], [
             'username' => $datos['username'],
-            'plan_id'  => $datos['plan_id'],
+            'plan_id'  => $datos['plan_id'], // Aquí ya forzamos el 2 en el paso anterior
             'avatar'   => $datos['avatar']
         ]);
 
-        // Actualizamos sesión
+        // 2. Actualizamos la sesión del usuario (para que vea el cambio al instante)
         session()->set([
             'username' => $datos['username'],
             'plan_id'  => $datos['plan_id'],
             'avatar'   => $datos['avatar']
         ]);
 
+        // 3. Limpiamos datos temporales
         session()->remove('temp_upgrade_data');
 
-        return redirect()->to('/perfil')->with('success', '¡Pago realizado! Ahora eres Premium.');
+        return redirect()->to('/perfil')->with('success', '¡Pago realizado con éxito! Ahora eres Premium.');
     }
 }

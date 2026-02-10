@@ -378,9 +378,7 @@ class Home extends BaseController
             'video_url' => $videoUrl
         ]);
     }
-    // =========================================================================
-    // 4. DETALLE HÍBRIDO (LOCAL + GLOBAL)
-    // =========================================================================
+
     // =========================================================================
     // 4. DETALLE HÍBRIDO (INTELIGENTE)
     // =========================================================================
@@ -506,10 +504,7 @@ class Home extends BaseController
         echo view('frontend/templates/footer', $data);
     }
 
-    // --- FUNCIÓN AUXILIAR: TRADUCIR API OMDb A TU FORMATO ---
-// --- FUNCIÓN AUXILIAR: API TMDB (MODO PRO) ---
-    // --- SOPORTE HÍBRIDO (CINE Y SERIES) ---
-    // Aceptamos un segundo parámetro: $tipoEspecifico ('movie' o 'tv')
+
     private function obtenerDetalleExterno($tmdbID, $tipoEspecifico = null)
     {
         $apiKey = '6387e3c183c454304108333c56530988';
@@ -919,81 +914,99 @@ class Home extends BaseController
         echo view('frontend/series', $data); // <--- OJO: Llama a 'series.php'
         echo view('frontend/templates/footer', $data);
     }
-    // FILTRAR CONTENIDO POR PERSONA (ACTOR O DIRECTOR)
-    public function persona($id)
+    // =========================================================
+    // 👤 PERFIL DE PERSONA (ACTOR/DIRECTOR)
+    // =========================================================
+    public function persona($idRaw)
     {
-        if (!session()->get('is_logged_in'))
-            return redirect()->to('/auth');
+        // 1. Limpieza de ID
+        $tmdbID = str_replace('tmdb_person_', '', $idRaw);
 
-        $nombrePersona = "Filmografía";
-        $peliculas = [];
+        // 2. Configuración API
+        $apiKey = '6387e3c183c454304108333c56530988'; // Tu API Key
+        $lang = 'es-ES';
+        
+        // Contexto para evitar errores SSL en local
+        $arrContextOptions = ["ssl" => ["verify_peer" => false, "verify_peer_name" => false], "http" => ["ignore_errors" => true]];
+        $context = stream_context_create($arrContextOptions);
 
-        // Si es de TMDB (tmdb_person_12345)
-        if (str_starts_with($id, 'tmdb_person_')) {
-            $tmdbID = str_replace('tmdb_person_', '', $id);
-            $apiKey = '6387e3c183c454304108333c56530988';
+        // 3. Petición a TMDB (Detalles + Créditos Combinados)
+        $url = "https://api.themoviedb.org/3/person/{$tmdbID}?api_key={$apiKey}&language={$lang}&append_to_response=combined_credits,images";
+        $json = @file_get_contents($url, false, $context);
 
-            // Pedimos los créditos combinados (Cine y TV)
-            $url = "https://api.themoviedb.org/3/person/{$tmdbID}/combined_credits?api_key={$apiKey}&language=es-ES";
-
-            // También pedimos info de la persona para el título
-            $urlPerson = "https://api.themoviedb.org/3/person/{$tmdbID}?api_key={$apiKey}&language=es-ES";
-
-            $arrContextOptions = ["ssl" => ["verify_peer" => false, "verify_peer_name" => false]];
-            $context = stream_context_create($arrContextOptions);
-
-            $jsonPerson = @file_get_contents($urlPerson, false, $context);
-            if ($jsonPerson) {
-                $pData = json_decode($jsonPerson, true);
-                $nombrePersona = $pData['name'];
-            }
-
-            $json = @file_get_contents($url, false, $context);
-            if ($json) {
-                $data = json_decode($json, true);
-                // Procesamos cast (actor) y crew (director)
-                $rawList = array_merge($data['cast'], $data['crew']);
-
-                // Eliminamos duplicados y filtramos
-                $seen = [];
-                foreach ($rawList as $item) {
-                    if (isset($seen[$item['id']]))
-                        continue;
-                    if ($item['media_type'] != 'movie' && $item['media_type'] != 'tv')
-                        continue;
-                    $seen[$item['id']] = true;
-
-                    // Formato compatible con tu vista catalogo
-                    $prefix = ($item['media_type'] == 'tv') ? 'tmdb_tv_' : 'tmdb_movie_';
-                    $img = $item['poster_path'] ? "https://image.tmdb.org/t/p/w300" . $item['poster_path'] : base_url('assets/img/no-poster.jpg');
-
-                    $peliculas[] = [
-                        'id' => $prefix . $item['id'],
-                        'titulo' => ($item['media_type'] == 'tv') ? ($item['name'] ?? '') : ($item['title'] ?? ''),
-                        'imagen' => $img,
-                        'anio' => substr(($item['release_date'] ?? $item['first_air_date'] ?? ''), 0, 4),
-                        'en_mi_lista' => false // Por defecto
-                    ];
-                }
-            }
+        if (!$json) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
-        // Si fuera local, aquí iría la lógica local ($model->getPeliculasPorActor...)
 
-        // Renderizar vista
-        $data = [
-            'titulo' => $nombrePersona . ' - La Butaca',
-            'categoria' => 'Filmografía de ' . $nombrePersona,
-            'peliculas' => $peliculas, // La vista catalogo usará esto
-            'mostrarHero' => false,
-            'splash' => false,
-            'generos' => (new \App\Models\GeneroModel())->findAll(),
-            'otrosPerfiles' => (new \App\Models\UsuarioModel())->where('id !=', session()->get('user_id'))->findAll(),
-            'carrusel' => []
+        $data = json_decode($json, true);
+
+        // 4. Procesar Datos Básicos
+        $baseImg = "https://image.tmdb.org/t/p/h632"; // Calidad alta para perfil
+        $basePoster = "https://image.tmdb.org/t/p/w300"; // Calidad media para grid
+
+        $persona = [
+            'nombre' => $data['name'],
+            'biografia' => !empty($data['biography']) ? $data['biography'] : 'No hay biografía disponible en español.',
+            'fecha_nacimiento' => $data['birthday'] ?? 'Desconocida',
+            'lugar_nacimiento' => $data['place_of_birth'] ?? '',
+            'foto' => !empty($data['profile_path']) ? $baseImg . $data['profile_path'] : base_url('assets/img/no-user.png'),
+            'conocido_por' => $data['known_for_department'] // Acting, Directing...
         ];
 
-        echo view('frontend/templates/header', $data);
-        echo view('frontend/catalogo', $data); // Reutilizamos tu vista de rejilla
-        echo view('frontend/templates/footer', $data);
+        // 5. Procesar Filmografía (Cast y Crew)
+        $filmografia = [];
+        
+        // Si es ACTOR, cogemos 'cast'. Si es DIRECTOR, cogemos 'crew' filtrando por job='Director'
+        // Pero para ser completos, vamos a mostrar AMBOS si tiene.
+
+        $rawCast = $data['combined_credits']['cast'] ?? [];
+        $rawCrew = $data['combined_credits']['crew'] ?? [];
+
+        // Función auxiliar para formatear items
+        $formatearCredito = function($item) use ($basePoster) {
+            $esSerie = ($item['media_type'] === 'tv');
+            return [
+                'id' => ($esSerie ? 'tmdb_tv_' : 'tmdb_movie_') . $item['id'],
+                'titulo' => $esSerie ? ($item['name'] ?? '') : ($item['title'] ?? ''),
+                'poster' => !empty($item['poster_path']) ? $basePoster . $item['poster_path'] : null,
+                'anio' => substr($esSerie ? ($item['first_air_date'] ?? '') : ($item['release_date'] ?? ''), 0, 4),
+                'personaje' => $item['character'] ?? '', // Para actores
+                'trabajo' => $item['job'] ?? '',         // Para directores
+                'popularidad' => $item['popularity'] ?? 0,
+                'media_type' => $item['media_type']
+            ];
+        };
+
+        // Procesar Actuación
+        $acting = array_map($formatearCredito, $rawCast);
+        
+        // Procesar Dirección (Solo donde job sea Director)
+        $directing = [];
+        foreach($rawCrew as $c) {
+            if (isset($c['job']) && $c['job'] === 'Director') {
+                $directing[] = $formatearCredito($c);
+            }
+        }
+
+        // Ordenar por popularidad (lo más famoso primero)
+        usort($acting, function($a, $b) { return $b['popularidad'] <=> $a['popularidad']; });
+        usort($directing, function($a, $b) { return $b['popularidad'] <=> $a['popularidad']; });
+
+        // Eliminamos duplicados (a veces salen varias veces si tienen varios roles)
+        // (Opcional, pero queda mejor limpio)
+        
+        $viewData = [
+            'titulo' => $persona['nombre'] . ' - Filmografía',
+            'persona' => $persona,
+            'acting' => $acting,
+            'directing' => $directing,
+            'mostrarHero' => false // Para no cargar el hero gigante del home
+        ];
+
+        // Cargar Vistas
+        echo view('frontend/templates/header', $viewData);
+        echo view('frontend/persona', $viewData);
+        echo view('frontend/templates/footer');
     }
     public function ajaxCargarFila()
     {

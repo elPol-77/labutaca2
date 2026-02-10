@@ -7,7 +7,7 @@ use App\Controllers\BaseController;
 class Auth extends BaseController
 {
     // =========================================================================
-    // 🟢 TU CÓDIGO ORIGINAL (INTACTO)
+    // 1. LOGIN Y GESTIÓN DE PERFILES (EXISTENTE)
     // =========================================================================
 
     public function index()
@@ -17,8 +17,7 @@ class Auth extends BaseController
         }
 
         $model = new UsuarioModel();
-        
-        // FILTRO: Solo usuarios con ID entre 2 y 4
+        // FILTRO: Solo usuarios con ID entre 2 y 4 (Demo)
         $data['usuarios'] = $model->where('id >=', 2)
                                   ->where('id <=', 4)
                                   ->orderBy('username', 'ASC')
@@ -34,44 +33,30 @@ class Auth extends BaseController
 
         $model = new UsuarioModel();
         $user = $model->find($id);
-
         $newToken = csrf_hash();
 
         if (!$user) {
             return $this->response->setJSON(['status' => 'error', 'msg' => 'Usuario no encontrado', 'token' => $newToken]);
         }
 
-        // --- LÓGICA DE ACCESO ---
         // Acceso concedido SI: (Es Plan Kids) O (La contraseña es correcta)
         $accesoConcedido = ($user['plan_id'] == 3) || password_verify($password, $user['password']);
 
         if ($accesoConcedido) {
-            
             session()->set([
                 'user_id'      => $user['id'],
                 'username'     => $user['username'],
                 'plan_id'      => $user['plan_id'], 
                 'rol'          => $user['rol'],
-                'avatar'       => $user['avatar'],
-                'is_logged_in' => true,
-                // Mantenemos tu línea del avatar fallback tal cual
                 'avatar'       => $user['avatar'] ?? 'https://i.pinimg.com/564x/1b/a2/e6/1ba2e6d1d4874546c70c91f1024e17fb.jpg',
+                'is_logged_in' => true,
             ]);
             
-            // Activar Intro
             session()->setFlashdata('mostrar_intro', true);
 
-            return $this->response->setJSON([
-                'status' => 'success', 
-                'token'  => $newToken
-            ]);
-
+            return $this->response->setJSON(['status' => 'success', 'token' => $newToken]);
         } else {
-            return $this->response->setJSON([
-                'status' => 'error', 
-                'msg'    => 'Contraseña incorrecta',
-                'token'  => $newToken
-            ]);
+            return $this->response->setJSON(['status' => 'error', 'msg' => 'Contraseña incorrecta', 'token' => $newToken]);
         }
     }
 
@@ -81,18 +66,12 @@ class Auth extends BaseController
         return redirect()->to('/auth');
     }
 
-    // =========================================================================
-    // 🟡 LO NUEVO (PARA EL MODAL Y BOTÓN +)
-    // =========================================================================
-
     public function login_general()
     {
         $emailOrUser = $this->request->getPost('email');
         $password    = $this->request->getPost('password');
 
         $model = new UsuarioModel();
-        
-        // Busca en TODA la base de datos (sin restricción de ID)
         $user = $model->groupStart()
                         ->where('email', $emailOrUser)
                         ->orWhere('username', $emailOrUser)
@@ -113,12 +92,11 @@ class Auth extends BaseController
             session()->setFlashdata('mostrar_intro', true);
             return redirect()->to('/');
         }
-
         return redirect()->back()->with('error_general', 'Usuario o contraseña incorrectos.');
     }
 
     // =========================================================================
-    // 🟡 SISTEMA DE REGISTRO COMPLETO (MEJORADO)
+    // 2. REGISTRO DE USUARIOS
     // =========================================================================
 
     public function registro()
@@ -126,8 +104,7 @@ class Auth extends BaseController
         if (session()->get('is_logged_in')) {
             return redirect()->to('/');
         }
-
-        // Tus avatares originales
+        
         $data['avatars'] = [
             'https://i.blogs.es/b0add0/breaking-bad/500_333.jpeg',
             'https://i.blogs.es/c1c467/daredevil-born-again/375_375.jpeg',
@@ -147,57 +124,22 @@ class Auth extends BaseController
 
     public function crear_usuario()
     {
-        // 1. VALIDACIÓN PERSONALIZADA
         $rules = [
-            'username' => [
-                'rules'  => 'required|min_length[3]|is_unique[usuarios.username]',
-                'errors' => [
-                    'required'   => 'El nombre de usuario es obligatorio.',
-                    'min_length' => 'El usuario debe tener al menos 3 caracteres.',
-                    'is_unique'  => 'Ese nombre de usuario ya existe. Prueba con otro.'
-                ]
-            ],
-            'email' => [
-                // Validamos que termine en @gmail.com
-                'rules'  => 'required|valid_email|is_unique[usuarios.email]|regex_match[/@gmail\.com$/]',
-                'errors' => [
-                    'required'    => 'El correo electrónico es obligatorio.',
-                    'valid_email' => 'El formato del correo no es válido.',
-                    'is_unique'   => 'Este correo ya está registrado. ¿Quieres iniciar sesión?',
-                    'regex_match' => 'Solo se permiten correos de Gmail (@gmail.com).'
-                ]
-            ],
-            'password' => [
-                'rules'  => 'required|min_length[4]',
-                'errors' => [
-                    'required'   => 'La contraseña es obligatoria.',
-                    'min_length' => 'La contraseña debe tener al menos 4 caracteres.'
-                ]
-            ],
-            'pass_confirm' => [
-                'rules'  => 'required|matches[password]',
-                'errors' => [
-                    'required' => 'Debes repetir la contraseña.',
-                    'matches'  => 'Las contraseñas no coinciden.'
-                ]
-            ],
-            'plan_id' => [
-                'rules'  => 'required',
-                'errors' => [ 'required' => 'Por favor, selecciona un plan (Free o Premium).' ]
-            ],
-            'avatar' => [
-                'rules'  => 'required',
-                'errors' => [ 'required' => 'Elige un avatar para tu perfil.' ]
-            ]
+            'username' => 'required|min_length[3]|is_unique[usuarios.username]',
+            'email'    => 'required|valid_email|is_unique[usuarios.email]|regex_match[/@gmail\.com$/]',
+            'password' => 'required|min_length[4]',
+            'pass_confirm' => 'required|matches[password]',
+            'plan_id'  => 'required',
+            'avatar'   => 'required'
         ];
 
         if (!$this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        // 2. RECOGIDA DE DATOS
         $planId = $this->request->getPost('plan_id');
         
+        // Preparamos los datos básicos
         $datosUsuario = [
             'username' => $this->request->getPost('username'),
             'email'    => $this->request->getPost('email'),
@@ -207,50 +149,113 @@ class Auth extends BaseController
             'avatar'   => $this->request->getPost('avatar')
         ];
 
-        // 3. SI ES PREMIUM -> PASARELA
+        // SI ES PREMIUM -> Guardamos en sesión y vamos a PASARELA
         if ($planId == 2) {
             session()->set('temp_user_data', $datosUsuario);
             return redirect()->to('/pasarela'); 
         } 
         
-        // 4. SI ES FREE -> GUARDAR DIRECTO
+        // SI ES FREE -> Guardamos DIRECTO en la BD
         return $this->_finalizar_registro($datosUsuario);
     }
 
-    // Muestra la vista bonita de pago
+    // =========================================================================
+    // 3. PASARELA DE PAGO (STRIPE)
+    // =========================================================================
+
     public function pasarela_pago()
     {
         if(!session()->has('temp_user_data')) return redirect()->to('/registro');
-        
-        // Pasamos datos a la vista por si quieres mostrar el nombre/precio
         $user = session()->get('temp_user_data');
         return view('auth/payment_gateway', ['user' => $user]);
     }
 
-    // Procesa el pago (Simulado)
     public function procesar_pago()
     {
         if (!session()->has('temp_user_data')) return redirect()->to('/registro');
 
-        // Aquí iría la integración real con Stripe API
-        // Simulamos éxito:
+        // TU CLAVE SECRETA DE STRIPE
+        \Stripe\Stripe::setApiKey('sk_test_51Syx7APTBNyzobQjQCTV8NYXHjek1Vl1ltougcjbvEkhoprL5NdIH2OqrgvDjyQyMPyOuDZqkqGLUzQEJDFJacNV00p5nd9p91');
+
         $datosUsuario = session()->get('temp_user_data');
-        session()->remove('temp_user_data'); // Limpiamos sesión temporal
+
+        try {
+            $session = \Stripe\Checkout\Session::create([
+                'payment_method_types' => ['card'],
+                'line_items' => [[
+                    'price_data' => [
+                        'currency' => 'eur',
+                        'product_data' => [
+                            'name' => 'Plan PREMIUM - La Butaca Premium',
+                        ],
+                        'unit_amount' => 999, // 9.99 EUR
+                    ],
+                    'quantity' => 1,
+                ]],
+                'mode' => 'payment',
+                // Rutas de retorno (deben coincidir con Routes.php)
+                'success_url' => base_url('auth/confirmar_registro?session_id={CHECKOUT_SESSION_ID}'),
+                'cancel_url'  => base_url('auth/pago_cancelado'),
+            ]);
+
+            return redirect()->to($session->url);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error al conectar con Stripe: ' . $e->getMessage());
+        }
+    }
+
+    public function confirmar_registro()
+    {
+        $sessionId = $this->request->getGet('session_id');
         
+        // Verificamos que venga de Stripe y que tengamos datos pendientes
+        if (!$sessionId || !session()->has('temp_user_data')) {
+            return redirect()->to('/registro');
+        }
+
+        $datosUsuario = session()->get('temp_user_data');
+        session()->remove('temp_user_data'); // Limpiamos la sesión temporal
+
+        // Guardamos finalmente al usuario en la BD
         return $this->_finalizar_registro($datosUsuario);
     }
 
-    // Función privada para no repetir código de insert + login
+    public function pago_cancelado()
+    {
+        // Si el usuario cancela en Stripe, vuelve a la pasarela con error
+        return redirect()->to('pasarela')->with('error', 'El proceso de pago fue cancelado. Inténtalo de nuevo.');
+    }
+
+    // =========================================================================
+    // 4. FUNCIÓN PRIVADA (INSERTAR EN BD + LOGIN)
+    // =========================================================================
+
     private function _finalizar_registro($datos) {
         $model = new UsuarioModel();
+
+        /* NOTA SOBRE IMÁGENES:
+           Actualmente usas URLs de internet ($datos['avatar'] es un string http...).
+           Si en el futuro cambias el formulario para subir archivos (input type="file"),
+           aquí es donde renombrarías el archivo:
+           
+           if (isset($datos['avatar_file'])) {
+               $file = $datos['avatar_file'];
+               $newName = $datos['username'] . '.' . $file->getExtension(); 
+               $file->move('uploads/avatares', $newName);
+               $datos['avatar'] = $newName; 
+           }
+        */
+
+        // Insertar en Base de Datos
         $nuevoId = $model->insert($datos);
 
+        // Iniciar Sesión Automáticamente
         session()->set([
             'user_id'      => $nuevoId,
             'username'     => $datos['username'],
             'email'        => $datos['email'],
             'plan_id'      => $datos['plan_id'],
-            'rol'          => 'usuario',
+            'rol'          => $datos['rol'],
             'avatar'       => $datos['avatar'],
             'is_logged_in' => true
         ]);

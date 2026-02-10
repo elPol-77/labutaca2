@@ -22,8 +22,8 @@ $routes->post('serie/ajax-fila', 'Serie::ajaxCargarFila');
 $routes->post('serie/ajax-expandir-fila', 'Serie::ajaxExpandirFila');
 
 $routes->get('director/(:num)', 'Home::director/$1');
-$routes->post('autocompletar', 'Api\Catalogo::autocompletar'); // Tu buscador arreglado
-$routes->get('persona/(:segment)', 'Home::persona/$1');
+$routes->post('autocompletar', 'Api\Catalogo::autocompletar'); 
+$routes->get('persona/(:any)', 'Home::persona/$1');
 $routes->post('ajax/cargar-fila', 'Home::ajaxCargarFila');
 
 // --- GESTIÓN DE CUENTA Y CONFIGURACIÓN ---
@@ -48,14 +48,20 @@ $routes->post('auth/ajax_login_perfil', 'Auth::login');
 
 $routes->post('auth/login_general', 'Auth::login_general');
 $routes->post('auth/register', 'Auth::register');
+
+
+$routes->get('auth/confirmar_registro', 'Auth::confirmar_registro');
+$routes->get('auth/pago_cancelado', 'Auth::pago_cancelado');
+
 // --- REGISTRO Y PAGOS ---
 $routes->get('registro', 'Auth::registro');
 $routes->post('auth/crear', 'Auth::crear_usuario');
 
-$routes->get('pasarela', 'Auth::pasarela_pago');      // Muestra la tarjeta
-$routes->post('auth/pagar', 'Auth::procesar_pago');   // Procesa el botón "Pagar"
+$routes->get('pasarela', 'Auth::pasarela_pago');     
+$routes->post('auth/pagar', 'Auth::procesar_pago');   
 $routes->get('pasarela-upgrade', 'Perfil::pasarela_upgrade');
 $routes->post('perfil/pagar-upgrade', 'Perfil::procesar_upgrade');
+$routes->get('perfil/confirmar_upgrade', 'Perfil::confirmar_upgrade'); 
 
 // Logout
 $routes->get('logout', 'Auth::logout');
@@ -129,7 +135,6 @@ $routes->group('admin', ['filter' => 'adminAuth', 'namespace' => 'App\Controller
     // --- GESTIÓN DE USUARIOS (CORREGIDO) ---
     $routes->get('usuarios', 'Usuarios::index');
     
-    // 👇 Rutas NUEVAS que faltaban 👇
     $routes->get('usuarios/editar/(:num)', 'Usuarios::edit/$1');
     $routes->post('usuarios/update/(:num)', 'Usuarios::update/$1');
     
