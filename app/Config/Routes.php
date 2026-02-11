@@ -13,7 +13,7 @@ $routes->get('/', 'Home::index');
 $routes->get('detalle/(:segment)', 'Home::detalle/$1');
 $routes->get('ver/(:segment)', 'Home::ver/$1');
 $routes->get('mi-lista', 'Home::miLista');
-$routes->get('peliculas', 'Home::paginaPeliculas');
+// $routes->get('peliculas', 'Home::paginaPeliculas');
 $routes->get('series', 'Serie::index');
 $routes->get('ayuda', 'Home::ayuda');
 $routes->get('genero/(:num)', 'Home::verGenero/$1');
@@ -23,6 +23,11 @@ $routes->get('genero/(:num)', 'Home::verGenero/$1');
 // Rutas AJAX Series
 $routes->post('serie/ajax-fila', 'Serie::ajaxCargarFila');
 $routes->post('serie/ajax-expandir-fila', 'Serie::ajaxExpandirFila');
+$routes->get('peliculas', 'Peliculas::index');
+
+// 2. Las peticiones AJAX (Deben ser POST)
+$routes->post('peliculas/ajax-fila', 'Peliculas::ajaxCargarFila');
+$routes->post('peliculas/ajax-expandir-fila', 'Peliculas::ajaxExpandirFila');
 
 $routes->get('director/(:num)', 'Home::director/$1');
 $routes->post('autocompletar', 'Api\Catalogo::autocompletar'); 

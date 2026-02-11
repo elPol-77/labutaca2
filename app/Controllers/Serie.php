@@ -81,7 +81,7 @@ class Serie extends BaseController
         // ---------------------------------------------------------
         $data = [
             'titulo' => 'Series - La Butaca',
-            'destacada' => $destacada, // PASAMOS UNA SOLA VARIABLE
+            'destacada' => $destacada, 
             'mostrarHero' => true,
             'splash' => false,
             'categoria' => 'Series',
