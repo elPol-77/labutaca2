@@ -16,7 +16,10 @@ $routes->get('mi-lista', 'Home::miLista');
 $routes->get('peliculas', 'Home::paginaPeliculas');
 $routes->get('series', 'Serie::index');
 $routes->get('ayuda', 'Home::ayuda');
+$routes->get('genero/(:num)', 'Home::verGenero/$1');
 
+$routes->get('genero/(:num)/(:num)', 'Home::verGenero/$1/$2'); 
+$routes->get('genero/(:num)', 'Home::verGenero/$1');
 // Rutas AJAX Series
 $routes->post('serie/ajax-fila', 'Serie::ajaxCargarFila');
 $routes->post('serie/ajax-expandir-fila', 'Serie::ajaxExpandirFila');

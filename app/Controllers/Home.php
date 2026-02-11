@@ -1148,5 +1148,204 @@ class Home extends BaseController
         $data = ['titulo' => 'Centro de Ayuda - La Butaca'];
         return view('frontend/help', $data);
     }
+// =========================================================
+    // 🎭 VISTA DE GÉNERO (HÍBRIDA: FILAS O GRID)
+    // =========================================================
+    public function verGenero($idGenero, $tipoEspecifico = null)
+    {
+        if (!session()->get('is_logged_in')) return redirect()->to('/auth');
 
+        $generoModel = new \App\Models\GeneroModel();
+        $userModel = new \App\Models\UsuarioModel();
+        
+        $infoGenero = $generoModel->find($idGenero);
+        if (!$infoGenero) return redirect()->to('/');
+
+        $data = [
+            'generos' => $generoModel->orderBy('nombre', 'ASC')->findAll(),
+            'otrosPerfiles' => $userModel->where('id !=', session()->get('user_id'))->findAll(),
+            'mostrarHero' => false,
+            'splash' => false,
+            'carrusel' => []
+        ];
+
+        // --- CASO A: MODO "VER TODO" (GRID) ---
+        if ($tipoEspecifico !== null) {
+            
+            // Cargamos MUCHOS items (ej. 100)
+            $contenidos = $this->_getContenidoCombinado($idGenero, $tipoEspecifico, 100);
+            
+            $nombreTipo = ($tipoEspecifico == 1) ? 'Películas' : 'Series';
+            $data['titulo'] = $nombreTipo . ' de ' . $infoGenero['nombre'];
+            $data['peliculas'] = $contenidos;
+            
+            // === MAGIA AJAX ===
+            if ($this->request->isAJAX()) {
+                // Si es AJAX, devolvemos SOLO la vista parcial (sin header/footer)
+                return view('frontend/peliculas', $data); 
+            }
+            
+            // Si entra escribiendo la URL, carga normal
+            echo view('frontend/templates/header', $data);
+            echo view('frontend/peliculas', $data);
+            echo view('frontend/templates/footer', $data);
+            return;
+        }
+
+        // --- CASO B: MODO RESUMEN (FILAS) ---
+        // Cargamos solo 20 de cada uno para que la página no pese
+        $peliculas = $this->_getContenidoCombinado($idGenero, 1, 20); 
+        $series = $this->_getContenidoCombinado($idGenero, 2, 20);
+
+        $data['titulo'] = 'Explorando: ' . $infoGenero['nombre'];
+        $data['infoGenero'] = $infoGenero;
+        $data['peliculas'] = $peliculas;
+        $data['series'] = $series;
+
+        echo view('frontend/templates/header', $data);
+        echo view('frontend/genero_filas', $data); // <--- VISTA FILAS
+        echo view('frontend/templates/footer', $data);
+    }
+
+    // --- HELPER ACTUALIZADO (Con parámetro $limit) ---
+    // --- HELPER PRIVADO PARA NO REPETIR CÓDIGO ---
+    private function _getContenidoCombinado($idGenero, $tipoId, $limit = 20)
+    {
+        $planId = session()->get('plan_id');
+        $model = new \App\Models\ContenidoModel();
+        
+        // 1. LOCAL
+        $contenido = $model->getPorGenero($idGenero, $tipoId, $limit, [], $planId);
+
+        // Filtro Kids Local
+        if ($planId == 3 || $planId == 1) {
+            $contenido = array_filter($contenido, fn($c) => $c['edad_recomendada'] <= 11);
+        }
+
+        // 2. EXTERNO (TMDB)
+        if ($planId == 2 || $planId == 3 || $planId == 1) { 
+            $mapaGeneros = [
+                1 => 28, 2 => 12, 3 => 878, 4 => 18, 5 => 16, 
+                6 => 80, 7 => 35, 8 => 27, 9 => 10749, 10 => 14, 
+                12 => 9648, 13 => 53
+            ];
+
+            if (isset($mapaGeneros[$idGenero])) {
+                $idTmdb = $mapaGeneros[$idGenero];
+                $modoTmdb = ($tipoId == 2) ? 'tv' : 'movie';
+                $esKids = ($planId == 3 || $planId == 1); 
+                
+                $externos = $this->obtenerDeTmdbPorGenero($idTmdb, $modoTmdb, $esKids);
+                
+                if(count($externos) > $limit) {
+                    $externos = array_slice($externos, 0, $limit);
+                }
+
+                $contenido = array_merge($contenido, $externos);
+            }
+        }
+
+        // 3. SANITIZACIÓN DE IMÁGENES (AQUÍ ESTÁ EL ARREGLO DEL ERROR JS)
+            foreach ($contenido as &$c) {
+                    
+                    // A. Asegurar IMAGEN (Poster)
+                    if (empty($c['imagen'])) {
+                        $c['imagen'] = base_url('assets/img/no-poster.jpg');
+                    } elseif (!str_starts_with($c['imagen'], 'http')) {
+                        $c['imagen'] = base_url('assets/img/' . $c['imagen']);
+                    }
+
+                    // B. Asegurar IMAGEN_BG (Fondo) - CORRECCIÓN PARA TU ERROR
+                    if (empty($c['imagen_bg'])) {
+                        // Si no tiene fondo, usamos el poster o uno genérico
+                        $c['imagen_bg'] = $c['imagen']; 
+                    } elseif (!str_starts_with($c['imagen_bg'], 'http')) {
+                        $c['imagen_bg'] = base_url('assets/img/' . $c['imagen_bg']);
+                    }
+
+                    // C. Asegurar NIVEL ACCESO (Para el JS 'item.nivel_acceso')
+                    if (!isset($c['nivel_acceso'])) {
+                        $c['nivel_acceso'] = 1; // Por defecto Free
+                    }
+                }
+
+                return $contenido;
+    }
+    // =========================================================
+    // 🔌 HELPER PRIVADO: CONEXIÓN CON TMDB
+    // =========================================================
+    private function obtenerDeTmdbPorGenero($genreIdTmdb, $tipo = 'movie', $esKids = false)
+    {
+        $apiKey = '6387e3c183c454304108333c56530988'; 
+        $lang = 'es-ES';
+        
+        // Contexto para evitar errores de SSL en local
+        $context = stream_context_create([
+            "ssl" => ["verify_peer" => false, "verify_peer_name" => false], 
+            "http" => ["ignore_errors" => true]
+        ]);
+        
+        // URL Base del endpoint 'discover'
+        // include_adult=false es vital, especialmente si no es Kids
+        $url = "https://api.themoviedb.org/3/discover/{$tipo}?api_key={$apiKey}&language={$lang}&sort_by=popularity.desc&include_adult=false&page=1";
+        
+        // --- GESTIÓN DE GÉNEROS ---
+        // Empezamos filtrando por el género que pidió el usuario (ej: Acción)
+        $generosAFiltrar = [$genreIdTmdb];
+
+        // --- FILTRO MÁGICO PARA KIDS ---
+        if ($esKids) {
+            if ($tipo == 'movie') {
+                // PELÍCULAS: Usamos el sistema de calificación por edades
+                // 'certification.lte=7' significa: Apta para 7 años o menos (España)
+                $url .= "&certification_country=ES&certification.lte=7";
+            } else {
+                // SERIES: El filtro de certificación en series es menos preciso en TMDB.
+                // Estrategia: Forzamos que la serie tenga TAMBIÉN el género "Kids" (10762) o "Animación" (16)
+                // Usamos coma (,) para lógica AND (Debe ser de "Acción" Y "Kids")
+                $generosAFiltrar[] = 10762; 
+            }
+        }
+
+        // Añadimos los géneros a la URL
+        $url .= "&with_genres=" . implode(',', $generosAFiltrar);
+
+        // --- LLAMADA A LA API ---
+        // ... LLAMADA A LA API ...
+        $json = @file_get_contents($url, false, $context);
+        if (!$json) return [];
+
+        $data = json_decode($json, true);
+        $resultados = [];
+        $baseImg = "https://image.tmdb.org/t/p/w300";
+        $baseBackdrop = "https://image.tmdb.org/t/p/w1280"; // <--- NUEVO: Base para fondos
+
+        if (!empty($data['results'])) {
+            foreach ($data['results'] as $item) {
+                if (empty($item['poster_path'])) continue;
+
+                $prefix = ($tipo == 'tv') ? 'tmdb_tv_' : 'tmdb_movie_';
+                $titulo = ($tipo == 'tv') ? ($item['name'] ?? '') : ($item['title'] ?? '');
+                $fecha  = ($tipo == 'tv') ? ($item['first_air_date'] ?? '') : ($item['release_date'] ?? '');
+
+                $resultados[] = [
+                    'id'               => $prefix . $item['id'],
+                    'titulo'           => $titulo,
+                    'imagen'           => $baseImg . $item['poster_path'],
+                    
+                    // --- CORRECCIÓN CLAVE AQUÍ ---
+                    // Añadimos imagen_bg. Si no tiene fondo, usamos el póster como fallback.
+                    'imagen_bg'        => !empty($item['backdrop_path']) ? $baseBackdrop . $item['backdrop_path'] : ($baseImg . $item['poster_path']),
+                    
+                    'anio'             => substr($fecha, 0, 4),
+                    'edad_recomendada' => $esKids ? 0 : 12,
+                    'tipo_id'          => ($tipo == 'tv') ? 2 : 1,
+                    'vistas'           => $item['popularity'],
+                    'nivel_acceso'     => 0 // Para que el JS no falle al chequear nivel
+                ];
+            }
+        }
+
+        return $resultados;
+    }
 }

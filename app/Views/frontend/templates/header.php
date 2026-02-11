@@ -56,14 +56,15 @@
                 <div class="mega-menu">
                     <div class="mega-column">
                         <h4>GÉNEROS</h4>
-                        <div class="genre-grid">
+                       <div class="genre-grid">
                             <?php if (!empty($generos)): ?>
                                 <?php foreach ($generos as $g): ?>
-                                    <a href="<?= base_url('peliculas?genero=' . $g['id']) ?>" class="genre-link trigger-filtro"
-                                        data-genero="<?= $g['id'] ?>"> <?= esc($g['nombre']) ?> </a>
+                                    <a href="<?= base_url('genero/' . $g['id']) ?>" class="genre-link"> 
+                                        <?= esc($g['nombre']) ?> 
+                                    </a>
                                 <?php endforeach; ?>
                             <?php else: ?>
-                                <p>Sin géneros</p>
+                                <p style="padding: 10px; color: #aaa;">Cargando géneros...</p>
                             <?php endif; ?>
                         </div>
                     </div>

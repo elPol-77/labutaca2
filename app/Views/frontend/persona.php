@@ -46,7 +46,7 @@
                     <div class="film-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px; margin-bottom: 50px;">
                         <?php foreach ($acting as $credito): ?>
                             <?php if($credito['poster']): // Solo mostrar si tiene poster para que quede bonito ?>
-                            <a href="<?= base_url('ver/' . $credito['id']) ?>" class="film-card" style="text-decoration: none; color: white; transition: transform 0.2s; display: block;">
+                            <a href="<?= base_url('detalle/' . $credito['id']) ?>" class="film-card" style="text-decoration: none; color: white; transition: transform 0.2s; display: block;">
                                 <div style="aspect-ratio: 2/3; border-radius: 8px; overflow: hidden; margin-bottom: 10px; position: relative; border: 1px solid #333;">
                                     <img src="<?= $credito['poster'] ?>" style="width: 100%; height: 100%; object-fit: cover;">
                                     <?php if($credito['media_type'] == 'tv'): ?>
@@ -74,7 +74,7 @@
                     <div class="film-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px;">
                         <?php foreach ($directing as $credito): ?>
                             <?php if($credito['poster']): ?>
-                            <a href="<?= base_url('ver/' . $credito['id']) ?>" class="film-card" style="text-decoration: none; color: white; transition: transform 0.2s; display: block;">
+                            <a href="<?= base_url('detalle/' . $credito['id']) ?>" class="film-card" style="text-decoration: none; color: white; transition: transform 0.2s; display: block;">
                                 <div style="aspect-ratio: 2/3; border-radius: 8px; overflow: hidden; margin-bottom: 10px; position: relative; border: 1px solid #333;">
                                     <img src="<?= $credito['poster'] ?>" style="width: 100%; height: 100%; object-fit: cover;">
                                 </div>
