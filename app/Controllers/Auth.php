@@ -256,7 +256,11 @@ class Auth extends BaseController
     private function _finalizar_registro($datos) {
         $model = new UsuarioModel();
 
-        
+        if ($datos['plan_id'] > 1) {
+            $datos['fecha_fin_suscripcion'] = date('Y-m-d H:i:s', strtotime('+30 days'));
+        } else {
+            $datos['fecha_fin_suscripcion'] = null;
+        }
 
         // Insertar en Base de Datos
         $nuevoId = $model->insert($datos);
@@ -275,4 +279,5 @@ class Auth extends BaseController
         session()->setFlashdata('mostrar_intro', true);
         return redirect()->to('/');
     }
+    
 }

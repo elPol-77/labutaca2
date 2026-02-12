@@ -9,10 +9,7 @@ class UsuarioModel extends Model
     protected $useAutoIncrement = true;
     protected $returnType       = 'array'; 
 
-    /* * 1. ALLOWED FIELDS (Campos Permitidos)
-     * Aquí definimos qué columnas se pueden guardar/editar.
-     * Faltaba 'email' y 'fecha_registro'.
-     */
+
     protected $allowedFields = [
         'username', 
         'email',          
@@ -20,7 +17,8 @@ class UsuarioModel extends Model
         'rol', 
         'plan_id', 
         'avatar', 
-        'fecha_registro'   
+        'fecha_registro'  ,
+        'fecha_fin_suscripcion'
     ];
     
 

@@ -13,17 +13,32 @@ class Home extends BaseController
 
     public function index()
     {
+        // 1. CHEQUEO DE SESIÓN
         if (!session()->get('is_logged_in')) return redirect()->to('/auth');
 
         $userId = session()->get('user_id');
-        $planId = session()->get('plan_id');
+        
+        // 2. OBTENER USUARIO Y VERIFICAR SUSCRIPCIÓN
+        // Es vital buscar al usuario fresco de la BD para ver su fecha
+        $userModel = new UsuarioModel();
+        $usuario = $userModel->find($userId);
+
+        // --- PORTERO AUTOMÁTICO: Chequea si caducó ---
+        // Si su fecha venció, esta función lo bajará a Plan 1 (Free)
+        $this->_verificarSuscripcion($usuario);
+        // ---------------------------------------------
+
+        // 3. REFRESCAR DATOS
+        // Volvemos a leer el plan_id de la sesión, porque _verificarSuscripcion 
+        // pudo haberlo cambiado hace un milisegundo.
+        $planId = session()->get('plan_id'); 
         $esFree = ($planId == 1);
         $esKids = ($planId == 3);
         
         $destacada = null;
         $model = new ContenidoModel();
 
-        // 1. Decidimos al azar si mostramos Película (0) o Serie (1)
+        // 4. LÓGICA DE HERO (Igual que tenías)
         $tipoHero = (rand(0, 1) == 0) ? 'movie' : 'tv';
 
         // --- CASO A: USUARIO FREE (Local) ---
@@ -48,7 +63,6 @@ class Home extends BaseController
             if (!empty($resultados)) {
                 shuffle($resultados);
                 foreach ($resultados as $item) {
-                    // Verificamos que tenga fondo
                     if (!empty($item['imagen_bg'])) { 
                         $destacada = $item;
                         break;
@@ -57,20 +71,20 @@ class Home extends BaseController
             }
         }
 
-        // --- FALLBACK LOCAL (Si la API falla) ---
+        // --- FALLBACK LOCAL ---
         if (empty($destacada)) {
             $backup = $model->where('imagen_bg !=', '')->orderBy('RAND()')->first();
             if ($backup) $destacada = $this->formatearLocal($backup);
         }
 
-        // --- FALLBACK FINAL (Hardcodeado) ---
+        // --- FALLBACK FINAL ---
         if (empty($destacada)) {
             $destacada = [
                 'id' => 0, 
                 'titulo' => 'Bienvenido', 
                 'descripcion' => 'Explora nuestro contenido.',
                 'imagen_bg' => 'https://image.tmdb.org/t/p/original/mBaXZ95R2OxueZhvQbcEWy2DqyO.jpg',
-                'backdrop' => 'https://image.tmdb.org/t/p/original/mBaXZ95R2OxueZhvQbcEWy2DqyO.jpg', // DUPLICADO PARA SEGURIDAD
+                'backdrop' => 'https://image.tmdb.org/t/p/original/mBaXZ95R2OxueZhvQbcEWy2DqyO.jpg',
                 'link_ver' => '#', 
                 'link_detalle' => '#'
             ];
@@ -83,11 +97,11 @@ class Home extends BaseController
             'splash' => (session()->getFlashdata('mostrar_intro') === true),
             'categoria' => 'Inicio',
             'generos' => (new GeneroModel())->findAll(),
-            'otrosPerfiles' => (new UsuarioModel())->where('id !=', $userId)->where('id >=', 2)->where('id <=', 4)->findAll()
+            'otrosPerfiles' => $userModel->where('id !=', $userId)->where('id >=', 2)->where('id <=', 4)->findAll()
         ];
 
         echo view('frontend/templates/header', $data);
-        echo view('frontend/catalogo', $data); // Carga tu vista de catálogo
+        echo view('frontend/catalogo', $data);
         echo view('frontend/templates/footer', $data);
     }
 
@@ -971,8 +985,8 @@ class Home extends BaseController
         $userId = session()->get('user_id');
 
         // 2. Modelos
-        $userModel = new \App\Models\UsuarioModel();
-        $generoModel = new \App\Models\GeneroModel();
+        $userModel = new UsuarioModel();
+        $generoModel = new GeneroModel();
 
         // 3. Perfiles (Lógica corregida por IDs)
         $otrosPerfiles = $userModel->where('id >=', 2)
@@ -1038,8 +1052,8 @@ class Home extends BaseController
         // 1. Datos básicos
         $userId = session()->get('user_id');
 
-        $userModel = new \App\Models\UsuarioModel();
-        $generoModel = new \App\Models\GeneroModel();
+        $userModel = new UsuarioModel();
+        $generoModel = new GeneroModel();
 
         // 2. Perfiles
         $otrosPerfiles = $userModel->where('id >=', 2)
@@ -1212,8 +1226,8 @@ class Home extends BaseController
     {
         if (!session()->get('is_logged_in')) return redirect()->to('/auth');
 
-        $generoModel = new \App\Models\GeneroModel();
-        $userModel = new \App\Models\UsuarioModel();
+        $generoModel = new GeneroModel();
+        $userModel = new UsuarioModel();
         
         $infoGenero = $generoModel->find($idGenero);
         if (!$infoGenero) return redirect()->to('/');
@@ -1269,7 +1283,7 @@ class Home extends BaseController
     private function _getContenidoCombinado($idGenero, $tipoId, $limit = 20)
     {
         $planId = session()->get('plan_id');
-        $model = new \App\Models\ContenidoModel();
+        $model = new ContenidoModel();
         
         // 1. LOCAL
         $contenido = $model->getPorGenero($idGenero, $tipoId, $limit, [], $planId);
@@ -1404,5 +1418,34 @@ class Home extends BaseController
         }
 
         return $resultados;
+    }
+    // FUNCIÓN PARA REVISAR CADUCIDAD
+    private function _verificarSuscripcion($usuario)
+    {
+        // Si es Free, no hay nada que caducar
+        if ($usuario['plan_id'] == 1) return;
+
+        // Si no tiene fecha de fin (error de datos), no hacemos nada
+        if (empty($usuario['fecha_fin_suscripcion'])) return;
+
+        $fechaFin = new \DateTime($usuario['fecha_fin_suscripcion']);
+        $ahora = new \DateTime();
+
+        // SI YA PASÓ LA FECHA DE FIN...
+        if ($ahora > $fechaFin) {
+            $userModel = new UsuarioModel();
+            
+            // 1. Lo bajamos a plan FREE (1)
+            $userModel->update($usuario['id'], [
+                'plan_id' => 1,
+                'fecha_fin_suscripcion' => null
+            ]);
+
+            // 2. Actualizamos la sesión para que el usuario se de cuenta
+            session()->set('plan_id', 1);
+            
+            // 3. (Opcional) Mensaje Flash
+            session()->setFlashdata('error', 'Tu suscripción ha caducado. Has vuelto al plan Free.');
+        }
     }
 }

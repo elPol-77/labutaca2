@@ -16,7 +16,6 @@ class Perfil extends BaseController
             'https://cdn.milenio.com/uploads/media/2018/06/08/estereotipo-ganster-actor-cinta-imitado.jpg',
             'https://upload.wikimedia.org/wikipedia/en/9/90/HeathJoker.png',
             'https://m.media-amazon.com/images/M/MV5BM2RkN2EwNDYtOTgzZC00Yzk4LTk1ZGQtN2U2MjlmZDQwYzMyXkEyXkFqcGc@._V1_.jpg',
-
         ],
         'kids' => [
             'https://m.media-amazon.com/images/M/MV5BYjVhYWQ2YTktYzIwMS00YWExLTkzYzQtMTcyMjAwZmZjNDU3XkEyXkFqcGc@._V1_.jpg',
@@ -26,61 +25,125 @@ class Perfil extends BaseController
         ]
     ];
 
- public function index()
-{
-    if (!session()->get('is_logged_in')) {
-        return redirect()->to('/auth');
-    }
-
-    $userId = session()->get('user_id');
-    $userModel = new UsuarioModel();
-    $generoModel = new GeneroModel();
-
-    // 1. Buscamos el usuario
-    $usuario = $userModel->find($userId);
-
-    // --- CORRECCIÓN CRÍTICA ---
-    // Si el usuario no existe en la BD (aunque haya sesión), abortamos.
-    if (!$usuario) {
-        session()->destroy();
-        return redirect()->to('/auth')->with('error_general', 'Sesión no válida o usuario inexistente.');
-    }
-
-    $planId = $usuario['plan_id']; // Usamos el plan real de la BD, no el de sesión por si acaso
-
-    $otrosPerfiles = $userModel->where('id !=', $userId)
-        ->where('id >=', 2)
-        ->where('id <=', 4)
-        ->findAll();
-
-    $listaGeneros = $generoModel->orderBy('nombre', 'ASC')->findAll();
-
-    $avataresDisponibles = ($planId == 3)
-        ? $this->avatars['kids']
-        : array_merge($this->avatars['general'], $this->avatars['kids']);
-
-    $data = [
-        'usuario'       => $usuario,
-        'avatares'      => $avataresDisponibles,
-        'esKids'        => ($planId == 3),
-        'generos'       => $listaGeneros,
-        'otrosPerfiles' => $otrosPerfiles,
-        'planes'        => [
-            1 => 'Plan Free (Con Anuncios)',
-            2 => 'Plan Premium (Todo incluido)',
-            3 => 'Perfil Kids (Contenido Infantil)'
-        ]
-    ];
-
-    // Cargamos las vistas de forma estándar
-    return view('frontend/templates/header', $data)
-         . view('frontend/perfil', $data)
-         . view('frontend/templates/footer');
-}
-
-   public function update()
+    public function index()
     {
-        // 🟢 ESTA PARTE LA TIENES PERFECTA, LA DEJAMOS IGUAL
+        if (!session()->get('is_logged_in')) {
+            return redirect()->to('/auth');
+        }
+
+        $userId = session()->get('user_id');
+        $userModel = new UsuarioModel();
+        $generoModel = new GeneroModel();
+
+        // 1. Buscamos el usuario
+        $usuario = $userModel->find($userId);
+
+        if (!$usuario) {
+            session()->destroy();
+            return redirect()->to('/auth')->with('error_general', 'Sesión no válida.');
+        }
+
+        $planId = $usuario['plan_id'];
+
+        // =========================================================
+        // 📅 CÁLCULO DE SUSCRIPCIÓN (LÓGICA REAL: FECHA FIN)
+        // =========================================================
+
+        $nombrePlan = 'Free';
+        $precio = '0.00€';
+        if ($planId == 2) {
+            $nombrePlan = 'Premium';
+            $precio = '9.99€';
+        }
+        if ($planId == 3) {
+            $nombrePlan = 'Kids';
+            $precio = '4.99€';
+        }
+
+        $diasRestantes = 0;
+        $porcentajeBarra = 0;
+        $fechaRenovacion = "N/A";
+        $estadoSuscripcion = 'Gratuita';
+
+        // Solo calculamos si es Premium/Kids Y si tiene una fecha de fin definida
+        if ($planId > 1) {
+            try {
+                if (!empty($usuario['fecha_fin_suscripcion'])) {
+                    // Usamos la FECHA REAL DE CADUCIDAD de la BD
+                    $fechaFin = new \DateTime($usuario['fecha_fin_suscripcion']);
+                    $hoy = new \DateTime();
+
+                    if ($fechaFin > $hoy) {
+                        // Aún está activa
+                        $diferencia = $hoy->diff($fechaFin);
+                        $diasRestantes = $diferencia->days;
+                        $fechaRenovacion = $fechaFin->format('d/m/Y');
+                        $estadoSuscripcion = 'Activa';
+
+                        // Barra de progreso (Calculada sobre 30 días estándar para efecto visual)
+                        $porcentajeBarra = ($diasRestantes / 30) * 100;
+                        if ($porcentajeBarra > 100)
+                            $porcentajeBarra = 100;
+                    } else {
+                        // Ya ha caducado (pero el usuario aún no ha sido degradado por el sistema)
+                        $diasRestantes = 0;
+                        $fechaRenovacion = "Caducada";
+                        $estadoSuscripcion = 'Pendiente de Pago';
+                        $porcentajeBarra = 0;
+                    }
+                } else {
+                    // Fallback: Es Premium pero no tiene fecha (error de datos antiguos)
+                    $diasRestantes = 30;
+                    $fechaRenovacion = "Indefinida";
+                }
+            } catch (\Exception $e) {
+                $diasRestantes = 0;
+                $fechaRenovacion = "Error";
+            }
+        }
+
+        // =========================================================
+
+        $otrosPerfiles = $userModel->where('id !=', $userId)
+            ->where('id >=', 2)
+            ->where('id <=', 4)
+            ->findAll();
+
+        $listaGeneros = $generoModel->orderBy('nombre', 'ASC')->findAll();
+
+        $avataresDisponibles = ($planId == 3)
+            ? $this->avatars['kids']
+            : array_merge($this->avatars['general'], $this->avatars['kids']);
+
+        $data = [
+            'usuario' => $usuario,
+            'avatares' => $avataresDisponibles,
+            'esKids' => ($planId == 3),
+            'generos' => $listaGeneros,
+            'otrosPerfiles' => $otrosPerfiles,
+            'planes' => [
+                1 => 'Plan Free (Con Anuncios)',
+                2 => 'Plan Premium (Todo incluido)',
+                3 => 'Perfil Kids (Contenido Infantil)'
+            ],
+            // 🟢 DATOS REALES ENVIADOS A LA VISTA
+            'suscripcion' => [
+                'nombre_plan' => $nombrePlan,
+                'precio' => $precio,
+                'dias_restantes' => $diasRestantes,
+                'fecha_renovacion' => $fechaRenovacion,
+                'porcentaje' => $porcentajeBarra,
+                'estado' => $estadoSuscripcion
+            ]
+        ];
+
+        return view('frontend/templates/header', $data)
+            . view('frontend/perfil', $data)
+            . view('frontend/templates/footer');
+    }
+
+    public function update()
+    {
         $idUsuario = session()->get('user_id');
         $nuevoPlan = $this->request->getPost('plan_id');
         $nuevoUser = $this->request->getPost('username');
@@ -123,13 +186,14 @@ class Perfil extends BaseController
     }
 
     // =========================================================================
-    // 🟡 AQUÍ EMPIEZA LA INTEGRACIÓN DE STRIPE (UPGRADE)
+    // 🟡 INTEGRACIÓN DE STRIPE (UPGRADE)
     // =========================================================================
 
     public function pasarela_upgrade()
     {
-        if(!session()->has('temp_upgrade_data')) return redirect()->to('/perfil');
-        
+        if (!session()->has('temp_upgrade_data'))
+            return redirect()->to('/perfil');
+
         $user = session()->get('temp_upgrade_data');
         // Pasamos 'is_upgrade' para que la vista sepa que debe cambiar el texto del botón y el enlace de cancelar
         return view('auth/payment_gateway', ['user' => $user, 'is_upgrade' => true]);
@@ -137,7 +201,8 @@ class Perfil extends BaseController
 
     public function procesar_upgrade()
     {
-        if(!session()->has('temp_upgrade_data')) return redirect()->to('/perfil');
+        if (!session()->has('temp_upgrade_data'))
+            return redirect()->to('/perfil');
 
         // 1. Configurar Stripe
         \Stripe\Stripe::setApiKey('sk_test_51Syx7APTBNyzobQjQCTV8NYXHjek1Vl1ltougcjbvEkhoprL5NdIH2OqrgvDjyQyMPyOuDZqkqGLUzQEJDFJacNV00p5nd9p91');
@@ -146,20 +211,22 @@ class Perfil extends BaseController
             // 2. Crear sesión de pago
             $session = \Stripe\Checkout\Session::create([
                 'payment_method_types' => ['card'],
-                'line_items' => [[
-                    'price_data' => [
-                        'currency' => 'eur',
-                        'product_data' => [
-                            'name' => 'Upgrade a Plan PREMIUM',
+                'line_items' => [
+                    [
+                        'price_data' => [
+                            'currency' => 'eur',
+                            'product_data' => [
+                                'name' => 'Upgrade a Plan PREMIUM',
+                            ],
+                            'unit_amount' => 999, // 9.99 EUR
                         ],
-                        'unit_amount' => 999, // 9.99 EUR
-                    ],
-                    'quantity' => 1,
-                ]],
+                        'quantity' => 1,
+                    ]
+                ],
                 'mode' => 'payment',
                 // Rutas de retorno específicas para el perfil
                 'success_url' => base_url('perfil/confirmar_upgrade?session_id={CHECKOUT_SESSION_ID}'),
-                'cancel_url'  => base_url('perfil'), // Si cancela, vuelve a su perfil
+                'cancel_url' => base_url('perfil'), // Si cancela, vuelve a su perfil
             ]);
 
             return redirect()->to($session->url);
@@ -169,7 +236,6 @@ class Perfil extends BaseController
         }
     }
 
-    // 🟢 NUEVO MÉTODO: Se ejecuta SOLO si el pago fue exitoso
     public function confirmar_upgrade()
     {
         $sessionId = $this->request->getGet('session_id');
@@ -184,15 +250,16 @@ class Perfil extends BaseController
         // 1. Actualizamos la Base de Datos
         $model->update($datos['id'], [
             'username' => $datos['username'],
-            'plan_id'  => $datos['plan_id'], // Aquí ya forzamos el 2 en el paso anterior
-            'avatar'   => $datos['avatar']
+            'plan_id' => $datos['plan_id'],
+            'avatar' => $datos['avatar'],
+            'fecha_fin_suscripcion' => date('Y-m-d H:i:s', strtotime('+30 days'))
         ]);
 
-        // 2. Actualizamos la sesión del usuario (para que vea el cambio al instante)
+
         session()->set([
             'username' => $datos['username'],
-            'plan_id'  => $datos['plan_id'],
-            'avatar'   => $datos['avatar']
+            'plan_id' => $datos['plan_id'],
+            'avatar' => $datos['avatar']
         ]);
 
         // 3. Limpiamos datos temporales
