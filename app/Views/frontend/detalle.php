@@ -18,7 +18,7 @@
 
         <div class="detail-info" style="flex:1; padding-top:10px;">
 
-            <h1 style="font-size:3.5rem; margin:0 0 10px 0; font-family:'Playfair Display'; line-height:1.1;">
+            <h1 style="font-size:3.5rem; margin:0 0 10px 0;  line-height:1.1;">
                 <?= esc($peli['titulo']) ?>
             </h1>
 
