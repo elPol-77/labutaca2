@@ -157,9 +157,7 @@ $(document).ready(function () {
             };
         },
         select: function (event, ui) {
-            // Redirección limpia usando el ID numérico
-            // Esto llevará a /detalle/12345 y tu controlador sabrá qué hacer
-            window.location.href = BASE_URL + "detalle/" + ui.item.value;
+            window.location.href = BASE_URL + "detalle/" + ui.item.id;
             return false;
         }
     });

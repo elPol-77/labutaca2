@@ -1,28 +1,30 @@
+<div id="view-splash" class="active">
+    
+    <div class="camera-loader">
+        <div class="reels-container">
+            <div class="reel"></div>
+            <div class="reel"></div>
+        </div>
+
+        <div class="camera-body">
+            <div class="lens"></div>
+            <div class="matte-box"></div>
+        </div>
+    </div>
+
+    <p class="loading-text">CARGANDO...</p>
+    
+    <div class="loader-line-container" style="width: 150px; background: #333; height: 3px; border-radius: 2px; margin-top: 10px;">
+        <div class="loader-line" style="width: 0%; height: 100%; background: var(--accent); transition: width 1s;"></div>
+    </div>
+
+</div>
 <section id="view-series-full" class="view-section active" style="padding-top: 100px;">
     <input type="hidden" class="txt_csrftoken" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
 
     <div id="loading-initial" class="active"
         style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #0f0c29; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-        <div class="camera-loader" style="transform: scale(1.5); margin-bottom: 20px;">
-            <div class="reels-container"
-                style="display: flex; gap: 15px; justify-content: center; margin-bottom: -15px; position: relative; z-index: 2;">
-                <div class="reel"
-                    style="width: 40px; height: 40px; border: 4px solid #333; border-radius: 50%; position: relative; animation: spinReel 2s linear infinite; background: #1a1a1a;">
-                </div>
-                <div class="reel"
-                    style="width: 40px; height: 40px; border: 4px solid #333; border-radius: 50%; position: relative; animation: spinReel 2s linear infinite; background: #1a1a1a;">
-                </div>
-            </div>
-            <div class="camera-body"
-                style="width: 100px; height: 60px; background: #222; border-radius: 8px; position: relative; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0,0,0,0.5);">
-                <div class="lens"
-                    style="width: 50px; height: 50px; background: #111; border-radius: 50%; border: 3px solid #444; position: relative; overflow: hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.8);">
-                    <div class="lens-reflection"
-                        style="width: 20px; height: 20px; background: rgba(255,255,255,0.1); border-radius: 50%; position: absolute; top: 5px; left: 5px;">
-                    </div>
-                </div>
-            </div>
-        </div>
+
         <p class="loading-text"
             style="color: #fff; font-family: 'Outfit', sans-serif; letter-spacing: 3px; font-weight: bold; margin-bottom: 15px;">
             CARGANDO...</p>

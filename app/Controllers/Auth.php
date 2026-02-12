@@ -106,17 +106,19 @@ class Auth extends BaseController
         }
         
         $data['avatars'] = [
-            'https://i.blogs.es/b0add0/breaking-bad/500_333.jpeg',
-            'https://i.blogs.es/c1c467/daredevil-born-again/375_375.jpeg',
-            'https://images.ecestaticos.com/an3NIKmUWjvoxIwgQ4K3J0pqAqo=/0x0:828x470/1200x1200/filters:fill(white):format(jpg)/f.elconfidencial.com%2Foriginal%2F280%2F050%2F590%2F2800505903fc39bbeaf82f750b823ec3.jpg',
-            'https://media.revistagq.com/photos/62a0a996223a33e985e4d59a/4:3/w_1199,h_899,c_limit/1072434_110615-cc-Darth-Vader-Thumb.jpg',
-            'https://cdn.milenio.com/uploads/media/2018/06/08/estereotipo-ganster-actor-cinta-imitado.jpg',
-            'https://upload.wikimedia.org/wikipedia/en/9/90/HeathJoker.png',
-            'https://m.media-amazon.com/images/M/MV5BM2RkN2EwNDYtOTgzZC00Yzk4LTk1ZGQtN2U2MjlmZDQwYzMyXkEyXkFqcGc@._V1_.jpg',
-            'https://m.media-amazon.com/images/M/MV5BYjVhYWQ2YTktYzIwMS00YWExLTkzYzQtMTcyMjAwZmZjNDU3XkEyXkFqcGc@._V1_.jpg',
-            'https://media.revistagq.com/photos/62a8546d6b74c0e2031238a6/16:9/w_1280,c_limit/buzz.jpg',
-            'https://yt3.googleusercontent.com/5VnfuQQjvC2uIfDR_R6lzSCJphVi2jTMGV71Xe24lUMW56nKa7Pu3CCCP3a7Po-G2J51xMb8tA=s900-c-k-c0x00ffffff-no-rj',
-            'https://play.nintendo.com/images/profile-mk-baby-mario.7bf2a8f2.aead314d58b63e27.png'
+            // --- ADULTOS ---
+            ['type' => 'adult', 'url' => 'https://i.blogs.es/b0add0/breaking-bad/500_333.jpeg'],
+            ['type' => 'adult', 'url' => 'https://i.blogs.es/c1c467/daredevil-born-again/375_375.jpeg'], 
+            ['type' => 'adult', 'url' => 'https://images.ecestaticos.com/an3NIKmUWjvoxIwgQ4K3J0pqAqo=/0x0:828x470/1200x1200/filters:fill(white):format(jpg)/f.elconfidencial.com%2Foriginal%2F280%2F050%2F590%2F2800505903fc39bbeaf82f750b823ec3.jpg'], 
+            ['type' => 'adult', 'url' => 'https://media.revistagq.com/photos/62a0a996223a33e985e4d59a/4:3/w_1199,h_899,c_limit/1072434_110615-cc-Darth-Vader-Thumb.jpg'],
+            ['type' => 'adult', 'url' => 'https://cdn.milenio.com/uploads/media/2018/06/08/estereotipo-ganster-actor-cinta-imitado.jpg'], 
+            ['type' => 'adult', 'url' => 'https://upload.wikimedia.org/wikipedia/en/9/90/HeathJoker.png'], 
+            ['type' => 'adult', 'url' => 'https://m.media-amazon.com/images/M/MV5BM2RkN2EwNDYtOTgzZC00Yzk4LTk1ZGQtN2U2MjlmZDQwYzMyXkEyXkFqcGc@._V1_.jpg'], 
+            ['type' => 'adult', 'url' => 'https://m.media-amazon.com/images/M/MV5BYjVhYWQ2YTktYzIwMS00YWExLTkzYzQtMTcyMjAwZmZjNDU3XkEyXkFqcGc@._V1_.jpg'], 
+            
+            // --- KIDS ---
+            ['type' => 'kids', 'url' => 'https://media.revistagq.com/photos/62a8546d6b74c0e2031238a6/16:9/w_1280,c_limit/buzz.jpg'], 
+            ['type' => 'kids', 'url' => 'https://media.revistagq.com/photos/5ca5f6a77a3aec0df5496c59/4:3/w_1960,h_1470,c_limit/bob_esponja_9564.png'], ['type' => 'kids', 'url' => 'https://m.media-amazon.com/images/M/MV5BYjVhYWQ2YTktYzIwMS00YWExLTkzYzQtMTcyMjAwZmZjNDU3XkEyXkFqcGc@._V1_.jpg'],
         ];
 
         return view('auth/register', $data);
@@ -153,7 +155,11 @@ class Auth extends BaseController
         if ($planId == 2) {
             session()->set('temp_user_data', $datosUsuario);
             return redirect()->to('/pasarela'); 
-        } 
+        }
+        elseif ($planId == 3) {
+            session()->set('temp_user_data', $datosUsuario);
+            return redirect()->to('/pasarela'); 
+        }
         
         // SI ES FREE -> Guardamos DIRECTO en la BD
         return $this->_finalizar_registro($datosUsuario);
@@ -167,9 +173,17 @@ class Auth extends BaseController
     {
         if(!session()->has('temp_user_data')) return redirect()->to('/registro');
         $user = session()->get('temp_user_data');
-        return view('auth/payment_gateway', ['user' => $user]);
-    }
+        
+        // Pasamos datos extra a la vista para mostrar el precio correcto
+        $precio = ($user['plan_id'] == 3) ? '4.99' : '9.99';
+        $nombrePlan = ($user['plan_id'] == 3) ? 'Plan KIDS' : 'Plan PREMIUM';
 
+        return view('auth/payment_gateway', [
+            'user' => $user,
+            'precio' => $precio,
+            'nombrePlan' => $nombrePlan
+        ]);
+    }
     public function procesar_pago()
     {
         if (!session()->has('temp_user_data')) return redirect()->to('/registro');
@@ -178,6 +192,16 @@ class Auth extends BaseController
         \Stripe\Stripe::setApiKey('sk_test_51Syx7APTBNyzobQjQCTV8NYXHjek1Vl1ltougcjbvEkhoprL5NdIH2OqrgvDjyQyMPyOuDZqkqGLUzQEJDFJacNV00p5nd9p91');
 
         $datosUsuario = session()->get('temp_user_data');
+        $planId = $datosUsuario['plan_id'];
+
+        // --- LÓGICA DINÁMICA DE PRECIOS ---
+        $precioEnCentimos = 999; // Por defecto Premium (9.99€)
+        $nombreProducto = 'Plan PREMIUM - La Butaca';
+
+        if ($planId == 3) {
+            $precioEnCentimos = 499; // Kids (4.99€)
+            $nombreProducto = 'Plan KIDS - La Butaca';
+        }
 
         try {
             $session = \Stripe\Checkout\Session::create([
@@ -186,14 +210,13 @@ class Auth extends BaseController
                     'price_data' => [
                         'currency' => 'eur',
                         'product_data' => [
-                            'name' => 'Plan PREMIUM - La Butaca Premium',
+                            'name' => $nombreProducto, // Nombre dinámico
                         ],
-                        'unit_amount' => 999, // 9.99 EUR
+                        'unit_amount' => $precioEnCentimos, // Precio dinámico
                     ],
                     'quantity' => 1,
                 ]],
                 'mode' => 'payment',
-                // Rutas de retorno (deben coincidir con Routes.php)
                 'success_url' => base_url('auth/confirmar_registro?session_id={CHECKOUT_SESSION_ID}'),
                 'cancel_url'  => base_url('auth/pago_cancelado'),
             ]);
@@ -233,18 +256,7 @@ class Auth extends BaseController
     private function _finalizar_registro($datos) {
         $model = new UsuarioModel();
 
-        /* NOTA SOBRE IMÁGENES:
-           Actualmente usas URLs de internet ($datos['avatar'] es un string http...).
-           Si en el futuro cambias el formulario para subir archivos (input type="file"),
-           aquí es donde renombrarías el archivo:
-           
-           if (isset($datos['avatar_file'])) {
-               $file = $datos['avatar_file'];
-               $newName = $datos['username'] . '.' . $file->getExtension(); 
-               $file->move('uploads/avatares', $newName);
-               $datos['avatar'] = $newName; 
-           }
-        */
+        
 
         // Insertar en Base de Datos
         $nuevoId = $model->insert($datos);

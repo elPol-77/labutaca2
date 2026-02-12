@@ -182,7 +182,7 @@ public function index()
                     5 => ['tipo' => 'tmdb', 'titulo' => 'Comedias Familiares', 'params' => ['with_genres' => '10751,35', 'sort_by' => 'revenue.desc']],
                     6 => ['tipo' => 'tmdb', 'titulo' => 'Animales Heroicos', 'params' => ['with_genres' => '16', 'with_keywords' => '12423']],
                     7 => ['tipo' => 'tmdb', 'titulo' => 'Musicales Mágicos', 'params' => ['with_genres' => '10751,10402']],
-                    8 => ['tipo' => 'tmdb', 'titulo' => 'Películas de Superhéroes (Kids)', 'params' => ['with_genres' => '16,28', 'with_keywords' => '9748']],
+
                 ];
             } else {
                 // --- MAPA ADULTOS (PELIS) ---
@@ -295,7 +295,7 @@ public function index()
                     $linkV = $peli['link_ver'];
                     $match = rand(85, 99);
 
-                    $edadRaw = $peli['edad'] ?? '12';
+                    $edadRaw = $peli['edad'] ?? '11';
                     if ($esKids || $edadRaw === 'TP')
                         $edadBadge = 'TP';
                     else
@@ -440,7 +440,7 @@ public function index()
 
                         $bg = !empty($item['backdrop_path']) ? $item['backdrop_path'] : $item['poster_path'];
 
-                        $edadCalculada = '12';
+                        $edadCalculada = '11';
                         // Si es Animación(16) o Familia(10751) -> TP
                         if (isset($item['genre_ids']) && (in_array(16, $item['genre_ids']) || in_array(10751, $item['genre_ids']))) {
                             $edadCalculada = 'TP';

@@ -9,7 +9,9 @@ use CodeIgniter\Router\RouteCollection;
 // =============================================================================
 // 1. FRONTEND (Público)
 // =============================================================================
-$routes->get('/', 'Home::index');
+$routes->get('/', 'Home::index'); 
+$routes->post('home/ajax-fila', 'Home::ajaxCargarFila');
+$routes->post('home/ajax-expandir-fila', 'Home::ajaxExpandirFila');
 $routes->get('detalle/(:segment)', 'Home::detalle/$1');
 $routes->get('ver/(:segment)', 'Home::ver/$1');
 $routes->get('mi-lista', 'Home::miLista');
@@ -30,7 +32,7 @@ $routes->post('peliculas/ajax-fila', 'Peliculas::ajaxCargarFila');
 $routes->post('peliculas/ajax-expandir-fila', 'Peliculas::ajaxExpandirFila');
 
 $routes->get('director/(:num)', 'Home::director/$1');
-$routes->post('autocompletar', 'Api\Catalogo::autocompletar'); 
+$routes->post('autocompletar', 'Home::autocompletar');
 $routes->get('persona/(:any)', 'Home::persona/$1');
 $routes->post('ajax/cargar-fila', 'Home::ajaxCargarFila');
 

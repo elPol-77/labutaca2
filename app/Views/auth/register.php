@@ -209,7 +209,13 @@
                     <input type="radio" name="plan_id" value="1" style="display:none;">
                     <h4>FREE</h4>
                     <div class="plan-price">0€</div>
-                    <small style="color:#ccc;">Con anuncios<br>Calidad HD</small>
+                    <small style="color:#ccc;">Con anuncios<br>Calidad 720p</small>
+                </label>
+                <label class="plan-card" onclick="selectPlan(3, this)">
+                    <input type="radio" name="plan_id" value="3" style="display:none;">
+                    <h4>KIDS</h4>
+                    <div class="plan-price">4.99€</div>
+                    <small style="color:#ccc;">Plan Infantil<br>Calidad HD</small>
                 </label>
 
                 <label class="plan-card" onclick="selectPlan(2, this)">
@@ -225,7 +231,7 @@
             <input type="hidden" name="avatar" id="avatarInput">
             <div class="avatar-grid">
 
-                <div class="avatar-option selected" onclick="selectAvatar('default.png', this)">
+                <div class="avatar-option selected default-avatar" data-type="all" onclick="selectAvatar('default.png', this)">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png" alt="Default">
                 </div>
 
@@ -233,15 +239,20 @@
                     <?php foreach ($avatars as $av): ?>
 
                         <?php
-                        // LÓGICA DE CORRECCIÓN:
-                        if (str_starts_with($av, 'http')) {
-                            $rutaImagen = $av;
+                        // Obtenemos URL y TIPO
+                        $url = $av['url'];
+                        $type = $av['type'];
+
+                        if (str_starts_with($url, 'http')) {
+                            $rutaImagen = $url;
+                            $valInput = $url; // Guardamos URL completa si es externa
                         } else {
-                            $rutaImagen = base_url('assets/img/avatars/' . $av);
+                            $rutaImagen = base_url('assets/img/avatars/' . $url);
+                            $valInput = $url;
                         }
                         ?>
 
-                        <div class="avatar-option" onclick="selectAvatar('<?= esc($av) ?>', this)">
+                        <div class="avatar-option" data-type="<?= $type ?>" onclick="selectAvatar('<?= esc($valInput) ?>', this)">
                             <img src="<?= $rutaImagen ?>" alt="Avatar">
                         </div>
 
@@ -268,6 +279,43 @@
             // Marcar el radio button interno
             const radio = element.querySelector('input[type="radio"]');
             if (radio) radio.checked = true;
+
+            // EJECUTAR FILTRO DE AVATARES
+            filterAvatars(id);
+        }
+
+        function filterAvatars(planId) {
+            const avatars = document.querySelectorAll('.avatar-option:not(.default-avatar)');
+            let currentSelectionHidden = false;
+            
+            avatars.forEach(av => {
+                const type = av.getAttribute('data-type');
+                
+                if (planId == 3) {
+                    // MODO KIDS: Solo mostrar 'kids'
+                    if (type === 'kids') {
+                        av.style.display = 'block';
+                    } else {
+                        av.style.display = 'none';
+                        // Si el avatar seleccionado se oculta, marcamos flag
+                        if(av.classList.contains('selected')) currentSelectionHidden = true;
+                    }
+                } else {
+                    if (type === 'adult') {
+                        av.style.display = 'block';
+                    } else {
+
+                        av.style.display = 'none'; 
+                        if(av.classList.contains('selected')) currentSelectionHidden = true;
+                    }
+                }
+            });
+
+            // Si el avatar que teníamos seleccionado desapareció, seleccionamos el default
+            if(currentSelectionHidden) {
+                const defaultAv = document.querySelector('.default-avatar');
+                if(defaultAv) selectAvatar('default.png', defaultAv);
+            }
         }
 
         function selectAvatar(filename, element) {
@@ -278,21 +326,22 @@
             element.classList.add('selected');
         }
 
-        // Seleccionar por defecto el plan 1 y avatar default si no hay old value
+        // Seleccionar por defecto
         document.addEventListener('DOMContentLoaded', () => {
-            // Si hay un old('plan_id'), seleccionarlo, si no, el primero
             const oldPlan = document.querySelector('input[name="plan_id"]:checked');
+            let planIdToFilter = 1; // Default Free
+
             if(oldPlan) {
                 oldPlan.closest('.plan-card').classList.add('selected');
+                planIdToFilter = oldPlan.value;
             } else {
-                // Por defecto el primero (Free)
                 const firstPlan = document.querySelector('.plan-card');
-                if(firstPlan) {
-                    firstPlan.click();
-                }
+                if(firstPlan) firstPlan.click();
             }
 
-            // Avatar por defecto
+            // Aplicar filtro inicial
+            filterAvatars(planIdToFilter);
+
             const oldAvatar = document.getElementById('avatarInput').value;
             if(!oldAvatar) {
                 document.getElementById('avatarInput').value = 'default.png';

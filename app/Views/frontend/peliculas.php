@@ -1,28 +1,29 @@
+<div id="view-splash" class="active">
+    
+    <div class="camera-loader">
+        <div class="reels-container">
+            <div class="reel"></div>
+            <div class="reel"></div>
+        </div>
+
+        <div class="camera-body">
+            <div class="lens"></div>
+            <div class="matte-box"></div>
+        </div>
+    </div>
+
+    <p class="loading-text">CARGANDO...</p>
+    
+    <div class="loader-line-container" style="width: 150px; background: #333; height: 3px; border-radius: 2px; margin-top: 10px;">
+        <div class="loader-line" style="width: 0%; height: 100%; background: var(--accent); transition: width 1s;"></div>
+    </div>
+
+</div>
 <section id="view-movies-full" class="view-section active" style="padding-top: 100px;">
     <input type="hidden" class="txt_csrftoken" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
 
     <div id="loading-initial" class="active"
         style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #0f0c29; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-        <div class="camera-loader" style="transform: scale(1.5); margin-bottom: 20px;">
-            <div class="reels-container"
-                style="display: flex; gap: 15px; justify-content: center; margin-bottom: -15px; position: relative; z-index: 2;">
-                <div class="reel"
-                    style="width: 40px; height: 40px; border: 4px solid #333; border-radius: 50%; position: relative; animation: spinReel 2s linear infinite; background: #1a1a1a;">
-                </div>
-                <div class="reel"
-                    style="width: 40px; height: 40px; border: 4px solid #333; border-radius: 50%; position: relative; animation: spinReel 2s linear infinite; background: #1a1a1a;">
-                </div>
-            </div>
-            <div class="camera-body"
-                style="width: 100px; height: 60px; background: #222; border-radius: 8px; position: relative; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0,0,0,0.5);">
-                <div class="lens"
-                    style="width: 50px; height: 50px; background: #111; border-radius: 50%; border: 3px solid #444; position: relative; overflow: hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.8);">
-                    <div class="lens-reflection"
-                        style="width: 20px; height: 20px; background: rgba(255,255,255,0.1); border-radius: 50%; position: absolute; top: 5px; left: 5px;">
-                    </div>
-                </div>
-            </div>
-        </div>
         <p class="loading-text"
             style="color: #fff; font-family: 'Outfit', sans-serif; letter-spacing: 3px; font-weight: bold; margin-bottom: 15px;">
             CARGANDO...</p>
@@ -39,18 +40,17 @@
         <?php if (!empty($destacada)): ?>
             <div class="hero-static">
                 <div class="hero-item" style="background-image: url('<?= $destacada['backdrop'] ?>');">
-                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, #141414 0%, transparent 60%); z-index: 1;"></div>
-                    
-                    <div class="hero-content-wrapper" style="position: relative; z-index: 2;">
+                    <div class="hero-content-wrapper">
                         <div class="hero-info" style="padding-left: 5%;">
-                            <h1 style="text-shadow: 2px 2px 4px rgba(0,0,0,0.8);"><?= esc($destacada['titulo']) ?></h1>
+                            <h1><?= esc($destacada['titulo']) ?></h1>
 
                             <div class="hero-badges">
                                 <span class="badge badge-premium">PELÍCULA</span>
                                 <span class="badge badge-hd">HD</span>
                             </div>
 
-                            <p style="color:#ddd; margin-bottom:2rem; font-size:1.1rem; line-height:1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); max-width: 600px;">
+                            <p
+                                style="color:#ddd; margin-bottom:2rem; font-size:1.1rem; line-height:1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
                                 <?= esc($destacada['descripcion']) ?>
                             </p>
 
@@ -60,7 +60,7 @@
                                 </button>
 
                                 <a href="<?= $destacada['link_detalle'] ?>" class="btn-secondary"
-                                    style="background:rgba(255,255,255,0.2); border:none; color:white; padding:12px 25px; border-radius:50px; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:8px; text-decoration:none; backdrop-filter: blur(5px);">
+                                    style="background:rgba(255,255,255,0.2); border:none; color:white; padding:12px 25px; border-radius:50px; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:8px; text-decoration:none;">
                                     <i class="fa fa-info-circle"></i> Más Info
                                 </a>
                             </div>
@@ -69,7 +69,6 @@
                 </div>
             </div>
         <?php endif; ?>
-
         <div id="rows-container" class="netflix-container" style="position: relative; z-index: 10; min-height: 500px;">
         </div>
 

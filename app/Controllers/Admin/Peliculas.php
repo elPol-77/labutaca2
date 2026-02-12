@@ -143,9 +143,6 @@ public function edit($id) {
     {
         if (!$id) return redirect()->to('admin/peliculas')->with('msg', 'Error: ID no proporcionado');
 
-        // 1. VALIDACIÓN (¡OJO AQUÍ!)
-        // Quitamos 'is_unique' del título para que te deje guardar el mismo nombre
-        // O usamos la regla compleja: 'is_unique[contenidos.titulo,id,{id}]'
         $reglas = [
             'titulo' => "required", 
             'anio'   => 'required|numeric'
@@ -266,7 +263,7 @@ public function edit($id) {
         }
 
         // 2. FONDO (BACKDROP)
-        $imgBg = $this->request->getFile('imagen_bg'); // Si existiera input file para bg
+        $imgBg = $this->request->getFile('imagen_bg'); 
         if ($this->request->getPost('url_bg_externa')) {
             $data['imagen_bg'] = $this->request->getPost('url_bg_externa');
         }
@@ -280,22 +277,16 @@ public function edit($id) {
     private function procesarGeneros($contenidoId, $datos) {
         if (empty($datos)) return;
         
-        // Normalizar entrada: puede ser array o JSON string
         $generosMixtos = is_string($datos) ? json_decode($datos, true) : $datos;
         if (!is_array($generosMixtos)) return;
 
         $db = \Config\Database::connect();
         $generoModel = new GeneroModel();
 
-        // ---------------------------------------------------------
-        // 📖 DICCIONARIO DE TRADUCCIÓN (MAPEO)
-        // Clave = Lo que llega de la API (o posibles variantes)
-        // Valor = Como lo quieres guardar en TU base de datos
-        // ---------------------------------------------------------
         $diccionario = [
             'Action'          => 'Acción',
             'Adventure'       => 'Aventura',
-            'Aventure'        => 'Aventura', // Caso que mencionaste
+            'Aventure'        => 'Aventura',
             'Sci-Fi'          => 'Ciencia Ficción',
             'Science Fiction' => 'Ciencia Ficción',
             'Animation'       => 'Animación',
