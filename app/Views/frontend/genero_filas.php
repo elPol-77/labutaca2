@@ -24,7 +24,7 @@
 
                         <div class="horizontal-scroll ocultar-scrollbar">
                             <?php foreach ($peliculas as $peli): ?>
-                                <a href="<?= base_url('ver/' . $peli['id']) ?>" class="poster-card">
+                                <a href="<?= base_url('detalle/' . $peli['id']) ?>" class="poster-card">
                                     <img src="<?= $peli['imagen'] ?>" loading="lazy"
                                         alt="<?= esc($peli['titulo'] ?? 'Película') ?>">
                                 </a>
@@ -53,7 +53,7 @@
 
                         <div class="horizontal-scroll ocultar-scrollbar">
                             <?php foreach ($series as $serie): ?>
-                                <a href="<?= base_url('ver/' . $serie['id']) ?>" class="poster-card">
+                                <a href="<?= base_url('detalle/' . $serie['id']) ?>" class="poster-card">
                                     <img src="<?= $serie['imagen'] ?>" loading="lazy"
                                         alt="<?= esc($serie['titulo'] ?? 'Serie') ?>">
                                 </a>
@@ -171,4 +171,3 @@
         });
     }
 </script>
-

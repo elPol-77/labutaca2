@@ -1309,7 +1309,7 @@ class Home extends BaseController
                 // Generamos SOLO el HTML de las tarjetas nuevas para apilar
                 $html = '';
                 foreach ($contenidos as $item) {
-                    $html .= '<a href="'.base_url('ver/'.$item['id']).'" class="poster-card" style="text-decoration:none;">';
+                    $html .= '<a href="'.base_url('detalle/'.$item['id']).'" class="poster-card" style="text-decoration:none;">';
                     $html .= '<img src="'.$item['imagen'].'" loading="lazy" alt="'.esc($item['titulo']).'">';
                     // Opcional: Puedes añadir aquí el título debajo de la foto si quieres
                     $html .= '</a>';
