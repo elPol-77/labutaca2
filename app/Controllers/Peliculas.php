@@ -10,16 +10,17 @@ class Peliculas extends BaseController
 {
     private $tmdbKey = '6387e3c183c454304108333c56530988';
 
-public function index()
+    public function index()
     {
         // 1. CHEQUEO DE SESIÓN
-        if (!session()->get('is_logged_in')) return redirect()->to('/auth');
+        if (!session()->get('is_logged_in'))
+            return redirect()->to('/auth');
 
         $userId = session()->get('user_id');
         $planId = session()->get('plan_id');
         $esFree = ($planId == 1);
         $esKids = ($planId == 3);
-        
+
         $destacada = null;
         $model = new ContenidoModel();
 
@@ -31,32 +32,32 @@ public function index()
         if ($esFree) {
             // Buscamos una película aleatoria en la BD que sea Gratis
             $localRandom = $model->where('tipo_id', 1)       // Es Película
-                                 ->where('nivel_acceso', 1)  // Es Gratis
-                                 ->where('imagen_bg !=', '') // Tiene fondo
-                                 ->orderBy('RAND()')         // <--- ¡MAGIA! Aleatorio puro
-                                 ->first();
-            
+                ->where('nivel_acceso', 1)  // Es Gratis
+                ->where('imagen_bg !=', '') // Tiene fondo
+                ->orderBy('RAND()')         // <--- ¡MAGIA! Aleatorio puro
+                ->first();
+
             if ($localRandom) {
                 $destacada = $this->formatearLocal($localRandom);
             }
-        } 
-        
+        }
+
         // --- CASO B: PREMIUM O KIDS (Aleatorio API TMDB) ---
         else {
             // Pedimos una página al azar (1-5) para variar contenido
             $paginaAleatoria = rand(1, 5);
-            
+
             $params = [
-                'sort_by' => 'popularity.desc', 
+                'sort_by' => 'popularity.desc',
                 'page' => $paginaAleatoria
             ];
 
             // La función fetchTmdbDiscover ya filtra si $esKids es true
-            $resultados = $this->fetchTmdbDiscover($params, $esKids); 
+            $resultados = $this->fetchTmdbDiscover($params, $esKids);
 
             if (!empty($resultados)) {
                 // Mezclamos para coger una cualquiera de esa página
-                shuffle($resultados); 
+                shuffle($resultados);
 
                 // Buscamos la primera con imagen de fondo válida
                 foreach ($resultados as $peli) {
@@ -70,7 +71,7 @@ public function index()
                             'link_ver' => $s['link_ver'],
                             'link_detalle' => $s['link_detalle']
                         ];
-                        break; 
+                        break;
                     }
                 }
             }
@@ -82,10 +83,10 @@ public function index()
         if (empty($destacada)) {
             // Cogemos CUALQUIER película local aleatoria para salvar el diseño
             $backup = $model->where('tipo_id', 1)
-                            ->where('imagen_bg !=', '')
-                            ->orderBy('RAND()')
-                            ->first();
-            
+                ->where('imagen_bg !=', '')
+                ->orderBy('RAND()')
+                ->first();
+
             if ($backup) {
                 $destacada = $this->formatearLocal($backup);
             }
@@ -120,14 +121,15 @@ public function index()
     }
 
     // --- AÑADE ESTA FUNCIÓN HELPER PRIVADA (Necesaria para el index) ---
-    private function formatearLocal($r) {
+    private function formatearLocal($r)
+    {
         $bg = str_starts_with($r['imagen_bg'], 'http') ? $r['imagen_bg'] : base_url('assets/img/' . $r['imagen_bg']);
-        
+
         // Si no tiene fondo, intentamos usar el póster
         if (empty($r['imagen_bg']) && !empty($r['imagen'])) {
             $bg = str_starts_with($r['imagen'], 'http') ? $r['imagen'] : base_url('assets/img/' . $r['imagen']);
         }
-        
+
         return [
             'id' => $r['id'],
             'titulo' => $r['titulo'],
@@ -149,19 +151,20 @@ public function index()
         $esFree = ($planId == 1);
 
         $html = "";
+        $filasGeneradas = 0;
+        $filasDeseadas = 4; // QUEREMOS 4 FILAS POR PETICIÓN
+        $bloqueActual = $bloqueSolicitado;
         $intentos = 0;
-        $maxIntentos = 5;
+        $maxIntentos = 15; // Aumentado por si falla la API en algún bloque
 
-        // BUCLE DE SEGURIDAD
+        // BUCLE: Seguimos hasta tener 4 filas o hasta llegar al límite de intentos
         do {
-            $bloqueActual = $bloqueSolicitado + $intentos;
             $items = [];
 
             // ---------------------------------------------------------
             // 1. EL MAPA DE CATEGORÍAS (PELÍCULAS)
             // ---------------------------------------------------------
             if ($esFree) {
-                // SOLO LOCAL
                 $mapa = [
                     0 => ['tipo' => 'local', 'titulo' => 'Películas Gratis'],
                     1 => ['tipo' => 'local', 'titulo' => 'Acción Local', 'params' => ['with_genres' => 1]],
@@ -172,7 +175,6 @@ public function index()
                     6 => ['tipo' => 'local', 'titulo' => 'Aventuras', 'params' => ['with_genres' => 2]],
                 ];
             } elseif ($esKids) {
-                // --- MAPA INFANTIL (PELIS) ---
                 $mapa = [
                     0 => ['tipo' => 'local', 'titulo' => 'Tus Pelis Favoritas'],
                     1 => ['tipo' => 'tmdb', 'titulo' => 'Éxitos de Disney', 'params' => ['with_companies' => '2', 'sort_by' => 'popularity.desc']],
@@ -182,13 +184,8 @@ public function index()
                     5 => ['tipo' => 'tmdb', 'titulo' => 'Comedias Familiares', 'params' => ['with_genres' => '10751,35', 'sort_by' => 'revenue.desc']],
                     6 => ['tipo' => 'tmdb', 'titulo' => 'Animales Heroicos', 'params' => ['with_genres' => '16', 'with_keywords' => '12423']],
                     7 => ['tipo' => 'tmdb', 'titulo' => 'Musicales Mágicos', 'params' => ['with_genres' => '10751,10402']],
-
                 ];
             } else {
-                // --- MAPA ADULTOS (PELIS) ---
-                // IDs de género CINE TMDB: 28=Acción, 12=Aventura, 16=Animación, 35=Comedia, 80=Crimen, 
-                // 99=Docu, 18=Drama, 10751=Familia, 14=Fantasía, 36=Historia, 27=Terror, 10402=Música, 
-                // 9648=Misterio, 10749=Romance, 878=SciFi, 53=Thriller, 10752=Guerra, 37=Western
                 $mapa = [
                     0 => ['tipo' => 'local', 'titulo' => 'Tendencias en La Butaca'],
                     1 => ['tipo' => 'tmdb', 'titulo' => 'Cartelera: Lo más popular', 'params' => ['sort_by' => 'popularity.desc']],
@@ -213,9 +210,8 @@ public function index()
             // 2. GENERADOR INFINITO
             // ---------------------------------------------------------
             if (!isset($mapa[$bloqueActual])) {
-                // Freno Free
                 if ($esFree)
-                    break;
+                    break; // Si es Free y se acaba el mapa, paramos del todo.
 
                 if ($esKids) {
                     $pool = [
@@ -257,7 +253,7 @@ public function index()
             // Filtros de seguridad extra para Kids
             if ($esKids && isset($config['params']['with_genres'])) {
                 $g = (string) $config['params']['with_genres'];
-                if (strpos($g, '27') !== false || strpos($g, '80') !== false) // 27=Terror, 80=Crimen
+                if (strpos($g, '27') !== false || strpos($g, '80') !== false)
                     $saltarBloque = true;
             }
 
@@ -273,7 +269,7 @@ public function index()
             }
 
             // ---------------------------------------------------------
-            // 5. GENERACIÓN HTML
+            // 5. GENERACIÓN HTML (ACUMULANDO FILAS)
             // ---------------------------------------------------------
             if (!empty($items)) {
                 $paramsEncoded = base64_encode(json_encode($config['params'] ?? []));
@@ -283,7 +279,6 @@ public function index()
 
                 $html .= '<div class="category-row mb-5" style="padding: 0 4%; opacity:0; transition: opacity 1s;" onload="this.style.opacity=1">';
                 $html .= '  <h3 class="row-title text-white fw-bold mb-3" style="font-family: Outfit; font-size: 1.4rem;">' . esc($config['titulo']) . '</h3>';
-
                 $html .= '  <div class="slick-carousel-ajax" data-params="' . $paramsEncoded . '" data-page="' . $currentPage . '" data-endpoint="' . $endpointType . '">';
 
                 foreach ($items as $peli) {
@@ -301,13 +296,18 @@ public function index()
                     else
                         $edadBadge = '+' . $edadRaw;
 
-                    $enLista = $peli['en_mi_lista'] ?? false;
+                    $db = \Config\Database::connect();
+                    $enLista = $db->table('mi_lista')->where('usuario_id', $userId)->where('contenido_id', $peli['id'])->countAllResults() > 0;
                     $styleBtnLista = $enLista ? 'border-color: var(--accent); color: var(--accent);' : '';
                     $iconClass = $enLista ? 'fa-check' : 'fa-heart';
 
                     $html .= '<div class="slick-slide-item" style="padding: 0 5px;">';
                     $html .= '  <div class="movie-card">';
-                    $html .= '    <div class="poster-visible"><img src="' . $img . '" alt="' . $titulo . '"></div>';
+
+                    // --- AQUÍ ESTÁ EL LAZY LOAD Y EL SKELETON ---
+                    $html .= '  <div class="poster-visible"><img src="' . $img . '" loading="lazy" alt="' . $titulo . '" onload="this.classList.add(\'loaded\')"></div>';
+                    // --------------------------------------------
+
                     $html .= '    <div class="hover-details-card">';
                     $html .= '      <div class="hover-backdrop" style="background-image: url(\'' . $bg . '\'); cursor: pointer;" onclick="window.location.href=\'' . $linkD . '\'"></div>';
                     $html .= '      <div class="hover-info">';
@@ -329,12 +329,20 @@ public function index()
                 $html .= '  </div>'; // Fin slick
                 $html .= '</div>'; // Fin row
 
-                break; // Éxito
+                $filasGeneradas++; // Contabilizamos una fila generada con éxito
             }
-            $intentos++;
-        } while ($intentos < $maxIntentos);
 
-        return $this->response->setBody($html);
+            $bloqueActual++;
+            $intentos++;
+
+            // YA NO HACEMOS 'break' AQUÍ. El bucle seguirá hasta que $filasGeneradas llegue a 4.
+        } while ($filasGeneradas < $filasDeseadas && $intentos < $maxIntentos);
+
+        // RESPONDEMOS CON JSON
+        return $this->response->setJSON([
+            'html' => $html,
+            'next_bloque' => $bloqueActual
+        ]);
     }
 
     // --- HELPER LOCAL (Tipo ID = 1 para Pelis) ---
@@ -343,7 +351,7 @@ public function index()
         $model = new ContenidoModel();
 
         $q = $model->select('contenidos.*');
-        $q->where('contenidos.tipo_id', 1); 
+        $q->where('contenidos.tipo_id', 1);
 
         if ($esFree) {
             $q->where('contenidos.nivel_acceso', 1);
@@ -448,7 +456,7 @@ public function index()
 
                         $finalResults[] = [
                             'id' => 'tmdb_movie_' . $item['id'],
-                            'titulo' => $item['title'],           
+                            'titulo' => $item['title'],
                             'imagen' => "https://image.tmdb.org/t/p/w300" . $item['poster_path'],
                             'imagen_bg' => "https://image.tmdb.org/t/p/w780" . $bg,
                             'descripcion' => $item['overview'],
@@ -511,7 +519,8 @@ public function index()
 
             $html .= '<div class="slick-slide-item" style="padding: 0 5px;">';
             $html .= '  <div class="movie-card">';
-            $html .= '    <div class="poster-visible"><img src="' . $img . '" alt="' . $titulo . '"></div>';
+            // Fíjate que hemos cambiado src="URL" por data-lazy="URL"
+            $html .= '  <div class="poster-visible"><img src="' . $img . '" loading="lazy" alt="' . $titulo . '" onload="this.classList.add(\'loaded\')"></div>';
             $html .= '    <div class="hover-details-card">';
             $html .= '      <div class="hover-backdrop" style="background-image: url(\'' . $bg . '\'); cursor: pointer;" onclick="window.location.href=\'' . $linkD . '\'"></div>';
             $html .= '      <div class="hover-info">';

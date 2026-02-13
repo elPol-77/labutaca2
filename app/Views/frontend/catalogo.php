@@ -1,5 +1,5 @@
 <div id="view-splash" class="active">
-    
+
     <div class="camera-loader">
         <div class="reels-container">
             <div class="reel"></div>
@@ -13,9 +13,11 @@
     </div>
 
     <p class="loading-text">CARGANDO...</p>
-    
-    <div class="loader-line-container" style="width: 150px; background: #333; height: 3px; border-radius: 2px; margin-top: 10px;">
-        <div class="loader-line" style="width: 0%; height: 100%; background: var(--accent); transition: width 1s;"></div>
+
+    <div class="loader-line-container"
+        style="width: 150px; background: #333; height: 3px; border-radius: 2px; margin-top: 10px;">
+        <div class="loader-line" style="width: 0%; height: 100%; background: var(--accent); transition: width 1s;">
+        </div>
     </div>
 
 </div>
@@ -26,7 +28,7 @@
     <div id="loading-initial" class="active"
         style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #0f0c29; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;">
         <div class="spinner-border text-danger" style="width: 3rem; height: 3rem;" role="status">
-             <span class="visually-hidden">Cargando...</span>
+            <span class="visually-hidden">Cargando...</span>
         </div>
     </div>
 
@@ -40,18 +42,18 @@
                             <h1><?= esc($destacada['titulo']) ?></h1>
 
                             <div class="hero-badges">
-                            <?php if (isset($destacada['tipo_id']) && $destacada['tipo_id'] == 1): ?>
-                                <span class="badge badge-premium">PELÍCULA</span>
-                            
-                            <?php elseif (isset($destacada['tipo_id']) && $destacada['tipo_id'] == 2): ?>
-                                <span class="badge badge-premium">SERIE</span>
-                            
-                            <?php else: ?>
-                                <span class="badge badge-premium">DESTACADO</span>
-                            <?php endif; ?>
+                                <?php if (isset($destacada['tipo_id']) && $destacada['tipo_id'] == 1): ?>
+                                    <span class="badge badge-premium">PELÍCULA</span>
 
-                            <span class="badge badge-hd">HD</span>
-                        </div>
+                                <?php elseif (isset($destacada['tipo_id']) && $destacada['tipo_id'] == 2): ?>
+                                    <span class="badge badge-premium">SERIE</span>
+
+                                <?php else: ?>
+                                    <span class="badge badge-premium">DESTACADO</span>
+                                <?php endif; ?>
+
+                                <span class="badge badge-hd">HD</span>
+                            </div>
 
                             <p
                                 style="color:#ddd; margin-bottom:2rem; font-size:1.1rem; line-height:1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
@@ -73,8 +75,9 @@
                 </div>
             </div>
         <?php endif; ?>
-        <div id="rows-container" class="netflix-container" style="position: relative; z-index: 10; min-height: 500px;"></div>
-        
+        <div id="rows-container" class="netflix-container" style="position: relative; z-index: 10; min-height: 500px;">
+        </div>
+
         <div id="infinite-loader" style="text-align:center; padding: 30px; height: 100px;">
             <div class="spinner-border text-danger" role="status" style="display:none;" id="spinner-scroll"></div>
         </div>
@@ -86,13 +89,13 @@
 <script>
     $(document).ready(function () {
         let bloqueActual = 0;
-        let cargandoBloque = false; 
+        let cargandoBloque = false;
         let hayMasBloques = true;
 
         const slickSettings = {
             dots: false, infinite: false, speed: 500, slidesToShow: 6, slidesToScroll: 3, lazyLoad: 'ondemand', arrows: true,
-            prevArrow: '<button class="slick-prev custom-arrow left-arrow">❮</button>',
-            nextArrow: '<button class="slick-next custom-arrow right-arrow">❯</button>',
+            prevArrow: '<button type="button" class="slick-prev custom-arrow left-arrow"><i class="fa fa-chevron-left"></i></button>',
+            nextArrow: '<button type="button" class="slick-next custom-arrow right-arrow"><i class="fa fa-chevron-right"></i></button>',
             responsive: [
                 { breakpoint: 1600, settings: { slidesToShow: 5, slidesToScroll: 2 } },
                 { breakpoint: 1200, settings: { slidesToShow: 4, slidesToScroll: 2 } },
@@ -108,9 +111,9 @@
                 $carousel.on('afterChange', function (event, slick, currentSlide) {
                     if (slick.currentSlide + slick.options.slidesToShow >= slick.slideCount) {
                         if ($carousel.data('loading-more') === true) return;
-                        
+
                         // Detectamos dinámicamente si esta fila es 'movie' o 'tv'
-                        let endpoint = $carousel.attr('data-endpoint'); 
+                        let endpoint = $carousel.attr('data-endpoint');
                         if (endpoint === 'movie' || endpoint === 'tv') {
                             cargarMasHorizontal($carousel);
                         }
@@ -180,8 +183,40 @@
 </script>
 
 <style>
-    .hero-static { margin: 2rem 4% 3rem 4%; border-radius: 24px; overflow: hidden; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); height: 65vh; display: block; position: relative; }
-    .hero-static .hero-item { height: 100% !important; width: 100% !important; background-size: cover; background-position: center; display: flex !important; align-items: center; position: relative; }
-    .desc-clamp { font-size:0.75rem; color:#ccc; margin:0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    @media (max-width: 768px) { .hero-static { margin: 1rem 2%; height: 55vh; } }
+    .hero-static {
+        margin: 2rem 4% 3rem 4%;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        height: 65vh;
+        display: block;
+        position: relative;
+    }
+
+    .hero-static .hero-item {
+        height: 100% !important;
+        width: 100% !important;
+        background-size: cover;
+        background-position: center;
+        display: flex !important;
+        align-items: center;
+        position: relative;
+    }
+
+    .desc-clamp {
+        font-size: 0.75rem;
+        color: #ccc;
+        margin: 0;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    @media (max-width: 768px) {
+        .hero-static {
+            margin: 1rem 2%;
+            height: 55vh;
+        }
+    }
 </style>

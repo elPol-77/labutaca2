@@ -1,5 +1,5 @@
 <div id="view-splash" class="active">
-    
+
     <div class="camera-loader">
         <div class="reels-container">
             <div class="reel"></div>
@@ -13,9 +13,11 @@
     </div>
 
     <p class="loading-text">CARGANDO...</p>
-    
-    <div class="loader-line-container" style="width: 150px; background: #333; height: 3px; border-radius: 2px; margin-top: 10px;">
-        <div class="loader-line" style="width: 0%; height: 100%; background: var(--accent); transition: width 1s;"></div>
+
+    <div class="loader-line-container"
+        style="width: 150px; background: #333; height: 3px; border-radius: 2px; margin-top: 10px;">
+        <div class="loader-line" style="width: 0%; height: 100%; background: var(--accent); transition: width 1s;">
+        </div>
     </div>
 
 </div>
@@ -103,8 +105,8 @@
             slidesToScroll: 3,
             lazyLoad: 'ondemand',
             arrows: true,
-            prevArrow: '<button class="slick-prev custom-arrow left-arrow">❮</button>',
-            nextArrow: '<button class="slick-next custom-arrow right-arrow">❯</button>',
+            prevArrow: '<button type="button" class="slick-prev custom-arrow left-arrow"><i class="fa fa-chevron-left"></i></button>',
+            nextArrow: '<button type="button" class="slick-next custom-arrow right-arrow"><i class="fa fa-chevron-right"></i></button>',
             responsive: [
                 { breakpoint: 1600, settings: { slidesToShow: 5, slidesToScroll: 2 } },
                 { breakpoint: 1200, settings: { slidesToShow: 4, slidesToScroll: 2 } },

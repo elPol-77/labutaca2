@@ -1,5 +1,5 @@
 <div id="view-splash" class="active">
-    
+
     <div class="camera-loader">
         <div class="reels-container">
             <div class="reel"></div>
@@ -13,9 +13,11 @@
     </div>
 
     <p class="loading-text">CARGANDO...</p>
-    
-    <div class="loader-line-container" style="width: 150px; background: #333; height: 3px; border-radius: 2px; margin-top: 10px;">
-        <div class="loader-line" style="width: 0%; height: 100%; background: var(--accent); transition: width 1s;"></div>
+
+    <div class="loader-line-container"
+        style="width: 150px; background: #333; height: 3px; border-radius: 2px; margin-top: 10px;">
+        <div class="loader-line" style="width: 0%; height: 100%; background: var(--accent); transition: width 1s;">
+        </div>
     </div>
 
 </div>
@@ -88,7 +90,7 @@
     $(document).ready(function () {
 
         let bloqueActual = 0;
-        let cargandoBloque = false; 
+        let cargandoBloque = false;
         let hayMasBloques = true;
 
         // CONFIGURACIÓN SLICK (Igual que series)
@@ -98,10 +100,9 @@
             speed: 500,
             slidesToShow: 6,
             slidesToScroll: 3,
-            lazyLoad: 'ondemand',
             arrows: true,
-            prevArrow: '<button class="slick-prev custom-arrow left-arrow">❮</button>',
-            nextArrow: '<button class="slick-next custom-arrow right-arrow">❯</button>',
+            prevArrow: '<button type="button" class="slick-prev custom-arrow left-arrow"><i class="fa fa-chevron-left"></i></button>',
+            nextArrow: '<button type="button" class="slick-next custom-arrow right-arrow"><i class="fa fa-chevron-right"></i></button>',
             responsive: [
                 { breakpoint: 1600, settings: { slidesToShow: 5, slidesToScroll: 2 } },
                 { breakpoint: 1200, settings: { slidesToShow: 4, slidesToScroll: 2 } },
@@ -120,7 +121,7 @@
                 $carousel.on('afterChange', function (event, slick, currentSlide) {
                     if (slick.currentSlide + slick.options.slidesToShow >= slick.slideCount) {
                         if ($carousel.data('loading-more') === true) return;
-                        
+
                         let endpoint = $carousel.attr('data-endpoint');
                         if (endpoint === 'tmdb') {
                             cargarMasPelisEnHorizontal($carousel); // <--- OJO: Llama a función de PELIS
@@ -140,7 +141,7 @@
 
             // CAMBIO CLAVE: URL apunta a 'peliculas/ajax-expandir-fila'
             $.ajax({
-                url: '<?= base_url("peliculas/ajax-expandir-fila") ?>', 
+                url: '<?= base_url("peliculas/ajax-expandir-fila") ?>',
                 method: 'POST',
                 data: {
                     params: params,
@@ -184,27 +185,36 @@
             cargandoBloque = true;
             $('#spinner-scroll').show();
 
-            // CAMBIO CLAVE: URL apunta a 'peliculas/ajax-fila'
             $.ajax({
                 url: '<?= base_url("peliculas/ajax-fila") ?>',
                 method: 'POST',
+                dataType: 'json', // <--- FUNDAMENTAL: Le decimos que esperamos JSON
                 data: { bloque: bloqueActual, '<?= csrf_token() ?>': '<?= csrf_hash() ?>' },
-                success: function (html) {
+                success: function (res) {
                     cargandoBloque = false;
                     $('#spinner-scroll').hide();
 
-                    if (html.trim() === "" && !html.includes("sync-data")) {
-                        hayMasBloques = false; return;
+                    // Comprobamos si nos devolvió un html vacío (fin de resultados)
+                    if (!res.html || res.html.trim() === "") {
+                        hayMasBloques = false;
+                        return;
                     }
 
-                    $('#rows-container').append(html);
-                    $('.category-row').css('opacity', 1);
-                    
+                    // Insertamos las 4 filas juntas en la web
+                    $('#rows-container').append(res.html);
+
+                    // Inicializamos los 4 carruseles a la vez
                     inicializarCarruseles();
 
-                    bloqueActual++;
+                    // Damos el efecto fade-in a las 4 filas a la vez
+                    setTimeout(() => {
+                        $('.category-row').css('opacity', 1);
+                    }, 50);
 
-                    // Auto-relleno si la pantalla es muy grande
+                    // ACTUALIZAMOS EL CONTADOR CON EL DEL SERVIDOR
+                    bloqueActual = res.next_bloque;
+
+                    // Si la pantalla es muy grande, carga el siguiente bloque de 4.
                     if ($(document).height() <= $(window).height() + 100) {
                         cargarSiguienteBloque();
                     }
@@ -212,6 +222,7 @@
                 error: function () {
                     cargandoBloque = false;
                     $('#spinner-scroll').hide();
+                    console.error("Error al cargar filas.");
                 }
             });
         }
@@ -244,8 +255,56 @@
             margin: 1rem 2%;
             height: 55vh;
         }
+
         .hero-info h1 {
             font-size: 2rem;
         }
+    }
+
+    <style>
+    /* ... Tus estilos anteriores para .hero-static y media queries ... */
+
+    /* 1. Fondo temporal animado (Efecto Skeleton) para el contenedor de la película */
+    .movie-poster {
+        background-color: #222;
+        animation: skeletonPulse 1.5s infinite ease-in-out;
+        /* Asegúrate de mantener tus estilos anteriores (border-radius, aspect-ratio, etc.)
+           Si los tienes definidos en front.css, no es necesario repetirlos aquí,
+           pero la estructura básica suele ser: */
+        border-radius: 16px;
+        overflow: hidden;
+        position: relative;
+        aspect-ratio: 2/3;
+    }
+
+    @keyframes skeletonPulse {
+        0% {
+            background-color: #222;
+        }
+
+        50% {
+            background-color: #333;
+        }
+
+        100% {
+            background-color: #222;
+        }
+    }
+
+    /* 2. La imagen empieza invisible (opacidad 0) */
+    .movie-poster img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0;
+        /* Inicia invisible */
+        transition: opacity 0.5s ease-in-out;
+        /* Transición suave */
+    }
+
+    /* 3. Clase que se añade mediante JS cuando la imagen termina de cargar */
+    .movie-poster img.loaded {
+        opacity: 1;
+        /* Se hace visible y oculta el esqueleto */
     }
 </style>

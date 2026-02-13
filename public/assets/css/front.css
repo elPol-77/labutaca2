@@ -1,90 +1,93 @@
 :root {
-  --glass-bg: rgba(255, 255, 255, 0.08);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  --accent: #00d2ff;
-  --accent-gradient: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%);
-  --premium: #ffd700;
-  --text-main: #ffffff;
-  --text-muted: #a0a0a0;
+    --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    --accent: #00d2ff;
+    --accent-gradient: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%);
+    --premium: #ffd700;
+    --text-main: #ffffff;
+    --text-muted: #a0a0a0;
 }
 
 * {
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 body {
-  margin: 0;
-  font-family: "Outfit", sans-serif;
-  background: #0f0c29;
-  background: linear-gradient(to right, #0f0c29, #302b63, #24243e);
-  color: var(--text-main);
-  min-height: 100vh;
-  overflow-x: hidden;
+    margin: 0;
+    font-family: "Outfit", sans-serif;
+    background: #0f0c29;
+    background: linear-gradient(to right, #0f0c29, #302b63, #24243e);
+    color: var(--text-main);
+    min-height: 100vh;
+    overflow-x: hidden;
 }
+
 /* Ancho de la barra */
 ::-webkit-scrollbar {
-  width: 15px;
+    width: 15px;
 }
 
 /* Pista de la barra (fondo) */
 ::-webkit-scrollbar-track {
-  background: #272145;
+    background: #272145;
 }
 
 /* Control deslizante (la parte que se mueve) */
 ::-webkit-scrollbar-thumb {
-  background: #28292A;
-  border-radius: 10px; 
+    background: #28292A;
+    border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #c72830;
+    background: #c72830;
 }
 
 
 /* --- FONDO DINÁMICO --- */
 #dynamic-bg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
-  background-size: cover;
-  background-position: center;
-  opacity: 0.4;
-  transition:
-    opacity 0.5s,
-    background-image 0.5s;
-  filter: blur(25px);
-  transform: scale(1.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background-size: cover;
+    background-position: center;
+    opacity: 0.4;
+    transition:
+        opacity 0.5s,
+        background-image 0.5s;
+    filter: blur(25px);
+    transform: scale(1.1);
 }
 
 /* --- UTILIDADES SPA --- */
 .view-section {
-  display: none;
-  width: 100%;
-  height: 100vh;
-  position: fixed;
-  top: 0;
-  left: 0;
-  overflow-y: auto;
+    display: none;
+    width: 100%;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    overflow-y: auto;
 }
+
 .view-section.active {
-  display: block;
-  animation: fadeIn 0.5s ease;
+    display: block;
+    animation: fadeIn 0.5s ease;
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* --- ESTILOS LOGIN / SPLASH --- */
@@ -92,37 +95,41 @@ body {
 #view-profiles,
 #view-login,
 #view-auth {
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
 }
+
 #view-splash.active,
 #view-profiles.active,
 #view-login.active,
 #view-auth.active {
-  display: flex !important;
+    display: flex !important;
 }
+
 #view-splash {
-  background: #000;
-  z-index: 9999;
+    background: #000;
+    z-index: 9999;
 }
 
 .splash-logo {
-  font-family: "Playfair Display", serif;
-  font-size: 5rem;
-  background: -webkit-linear-gradient(#eee, #333);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+    font-family: "Playfair Display", serif;
+    font-size: 5rem;
+    background: -webkit-linear-gradient(#eee, #333);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
+
 .loader-line {
-  width: 0%;
-  height: 2px;
-  background: var(--accent);
-  margin-top: 20px;
-  transition: width 2s ease-in-out;
+    width: 0%;
+    height: 2px;
+    background: var(--accent);
+    margin-top: 20px;
+    transition: width 2s ease-in-out;
 }
+
 /* =========================================
    SPLASH SCREEN: CÁMARA DE CINE
    ========================================= */
@@ -133,8 +140,10 @@ body {
     left: 0;
     width: 100%;
     height: 100vh;
-    background-color: #141414; /* Fondo oscuro estilo Netflix */
-    z-index: 99999; /* Por encima de todo */
+    background-color: #141414;
+    /* Fondo oscuro estilo Netflix */
+    z-index: 99999;
+    /* Por encima de todo */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -150,7 +159,8 @@ body {
     display: flex;
     justify-content: center;
     margin-bottom: 20px;
-    transform: scale(1.2); /* Un poco más grande */
+    transform: scale(1.2);
+    /* Un poco más grande */
 }
 
 /* --- LAS CINTAS (Reels) --- */
@@ -175,9 +185,11 @@ body {
 .reel::after {
     content: '';
     position: absolute;
-    top: 50%; left: 50%;
+    top: 50%;
+    left: 50%;
     transform: translate(-50%, -50%);
-    width: 15px; height: 15px;
+    width: 15px;
+    height: 15px;
     background-color: #fff;
     border-radius: 50%;
     box-shadow: 18px 0 0 -3px #888, -18px 0 0 -3px #888, 0 18px 0 -3px #888, 0 -18px 0 -3px #888;
@@ -191,13 +203,16 @@ body {
     border-radius: 8px;
     position: relative;
     z-index: 2;
-    box-shadow: 0 10px 15px rgba(0,0,0,0.5);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
 }
 
 .camera-body::before {
     content: '';
     position: absolute;
-    top: 10px; left: 10px; right: 35px; bottom: 10px;
+    top: 10px;
+    left: 10px;
+    right: 35px;
+    bottom: 10px;
     border: 2px solid #666;
     border-radius: 4px;
 }
@@ -212,14 +227,15 @@ body {
     position: absolute;
     top: 20px;
     right: -15px;
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
 }
 
 .matte-box {
     position: absolute;
     top: 15px;
     right: -45px;
-    width: 0; height: 0;
+    width: 0;
+    height: 0;
     border-top: 25px solid transparent;
     border-bottom: 25px solid transparent;
     border-left: 40px solid #222;
@@ -228,7 +244,8 @@ body {
 /* --- TEXTO Y BARRA DE CARGA --- */
 .loading-text {
     margin-top: 30px;
-    color: #fff; /* Texto blanco */
+    color: #fff;
+    /* Texto blanco */
     font-weight: bold;
     letter-spacing: 3px;
     font-size: 0.9rem;
@@ -237,370 +254,419 @@ body {
 
 /* Barra de carga fina (para que funcione tu JS actual) */
 .loader-line {
-    width: 0%; /* Empieza en 0 */
+    width: 0%;
+    /* Empieza en 0 */
     height: 3px;
-    background-color: var(--accent); 
+    background-color: var(--accent);
     margin-top: 10px;
     border-radius: 2px;
     transition: width 0.5s ease-out;
-    max-width: 150px; 
+    max-width: 150px;
 }
 
 /* --- ANIMACIONES --- */
 @keyframes rodar {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes parpadeo {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
 }
 
 /* Panel de Cristal (Login) */
 .glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  border-radius: 24px;
-  padding: 3rem;
-  box-shadow: var(--glass-shadow);
-  text-align: center;
-  max-width: 550px;
-  width: 90%;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 3rem;
+    box-shadow: var(--glass-shadow);
+    text-align: center;
+    max-width: 550px;
+    width: 90%;
 }
+
 .profile-container {
-  display: flex;
-  gap: 2rem;
-  margin-top: 2rem;
-  justify-content: center;
+    display: flex;
+    gap: 2rem;
+    margin-top: 2rem;
+    justify-content: center;
 }
+
 .profile-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  transition: 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: 0.3s;
 }
+
 .profile-item:hover {
-  transform: translateY(-10px);
+    transform: translateY(-10px);
 }
+
 .profile-avatar {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  background-size: cover;
-  background-position: center;
-  margin-bottom: 1rem;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    background-size: cover;
+    background-position: center;
+    margin-bottom: 1rem;
 }
+
 .profile-item:hover .profile-avatar {
-  border-color: var(--accent);
-  box-shadow: 0 0 15px var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 15px var(--accent);
 }
 
 /* --- HEADER NEÓN --- */
 .neon-header {
-  background: rgba(15, 12, 41, 0.85);
-  backdrop-filter: blur(15px);
-  border-bottom: 1px solid var(--glass-border);
-  height: 75px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 4%;
-  position: fixed;
-  top: 0;
-  width: 100%;
-  z-index: 1000;
+    background: rgba(15, 12, 41, 0.85);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid var(--glass-border);
+    height: 75px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4%;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
 }
+
 .logo-text {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: white;
-  text-decoration: none;
-  letter-spacing: 1px;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: white;
+    text-decoration: none;
+    letter-spacing: 1px;
 }
+
 .logo-text span {
-  color: var(--accent);
+    color: var(--accent);
 }
+
 .nav-center {
-  display: flex;
-  gap: 20px;
+    display: flex;
+    gap: 20px;
 }
+
 .nav-link {
-  color: var(--text-muted);
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 1rem;
-  padding: 8px 16px;
-  border-radius: 20px;
-  transition: 0.3s;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 8px 16px;
+    border-radius: 20px;
+    transition: 0.3s;
 }
+
 .nav-link:hover,
 .nav-link.active {
-  color: white;
-  background: var(--glass-bg);
-  box-shadow: 0 0 10px rgba(0, 210, 255, 0.1);
-  border: 1px solid var(--glass-border);
+    color: white;
+    background: var(--glass-bg);
+    box-shadow: 0 0 10px rgba(0, 210, 255, 0.1);
+    border: 1px solid var(--glass-border);
 }
 
 /* Buscador & Iconos */
 .search-wrapper {
-  position: relative;
-  margin-right: 20px;
+    position: relative;
+    margin-right: 20px;
 }
+
 .search-input-neon {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--glass-border);
-  border-radius: 30px;
-  color: white;
-  padding: 10px 15px 10px 40px;
-  width: 220px;
-  transition: 0.3s;
-  font-family: "Outfit";
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--glass-border);
+    border-radius: 30px;
+    color: white;
+    padding: 10px 15px 10px 40px;
+    width: 220px;
+    transition: 0.3s;
+    font-family: "Outfit";
 }
+
 .search-input-neon:focus {
-  background: rgba(0, 0, 0, 0.6);
-  border-color: var(--accent);
-  width: 300px;
-  outline: none;
+    background: rgba(0, 0, 0, 0.6);
+    border-color: var(--accent);
+    width: 300px;
+    outline: none;
 }
+
 .search-icon {
-  position: absolute;
-  left: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
 }
 
 .header-icon-btn {
-  color: var(--text-muted);
-  font-size: 1.2rem;
-  margin-right: 15px;
-  text-decoration: none;
-  transition: 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    margin-right: 15px;
+    text-decoration: none;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
 }
+
 .header-icon-btn:hover {
-  color: #ff4757;
-  background: rgba(255, 71, 87, 0.1);
-  transform: scale(1.1);
+    color: #ff4757;
+    background: rgba(255, 71, 87, 0.1);
+    transform: scale(1.1);
 }
+
 .header-icon-btn.active {
-  color: #ff4757;
-  background: rgba(255, 71, 87, 0.1);
-  font-weight: bold;
+    color: #ff4757;
+    background: rgba(255, 71, 87, 0.1);
+    font-weight: bold;
 }
 
 /* --- HOME & CARRUSEL (Estilo Flotante) --- */
 #view-home {
-  padding-top: 80px;
+    padding-top: 80px;
 }
 
 .hero-carousel {
-  margin: 2rem 4% 3rem 4%; /* Margen para efecto tarjeta flotante */
-  border-radius: 24px; /* Bordes redondeados */
-  overflow: hidden; /* Recortar contenido */
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); /* Sombra profunda */
+    margin: 2rem 4% 3rem 4%;
+    /* Margen para efecto tarjeta flotante */
+    border-radius: 24px;
+    /* Bordes redondeados */
+    overflow: hidden;
+    /* Recortar contenido */
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    /* Sombra profunda */
 }
 
 .hero-item {
-  height: 65vh;
-  background-size: cover;
-  background-position: center;
-  position: relative;
-  display: flex !important;
-  align-items: center;
+    height: 65vh;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    display: flex !important;
+    align-items: center;
 }
 
 /* El degradado lateral está dentro del wrapper ahora */
 .hero-content-wrapper {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    90deg,
-    rgba(15, 23, 30, 0.95) 0%,
-    rgba(15, 23, 30, 0.5) 50%,
-    transparent 100%
-  );
-  display: flex;
-  align-items: center;
-  padding-left: 5%;
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,
+            rgba(15, 23, 30, 0.95) 0%,
+            rgba(15, 23, 30, 0.5) 50%,
+            transparent 100%);
+    display: flex;
+    align-items: center;
+    padding-left: 5%;
 }
 
 .hero-info {
-  max-width: 600px;
-  z-index: 2;
-  position: relative;
+    max-width: 600px;
+    z-index: 2;
+    position: relative;
 }
+
 .hero-info h1 {
-  font-size: 3.5rem;
-  margin: 0 0 1rem 0;
-  line-height: 1.1;
-  text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    font-size: 3.5rem;
+    margin: 0 0 1rem 0;
+    line-height: 1.1;
+    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
 }
+
 .hero-badges {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 2rem;
+    display: flex;
+    gap: 10px;
+    margin-bottom: 2rem;
 }
+
 .badge {
-  padding: 6px 14px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
 }
+
 .badge-premium {
-  background: var(--premium);
-  color: black;
+    background: var(--premium);
+    color: black;
 }
+
 .badge-hd {
-  border: 1px solid white;
-  color: white;
+    border: 1px solid white;
+    color: white;
 }
+
 /* Badge de Edad */
 .badge-age {
-  border: 1px solid #a0a0a0;
-  color: #fff;
-  padding: 6px 14px;
-  font-size: 0.8rem;
+    border: 1px solid #a0a0a0;
+    color: #fff;
+    padding: 6px 14px;
+    font-size: 0.8rem;
 }
 
 .badge-age.adult {
-  border-color: #ff4757;
-  color: #ff4757;
-} 
+    border-color: #ff4757;
+    color: #ff4757;
+}
 
 .btn-primary {
-  background: var(--accent-gradient);
-  color: white;
-  padding: 12px 35px;
-  border-radius: 50px;
-  border: none;
-  font-weight: 700;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: 0.3s;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  box-shadow: 0 4px 15px rgba(0, 210, 255, 0.4);
+    background: var(--accent-gradient);
+    color: white;
+    padding: 12px 35px;
+    border-radius: 50px;
+    border: none;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 15px rgba(0, 210, 255, 0.4);
 }
+
 .btn-primary:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(0, 210, 255, 0.6);
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 210, 255, 0.6);
 }
 
 /* GRID */
 .section-title {
-  font-size: 1.5rem;
-  margin: 0 4% 1.5rem 4%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+    font-size: 1.5rem;
+    margin: 0 4% 1.5rem 4%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
+
 .section-title::before {
-  content: "";
-  display: block;
-  width: 4px;
-  height: 24px;
-  background: var(--accent);
-  border-radius: 2px;
+    content: "";
+    display: block;
+    width: 4px;
+    height: 24px;
+    background: var(--accent);
+    border-radius: 2px;
 }
+
 .movie-grid {
-  padding: 0 4% 60px 4%;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 2rem;
+    padding: 0 4% 60px 4%;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 2rem;
 }
 
 .movie-poster {
-  border-radius: 16px;
-  overflow: hidden;
-  position: relative;
-  aspect-ratio: 2/3;
-  cursor: pointer;
-  transition: 0.3s;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    aspect-ratio: 2/3;
+    cursor: pointer;
+    transition: 0.3s;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 }
+
 .movie-poster img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
+
 .movie-poster:hover {
-  transform: scale(1.05) translateY(-5px);
-  z-index: 10;
-  box-shadow: 0 15px 30px rgba(0, 210, 255, 0.2);
-  outline: 2px solid var(--accent);
+    transform: scale(1.05) translateY(-5px);
+    z-index: 10;
+    box-shadow: 0 15px 30px rgba(0, 210, 255, 0.2);
+    outline: 2px solid var(--accent);
 }
+
 .poster-info {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  padding: 40px 10px 15px 10px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
-  opacity: 0;
-  transition: 0.3s;
-  color: white;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 40px 10px 15px 10px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+    opacity: 0;
+    transition: 0.3s;
+    color: white;
 }
+
 .movie-poster:hover .poster-info {
-  opacity: 1;
+    opacity: 1;
 }
 
 /* AUTOCOMPLETE */
 .ui-autocomplete {
-  background: rgba(15, 12, 41, 0.95);
-  backdrop-filter: blur(15px);
-  border: 1px solid var(--accent);
-  color: white;
-  border-radius: 12px;
-  padding: 10px;
-  z-index: 9999 !important;
+    background: rgba(15, 12, 41, 0.95);
+    backdrop-filter: blur(15px);
+    border: 1px solid var(--accent);
+    color: white;
+    border-radius: 12px;
+    padding: 10px;
+    z-index: 9999 !important;
 }
+
 .ui-menu-item-wrapper {
-  padding: 10px 15px;
-  font-family: "Outfit";
-  font-size: 0.95rem;
-  border-radius: 8px;
+    padding: 10px 15px;
+    font-family: "Outfit";
+    font-size: 0.95rem;
+    border-radius: 8px;
 }
+
 .ui-state-active {
-  background: var(--accent) !important;
-  color: black !important;
-  font-weight: bold;
+    background: var(--accent) !important;
+    color: black !important;
+    font-weight: bold;
 }
 
 /* Slick Dots */
 .slick-dots {
-  bottom: 30px !important;
+    bottom: 30px !important;
 }
 
 .slick-dots li button:before {
-  color: var(--accent) !important;
-  font-size: 10px !important;
-  opacity: 0.4;
+    color: var(--accent) !important;
+    font-size: 10px !important;
+    opacity: 0.4;
 }
+
 .slick-dots li.slick-active button:before {
-  opacity: 1;
+    opacity: 1;
 }
+
 /* =========================================
    EFECTO HOVER CARD (ESTILO PRIME/NETFLIX)
    ========================================= */
 
 /* Quitamos el overflow hidden del poster anterior para permitir que salga la tarjeta */
 .movie-poster {
-    overflow: visible !important; 
-    box-shadow: none !important; /* Quitamos sombra base para que no ensucie */
+    overflow: visible !important;
+    box-shadow: none !important;
+    /* Quitamos sombra base para que no ensucie */
     background: transparent;
-    transform: none !important; /* Quitamos el scale anterior del grid simple */
+    transform: none !important;
+    /* Quitamos el scale anterior del grid simple */
 }
 
 /* 1. Contenedor de la carta */
@@ -608,12 +674,14 @@ body {
     position: relative;
     aspect-ratio: 2 / 3;
     border-radius: 8px;
-    transition: z-index 0s 0.3s; /* Truco: baja el z-index con retraso */
+    transition: z-index 0s 0.3s;
+    /* Truco: baja el z-index con retraso */
     cursor: pointer;
 }
 
 .movie-card:hover {
-    z-index: 100; /* Al hacer hover, subimos capa inmediatamente */
+    z-index: 100;
+    /* Al hacer hover, subimos capa inmediatamente */
     transition: z-index 0s 0s;
 }
 
@@ -638,24 +706,25 @@ body {
     top: 50%;
     left: 50%;
     /* Se expande un 50% más ancho que el poster original */
-    width: 150%; 
+    width: 150%;
     /* Fondo oscuro sólido para que no se trasparenten las de abajo */
-    background-color: #1a1a1a; 
+    background-color: #1a1a1a;
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.8);
-    
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+
     /* ESTADO INICIAL: Invisible */
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    
+
     /* Transformación inicial (pequeña) */
     transform: translate(-50%, -50%) scale(0.9);
-    
+
     /* Animación suave */
     transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    transition-delay: 0.2s; /* RETRASO IMPORTANTE: Evita parpadeos al pasar rápido */
+    transition-delay: 0.2s;
+    /* RETRASO IMPORTANTE: Evita parpadeos al pasar rápido */
 }
 
 /* --- ACCIÓN AL HACER HOVER --- */
@@ -681,7 +750,11 @@ body {
 
 .hover-backdrop::after {
     content: '';
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     background: linear-gradient(to top, #1a1a1a 10%, transparent 100%);
 }
 
@@ -708,28 +781,57 @@ body {
 }
 
 .btn-mini-play {
-    background: white; color: black; border: none;
-    border-radius: 50%; width: 35px; height: 35px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: 0.2s;
+    background: white;
+    color: black;
+    border: none;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
 }
-.btn-mini-play:hover { transform: scale(1.1); background: var(--accent); }
+
+.btn-mini-play:hover {
+    transform: scale(1.1);
+    background: var(--accent);
+}
 
 .btn-mini-icon {
-    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.5);
-    color: white; border-radius: 50%; width: 35px; height: 35px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: 0.2s;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    color: white;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
 }
-.btn-mini-icon:hover { border-color: white; background: rgba(255,255,255,0.2); }
+
+.btn-mini-icon:hover {
+    border-color: white;
+    background: rgba(255, 255, 255, 0.2);
+}
 
 .hover-meta {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 0.75rem; color: #ccc; margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    color: #ccc;
+    margin-bottom: 8px;
 }
+
 .btn-mini-icon:hover .fa-heart {
-    color: #ff4757; /* Rojo corazón */
+    color: #ff4757;
+    /* Rojo corazón */
 }
+
 /* =========================================
    MEGA MENÚ FINAL (ESTILO PRIME VIDEO)
    ========================================= */
@@ -737,14 +839,14 @@ body {
 .category-menu-wrapper {
     position: relative;
     /* Quitamos márgenes laterales porque ahora usamos 'gap' en el HTML padre */
-    height: 40px; 
+    height: 40px;
     display: flex;
     align-items: center;
     z-index: 2000;
 }
 
 .btn-grid-menu {
-    width: 40px; 
+    width: 40px;
     height: 40px;
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -767,29 +869,33 @@ body {
 /* EL PANEL DESPLEGABLE */
 .mega-menu {
     position: absolute;
-    top: 100%; /* Justo debajo del botón */
-    right: 0; /* Alineado a la derecha del botón (o usa left:0 si prefieres) */
-    
-    margin-top: 10px; /* Separación visual del botón */
+    top: 100%;
+    /* Justo debajo del botón */
+    right: 0;
+    /* Alineado a la derecha del botón (o usa left:0 si prefieres) */
+
+    margin-top: 10px;
+    /* Separación visual del botón */
     width: 550px;
-    
+
     /* ESTILO VISUAL */
     background: rgba(20, 20, 20, 0.95);
     backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 8px;
     padding: 25px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.9);
-    
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+
     display: flex;
     gap: 30px;
-    
+
     /* ANIMACIÓN */
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: none; /* Ignora clicks cuando está oculto */
+    pointer-events: none;
+    /* Ignora clicks cuando está oculto */
 }
 
 /* EL PUENTE INVISIBLE (CRUCIAL PARA QUE NO SE CIERRE) */
@@ -797,11 +903,14 @@ body {
 .category-menu-wrapper::after {
     content: '';
     position: absolute;
-    top: 100%; /* Empieza al final del botón */
-    left: -20px; /* Un poco más ancho para seguridad */
-    width: 140%; 
-    height: 20px; /* Altura suficiente para cubrir el hueco */
-    background: transparent; 
+    top: 100%;
+    /* Empieza al final del botón */
+    left: -20px;
+    /* Un poco más ancho para seguridad */
+    width: 140%;
+    height: 20px;
+    /* Altura suficiente para cubrir el hueco */
+    background: transparent;
     display: block;
 }
 
@@ -818,7 +927,8 @@ body {
     content: '';
     position: absolute;
     top: -6px;
-    right: 14px; /* Ajustado para que apunte al centro del botón si usas right:0 */
+    right: 14px;
+    /* Ajustado para que apunte al centro del botón si usas right:0 */
     width: 12px;
     height: 12px;
     background: rgba(20, 20, 20, 0.95);
@@ -829,14 +939,58 @@ body {
 }
 
 /* ESTILOS DE TEXTO INTERNO */
-.mega-column h4 { margin-top: 0; color: #888; font-size: 0.75rem; font-weight: 700; margin-bottom: 15px; }
-.genre-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.genre-link { color: #e0e0e0; text-decoration: none; font-size: 0.9rem; display: block; transition:0.2s; }
-.genre-link:hover { color: var(--accent); transform: translateX(5px); }
-.mega-column.border-left { border-left: 1px solid rgba(255,255,255,0.1); padding-left: 30px; flex: 0.7; }
-.featured-list { list-style: none; padding: 0; margin: 0; }
-.featured-list li a { color: #fff; font-weight: 600; text-decoration: none; display: block; padding: 8px 0; font-size: 1rem; }
-.featured-list li a:hover { color: var(--accent); }
+.mega-column h4 {
+    margin-top: 0;
+    color: #888;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.genre-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.genre-link {
+    color: #e0e0e0;
+    text-decoration: none;
+    font-size: 0.9rem;
+    display: block;
+    transition: 0.2s;
+}
+
+.genre-link:hover {
+    color: var(--accent);
+    transform: translateX(5px);
+}
+
+.mega-column.border-left {
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    padding-left: 30px;
+    flex: 0.7;
+}
+
+.featured-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.featured-list li a {
+    color: #fff;
+    font-weight: 600;
+    text-decoration: none;
+    display: block;
+    padding: 8px 0;
+    font-size: 1rem;
+}
+
+.featured-list li a:hover {
+    color: var(--accent);
+}
+
 /* =========================================
    MENÚ DE PERFIL (ESTILO NETFLIX/PRIME)
    ========================================= */
@@ -847,13 +1001,15 @@ body {
     display: flex;
     align-items: center;
     cursor: pointer;
-    margin-left: 15px; /* Separación del corazón */
+    margin-left: 15px;
+    /* Separación del corazón */
 }
 
 /* El avatar que se ve siempre */
 .avatar-trigger img {
     transition: 0.3s;
 }
+
 .profile-menu-wrapper:hover .avatar-trigger img {
     transform: scale(1.1);
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
@@ -863,21 +1019,23 @@ body {
 .profile-dropdown {
     position: absolute;
     top: 100%;
-    right: 0; /* ALINEADO A LA DERECHA */
-    
+    right: 0;
+    /* ALINEADO A LA DERECHA */
+
     margin-top: 10px;
-    width: 400px; /* Un poco más estrecho que el de géneros */
-    
+    width: 400px;
+    /* Un poco más estrecho que el de géneros */
+
     background: rgba(20, 20, 20, 0.95);
     backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 8px;
     padding: 20px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.9);
-    
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+
     display: flex;
     gap: 20px;
-    
+
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
@@ -892,7 +1050,7 @@ body {
     position: absolute;
     top: 100%;
     right: 0;
-    width: 150%; 
+    width: 150%;
     height: 20px;
     background: transparent;
     display: block;
@@ -911,7 +1069,8 @@ body {
     content: '';
     position: absolute;
     top: -6px;
-    right: 14px; /* Apunta al centro del avatar */
+    right: 14px;
+    /* Apunta al centro del avatar */
     width: 12px;
     height: 12px;
     background: rgba(20, 20, 20, 0.95);
@@ -922,165 +1081,264 @@ body {
 
 /* --- ESTILOS INTERNOS --- */
 
-.profile-column { flex: 1; }
-.profile-column.border-right { 
-    border-right: 1px solid rgba(255,255,255,0.1); 
-    padding-right: 20px; 
+.profile-column {
+    flex: 1;
+}
+
+.profile-column.border-right {
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding-right: 20px;
 }
 
 .profile-column h4 {
-    margin-top: 0; color: #888; font-size: 0.7rem; 
-    font-weight: 700; margin-bottom: 15px; letter-spacing: 1px;
+    margin-top: 0;
+    color: #888;
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    letter-spacing: 1px;
 }
 
 /* Enlaces de texto (Izq) */
-.profile-links { list-style: none; padding: 0; margin: 0; }
-.profile-links li { margin-bottom: 10px; }
-.profile-links li a { 
-    color: #e0e0e0; text-decoration: none; font-size: 0.9rem; transition: 0.2s; 
+.profile-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
-.profile-links li a:hover { text-decoration: underline; }
+
+.profile-links li {
+    margin-bottom: 10px;
+}
+
+.profile-links li a {
+    color: #e0e0e0;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: 0.2s;
+}
+
+.profile-links li a:hover {
+    text-decoration: underline;
+}
 
 /* Lista de perfiles (Der) */
 .mini-profile-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 8px; border-radius: 6px;
-    cursor: pointer; transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.2s;
     margin-bottom: 5px;
 }
+
 .mini-profile-item:hover {
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.1);
 }
+
 .mini-profile-item img {
-    width: 32px; height: 32px; border-radius: 4px; /* Cuadrados redondeados estilo Netflix */
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    /* Cuadrados redondeados estilo Netflix */
 }
-.mini-profile-item span ,a {
-    font-size: 0.9rem; color: #fff;
+
+.mini-profile-item span,
+a {
+    font-size: 0.9rem;
+    color: #fff;
     text-decoration: none;
 }
 
 /* Iconos especiales (Añadir/Editar) */
-.add-profile-icon, .edit-profile-icon {
-    width: 32px; height: 32px; border-radius: 50%;
-    border: 1px solid #888; color: #888;
-    display: flex; align-items: center; justify-content: center;
+.add-profile-icon,
+.edit-profile-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid #888;
+    color: #888;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 0.8rem;
 }
+
 .mini-profile-item:hover .add-profile-icon {
-    border-color: white; color: white; background: rgba(255,255,255,0.1);
+    border-color: white;
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
 }
+
 /* --- ESTILO CARRUSELES NETFLIX --- */
 .slick-list {
-    overflow: visible; /* Permite que el hover no se corte */
+    overflow: visible;
+    /* Permite que el hover no se corte */
     z-index: 1;
 }
+
 .slick-slide-item {
     transition: transform 0.3s;
 }
+
 /* Al hacer hover en el contenedor, las flechas aparecen */
 .category-row:hover .custom-arrow {
     opacity: 1;
 }
+
+.category-row {
+    min-height: 250px;
+}
+
 /* =========================================================
    NUEVO: ESTILOS PARA MODAL API GLOBAL (OMDb)
    ========================================================= */
 .api-modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.9); z-index: 10000;
-    display: none; justify-content: center; align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 10000;
+    display: none;
+    justify-content: center;
+    align-items: center;
     backdrop-filter: blur(10px);
 }
 
 .api-modal-content {
-    background: #1a1a1d; 
-    border: 1px solid rgba(255,255,255,0.1);
-    width: 90%; max-width: 750px; 
-    border-radius: 20px; overflow: hidden;
-    display: flex; position: relative; 
+    background: #1a1a1d;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 90%;
+    max-width: 750px;
+    border-radius: 20px;
+    overflow: hidden;
+    display: flex;
+    position: relative;
     box-shadow: 0 0 50px rgba(0, 210, 255, 0.2);
 }
 
 .api-modal-poster {
-    width: 40%; object-fit: cover; min-height: 350px;
+    width: 40%;
+    object-fit: cover;
+    min-height: 350px;
 }
 
 /* Ajustes Responsive del Modal API */
 @media(max-width: 768px) {
-    .api-modal-content { flex-direction: column; height: 90vh; overflow-y: auto; }
-    .api-modal-poster { width: 100%; height: 200px !important; }
+    .api-modal-content {
+        flex-direction: column;
+        height: 90vh;
+        overflow-y: auto;
+    }
+
+    .api-modal-poster {
+        width: 100%;
+        height: 200px !important;
+    }
 }
 
 /* =========================================
-   FLECHAS DE NAVEGACIÓN (ALTURA COMPLETA)
+   1. RESETEAR FLECHAS POR DEFECTO DE SLICK
    ========================================= */
-
-.custom-arrow {
-    position: absolute;
-    
-    /* 1. ALTURA COMPLETA DE LA CARÁTULA */
-    /* Como el carrusel tiene 20px de padding para el hover, */
-    /* empujamos la flecha 20px para que coincida EXACTO con la imagen */
-    top: 20px !important;
-    bottom: 20px !important;
-    height: auto !important; /* Dejamos que top/bottom definan la altura */
-    transform: none !important; /* Quitamos el centrado anterior */
-    
-    /* 2. ANCHO Y ESTILO */
-    width: 45px; /* Ancho de la zona de clic */
-    background-color: rgba(0, 0, 0, 0.5); /* Fondo semitransparente oscuro */
-    border: none;
-    color: white;
-    font-size: 1.5rem;
-    z-index: 50; /* Por encima del póster */
-    
-    /* 3. CENTRAR EL ICONO */
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    
-    cursor: pointer;
-    opacity: 0; 
-    transition: all 0.3s ease;
-    
-    /* Quitamos bordes redondeados en el lado que toca el borde de pantalla */
-    border-radius: 0; 
+button.slick-prev,
+button.slick-next {
+    font-size: 0 !important;
+    /* Oculta el texto por defecto */
+    color: transparent !important;
+    background: transparent !important;
+    /* Mata el círculo blanco */
+    border: none !important;
+    box-shadow: none !important;
 }
 
-/* POSICIÓN LATERAL (Pegadas a los bordes) */
+button.slick-prev::before,
+button.slick-next::before,
+button.slick-prev::after,
+button.slick-next::after {
+    display: none !important;
+    content: '' !important;
+}
+
+/* =========================================
+   2. NUESTRO CONTENEDOR 
+   ========================================= */
+.custom-arrow {
+    position: absolute;
+
+    top: 20px !important;
+    bottom: 20px !important;
+    height: auto !important;
+    transform: none !important;
+
+
+    width: 45px !important;
+    /* Ancho de la zona clicable */
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    z-index: 50 !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.3s ease;
+    border-radius: 0 !important;
+    padding: 0 !important;
+}
+
+/* =========================================
+   3. EL ICONO DE LA FLECHA (FontAwesome)
+   ========================================= */
+.custom-arrow i {
+    font-size: 1.8rem !important;
+    /* Tamaño de la flecha */
+    color: white !important;
+    /* Color blanco neutro */
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+/* =========================================
+   4. POSICIONES Y BORDES REDONDEADOS
+   ========================================= */
 .left-arrow.custom-arrow {
-    left: 0;
-    /* Redondeamos solo el lado interior (derecho) */
-    border-top-right-radius: 4px;
-    border-bottom-right-radius: 4px;
+    left: 0 !important;
+    border-top-right-radius: 8px !important;
+    border-bottom-right-radius: 8px !important;
 }
 
 .right-arrow.custom-arrow {
-    right: 0;
-    /* Redondeamos solo el lado interior (izquierdo) */
-    border-top-left-radius: 4px;
-    border-bottom-left-radius: 4px;
+    right: 0 !important;
+    border-top-left-radius: 8px !important;
+    border-bottom-left-radius: 8px !important;
 }
 
-/* MOSTRAR AL HACER HOVER EN LA FILA */
-.left-arrow:hover .custom-arrow {
-    opacity: 1;
+.category-row:hover .custom-arrow {
+    opacity: 1 !important;
 }
 
-/* EFECTO AL PASAR SOBRE LA FLECHA */
 .custom-arrow:hover {
-    background-color: rgba(0, 0, 0, 0.8); /* Se oscurece más */
-    color: var(--accent); /* El icono se pone azul/rojo */
-}
-.custom-arrow:hover i {
-    transform: scale(1.2); /* El icono crece un poco */
+    background-color: rgba(0, 0, 0, 0.8) !important;
 }
 
-/* RESPONSIVE */
+.custom-arrow:hover i {
+    color: red !important;
+    transform: scale(1.3);
+}
+
+/* En móviles, siempre visibles pero más pequeñas */
 @media (max-width: 768px) {
     .custom-arrow {
-        opacity: 1; /* En móvil siempre visible */
-        width: 30px;
-        background-color: rgba(0, 0, 0, 0.3);
+        opacity: 1 !important;
+        width: 35px !important;
+        background-color: rgba(0, 0, 0, 0.4) !important;
+    }
+
+    .custom-arrow i {
+        font-size: 1.4rem !important;
     }
 }
 
@@ -1091,18 +1349,21 @@ body {
    ========================================================= */
 
 /* Evitar que el slider corte la tarjeta expandida al hacer hover */
-.slick-list { 
-    overflow: visible !important; 
-    z-index: 1; 
+.slick-list {
+    overflow: visible !important;
+    z-index: 1;
 }
+
 .slick-slider {
     z-index: 1;
 }
 
 /* Asegurar que las filas no generen scroll horizontal */
-.netflix-container, .slick-row {
+.netflix-container,
+.slick-row {
     width: 100%;
-    overflow-x: clip; /* clip es más agresivo que hidden para sliders */
+    overflow-x: clip;
+    /* clip es más agresivo que hidden para sliders */
 }
 
 
@@ -1125,14 +1386,17 @@ body {
 .movie-card-grid {
     position: relative;
     width: 100%;
-    aspect-ratio: 2 / 3; /* Formato vertical por defecto */
+    aspect-ratio: 2 / 3;
+    /* Formato vertical por defecto */
     cursor: pointer;
-    transition: z-index 0s 0.3s; /* Delay para el z-index */
+    transition: z-index 0s 0.3s;
+    /* Delay para el z-index */
 }
 
 /* Evitamos que el hover rompa el layout */
 .movie-card-grid:hover {
-    z-index: 1000; /* Prioridad absoluta */
+    z-index: 1000;
+    /* Prioridad absoluta */
     transition-delay: 0s;
 }
 
@@ -1153,26 +1417,33 @@ body {
 
 /* Al hacer hover, el póster vertical desaparece suavemente */
 .movie-card-grid:hover .poster-wrapper {
-    opacity: 0; 
+    opacity: 0;
 }
 
 /* 3. LA CAPA OCULTA (El Pop-up Horizontal) */
 .card-hover-popup {
     position: absolute;
-    top: 0;   /* Se expande hacia arriba */
-    left: -50%;  /* Se centra horizontalmente (mitad izquierda) */
-    width: 200%; /* El doble de ancho que la tarjeta original */
-    background-color: #181818; /* Fondo oscuro Netflix */
+    top: 0;
+    /* Se expande hacia arriba */
+    left: -50%;
+    /* Se centra horizontalmente (mitad izquierda) */
+    width: 200%;
+    /* El doble de ancho que la tarjeta original */
+    background-color: #181818;
+    /* Fondo oscuro Netflix */
     border-radius: 6px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-    
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+
     /* Animación de aparición */
     opacity: 0;
-    transform: scale(0.5); /* Empieza pequeña */
-    pointer-events: none; /* No molesta si no se ve */
+    transform: scale(0.5);
+    /* Empieza pequeña */
+    pointer-events: none;
+    /* No molesta si no se ve */
     transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
-    transition-delay: 0.4s; /* RETARDO: Solo se abre si mantienes el ratón 0.4s */
-    
+    transition-delay: 0.4s;
+    /* RETARDO: Solo se abre si mantienes el ratón 0.4s */
+
     overflow: hidden;
 
 }
@@ -1182,14 +1453,16 @@ body {
     opacity: 1;
     transform: scale(1);
     pointer-events: auto;
-    top: -60%; /* Ajuste fino de posición vertical */
+    top: -60%;
+    /* Ajuste fino de posición vertical */
     z-index: 999;
 }
 
 /* 4. IMAGEN DE CABECERA (Landscape) */
 .popup-image-container {
     width: 100%;
-    height: 160px; /* Altura de la imagen en el popup */
+    height: 160px;
+    /* Altura de la imagen en el popup */
     position: relative;
     background: #000;
 }
@@ -1204,7 +1477,9 @@ body {
 .popup-image-container::after {
     content: '';
     position: absolute;
-    bottom: 0; left: 0; right: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
     height: 40px;
     background: linear-gradient(to top, #181818, transparent);
 }
@@ -1232,19 +1507,27 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid rgba(255,255,255,0.5);
-    background: rgba(42,42,42,0.6);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    background: rgba(42, 42, 42, 0.6);
     color: white;
     transition: 0.2s;
 }
-.btn-icon-circle:hover { border-color: white; background: white; color: black; }
+
+.btn-icon-circle:hover {
+    border-color: white;
+    background: white;
+    color: black;
+}
 
 .btn-play-white {
     background: white;
     color: black;
     border: none;
 }
-.btn-play-white:hover { background: #e5e5e5; }
+
+.btn-play-white:hover {
+    background: #e5e5e5;
+}
 
 /* Título */
 .popup-title {
@@ -1263,22 +1546,28 @@ body {
     font-weight: 600;
 }
 
-.match-score { color: #46d369; /* Verde Netflix */ }
-.age-badge { 
-    border: 1px solid #808080; 
-    padding: 0 4px; 
-    font-size: 0.7rem; 
+.match-score {
+    color: #46d369;
+    /* Verde Netflix */
+}
+
+.age-badge {
+    border: 1px solid #808080;
+    padding: 0 4px;
+    font-size: 0.7rem;
     color: white;
-    background: rgba(0,0,0,0.2);
+    background: rgba(0, 0, 0, 0.2);
 }
 
 /* Descripción / Sinopsis */
 .popup-description {
     font-size: 0.75rem;
-    color: #b3b3b3; /* Gris claro */
+    color: #b3b3b3;
+    /* Gris claro */
     line-height: 1.3;
     display: -webkit-box;
-    -webkit-line-clamp: 3; /* Máximo 3 líneas */
+    -webkit-line-clamp: 3;
+    /* Máximo 3 líneas */
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -1286,32 +1575,40 @@ body {
 /* --- FIX FINAL GRID --- */
 /* 1. Oculto por defecto SIEMPRE (incluso si el HTML viene sucio) */
 #grid-container {
-    display: none !important; 
+    display: none !important;
 }
 
 /* 2. Solo se muestra si le ponemos esta clase específica con JS */
 #grid-container.activo-visible {
-    display: grid !important; 
+    display: grid !important;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 20px;
-    padding: 120px 4% 40px 4%; /* El padding que te gustaba */
+    padding: 120px 4% 40px 4%;
+    /* El padding que te gustaba */
 }
+
 /* --- GRID EXPANDIDO (6 COLUMNAS) --- */
 #grid-expandido {
-    display: none; /* Oculto por defecto */
-    grid-template-columns: repeat(6, 1fr); /* 6 Columnas fijas */
+    display: none;
+    /* Oculto por defecto */
+    grid-template-columns: repeat(6, 1fr);
+    /* 6 Columnas fijas */
     gap: 15px;
     padding: 120px 4% 60px 4%;
 }
 
 /* En pantallas medianas (Laptops), bajamos a 5 */
 @media (max-width: 1400px) {
-    #grid-expandido { grid-template-columns: repeat(5, 1fr); }
+    #grid-expandido {
+        grid-template-columns: repeat(5, 1fr);
+    }
 }
 
 /* En tablets, bajamos a 4 */
 @media (max-width: 900px) {
-    #grid-expandido { grid-template-columns: repeat(4, 1fr); }
+    #grid-expandido {
+        grid-template-columns: repeat(4, 1fr);
+    }
 }
 
 /* Botón Ver Más (Estilo elegante) */
@@ -1327,6 +1624,7 @@ body {
     transition: 0.3s;
     margin-left: 20px;
 }
+
 .btn-ver-mas-row:hover {
     background: var(--accent);
     color: #000;
@@ -1337,24 +1635,69 @@ body {
     align-items: center;
     margin-bottom: 10px;
 }
+
 /* Permitir que las tarjetas se salgan del carrusel al hacer hover */
 .slick-list {
     overflow: visible !important;
-    padding-top: 20px !important; /* Espacio extra arriba para la animación */
-    padding-bottom: 20px !important; /* Espacio extra abajo */
+    padding-top: 20px !important;
+    /* Espacio extra arriba para la animación */
+    padding-bottom: 20px !important;
+    /* Espacio extra abajo */
 }
 
 /* Asegurar que las tarjetas estén por encima de otras filas */
 .slick-slide {
-    z-index: 1; 
+    z-index: 1;
     transition: z-index 0.2s;
 }
 
 .slick-slide:hover {
-    z-index: 100; /* Prioridad máxima al pasar el ratón */
+    z-index: 100;
+    /* Prioridad máxima al pasar el ratón */
 }
 
 /* Ajuste visual para el grid expandido */
 #grid-expandido .movie-card-grid {
     margin-bottom: 20px;
+}
+
+/* 1. Fondo temporal animado (Efecto Skeleton) para el contenedor */
+.movie-poster {
+    background-color: #222;
+    animation: skeletonPulse 1.5s infinite ease-in-out;
+    /* Mantenemos tus estilos anteriores: border-radius, aspect-ratio, etc. */
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    aspect-ratio: 2/3;
+}
+
+@keyframes skeletonPulse {
+    0% {
+        background-color: #222;
+    }
+
+    50% {
+        background-color: #333;
+    }
+
+    100% {
+        background-color: #222;
+    }
+}
+
+/* 2. La imagen empieza invisible (opacidad 0) */
+.movie-poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+    /* Transición suave */
+}
+
+/* 3. Clase que se añade cuando la imagen termina de cargar */
+.movie-poster img.loaded {
+    opacity: 1;
+    /* Se hace visible */
 }
