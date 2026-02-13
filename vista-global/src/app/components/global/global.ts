@@ -28,12 +28,9 @@ export class GlobalComponent implements OnInit {
   // --- DETECTOR DE SCROLL ---
   @HostListener('window:scroll', [])
   onScroll(): void {
-    // Altura total de la ventana + lo que has scrolleado
     const pos = (document.documentElement.scrollTop || document.body.scrollTop) + document.documentElement.offsetHeight;
-    // Altura total del documento
     const max = document.documentElement.scrollHeight;
 
-    // Si llegas cerca del final (a 500px) y no está cargando ya...
     if (pos > max - 500 && !this.loading) {
       this.cargarMasPeliculas();
     }
@@ -42,13 +39,10 @@ export class GlobalComponent implements OnInit {
   cargarMasPeliculas() {
     this.loading = true;
 
-    // Pedimos la página actual (empieza en 1, luego 2, 3...)
     this.tmdbService.getDiscoveryMovies(this.currentPage).subscribe(newMovies => {
       
-      // Añadimos las nuevas al final de la lista existente
       this.movies.push(...newMovies);
       
-      // Preparamos la siguiente página
       this.currentPage++;
       
       this.loading = false;
@@ -60,7 +54,6 @@ export class GlobalComponent implements OnInit {
   }
 
   goToDetail(movie: TmdbMovie) {
-    // Redirige a la vista de detalle de CodeIgniter
-    window.location.href = `/detalle/${movie.id}`;
+    window.location.href = `/labutaca2/detalle/tmdb_movie_${movie.id}`;
   }
 }

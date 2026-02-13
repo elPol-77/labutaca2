@@ -4,13 +4,15 @@
 <head>
     <meta charset="utf-8">
     <title>La Butaca Global</title>
-    <base href="/labutaca2/global/">
+    
+    <base href="/labutaca2/">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/x-icon" href="<?= base_url('favicon.ico') ?>">
 
+    <link rel="stylesheet" href="<?= base_url('assets/angular-global/browser/styles.css') ?>">
+
     <style>
-        /* Estilos básicos para evitar el parpadeo blanco */
         body {
             margin: 0;
             background-color: #141414;
@@ -53,8 +55,9 @@
         </div>
     </app-root>
 
-    <script src="<?= base_url('assets/angular-global/browser/polyfills-5CFQRCPP.js') ?>" type="module"></script>
-    <script src="<?= base_url('assets/angular-global/browser/main-ZQBSHZN2.js') ?>" type="module"></script>
+    <script src="<?= base_url('assets/angular-global/browser/runtime.js') ?>" type="module"></script>
+    <script src="<?= base_url('assets/angular-global/browser/polyfills.js') ?>" type="module"></script>
+    <script src="<?= base_url('assets/angular-global/browser/main.js') ?>" type="module"></script>
 
 </body>
 

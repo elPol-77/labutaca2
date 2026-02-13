@@ -610,7 +610,6 @@ class Home extends BaseController
         $esExterno = false;
         $esLocal = false;
 
-        // 2. BÚSQUEDA
         if ($esTmdb) {
             // Buscamos en la API (y calculamos la edad real)
             $contenido = $this->obtenerDetalleExterno($idLimpio, $tipoBusqueda);
@@ -621,10 +620,60 @@ class Home extends BaseController
                 $contenido['id'] = $prefix . $contenido['id'];
             }
         } else {
-            $contenido = $model->getDetallesCompletos($id);
-            if ($contenido) {
+            // =========================================================
+            // LÓGICA HÍBRIDA: CONTENIDO LOCAL + DATOS TMDB
+            // =========================================================
+            $localData = $model->getDetallesCompletos($id);
+            
+            if ($localData) {
                 $esLocal = true;
-                $director = $model->getDirector($id);
+                $director = $model->getDirector($id); // Respaldo del director local
+                
+                // 1. Buscamos el título local en la API de TMDB
+                $tituloBusqueda = urlencode($localData['titulo']);
+                $apiKey = '6387e3c183c454304108333c56530988';
+                $searchUrl = "https://api.themoviedb.org/3/search/multi?api_key={$apiKey}&language=es-ES&query={$tituloBusqueda}";
+                
+                $arrContextOptions = ["ssl" => ["verify_peer" => false, "verify_peer_name" => false], "http" => ["ignore_errors" => true]];
+                $jsonSearch = @file_get_contents($searchUrl, false, stream_context_create($arrContextOptions));
+                
+                $tmdbData = null;
+                if ($jsonSearch) {
+                    $searchResult = json_decode($jsonSearch, true);
+                    
+                    // Si TMDB encuentra resultados con ese nombre...
+                    if (!empty($searchResult['results'])) {
+                        $primerResultado = $searchResult['results'][0];
+                        $tmdbId = $primerResultado['id'];
+                        $tipoTmdb = ($primerResultado['media_type'] === 'tv') ? 'tv' : 'movie';
+                        
+                        // 2. Traemos todos los detalles ricos usando tu función
+                        $tmdbData = $this->obtenerDetalleExterno($tmdbId, $tipoTmdb);
+                    }
+                }
+
+                // 3. FUSIÓN DE DATOS (El truco maestro)
+                if ($tmdbData) {
+                    // Usamos la información espectacular de TMDB (Fotos, Actores, etc)
+                    $contenido = $tmdbData; 
+                    
+                    // ¡SUPER IMPORTANTE! Sobrescribimos el ID de TMDB con tu ID Local.
+                    // Si no hacemos esto, el botón "Reproducir" intentaría buscar
+                    // el vídeo en TMDB en lugar de en tu servidor.
+                    $contenido['id'] = $localData['id']; 
+                    
+                    // Conservamos el nivel de acceso (Gratis/Premium) de tu BD local
+                    $contenido['nivel_acceso'] = $localData['nivel_acceso'] ?? 1;
+                    
+                    // Actualizamos la variable $director para la vista
+                    if (!empty($tmdbData['director_externo'])) {
+                        $director = $tmdbData['director_externo'];
+                    }
+                } else {
+                    // FALLBACK: Si subes un vídeo casero que TMDB no conoce, 
+                    // simplemente usamos tus datos locales para que no falle.
+                    $contenido = $localData;
+                }
             }
         }
 
