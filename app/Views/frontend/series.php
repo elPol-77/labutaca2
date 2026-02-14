@@ -92,11 +92,10 @@
     $(document).ready(function () {
 
         let bloqueActual = 0;
-        let cargandoBloque = false; // Semáforo para filas verticales
+        let cargandoBloque = false; 
         let hayMasBloques = true;
 
-        // CONFIGURACIÓN SLICK
-        // IMPORTANTE: 'infinite: false' es necesario para detectar el final y cargar más
+
         const slickSettings = {
             dots: false,
             infinite: false,
@@ -115,28 +114,21 @@
             ]
         };
 
-        // --- FUNCIÓN MAESTRA: INICIALIZA LOS CARRUSELES Y LOS "VIGILA" ---
         function inicializarCarruseles() {
-            // Seleccionamos solo los que NO se han iniciado aún
             $('.slick-carousel-ajax:not(.slick-initialized)').each(function () {
                 let $carousel = $(this);
 
-                // 1. Iniciamos Slick
                 $carousel.slick(slickSettings);
 
-                // 2. Añadimos el "Vigilante" (Evento afterChange)
                 $carousel.on('afterChange', function (event, slick, currentSlide) {
 
-                    // Comprobamos si el usuario ha llegado al final derecho del carrusel
-                    // (Slide actual + slides visibles >= total slides)
+
                     if (slick.currentSlide + slick.options.slidesToShow >= slick.slideCount) {
 
-                        // Evitar doble carga si ya está pidiendo
                         if ($carousel.data('loading-more') === true) return;
 
                         let endpoint = $carousel.attr('data-endpoint');
 
-                        // Solo expandimos si es TMDB (Local ya carga 50 de golpe)
                         if (endpoint === 'tmdb') {
                             cargarMasSeriesEnHorizontal($carousel);
                         }
@@ -145,14 +137,13 @@
             });
         }
 
-        // --- FUNCIÓN PARA PEDIR MÁS SERIES (FLECHA DERECHA) ---
         function cargarMasSeriesEnHorizontal($carousel) {
             let params = $carousel.attr('data-params');
             let page = parseInt($carousel.attr('data-page'));
             let tipo = $carousel.attr('data-endpoint');
 
             console.log("➡️ Pidiendo más series... Página actual: " + page);
-            $carousel.data('loading-more', true); // Bloqueamos para no repetir
+            $carousel.data('loading-more', true); 
 
             $.ajax({
                 url: '<?= base_url("serie/ajax-expandir-fila") ?>',
@@ -166,34 +157,31 @@
                 success: function (newHtml) {
                     if (newHtml.trim() !== "") {
 
-                        // --- CORRECCIÓN CLAVE ---
-                        // Convertimos el texto HTML en elementos reales de jQuery
+   
                         var $nuevosElementos = $(newHtml);
 
-                        // Añadimos cada tarjeta COMO UNA DIAPOSITIVA INDIVIDUAL
                         $nuevosElementos.each(function () {
                             $carousel.slick('slickAdd', this);
                         });
 
                         // Actualizamos el contador de página (+2 porque cargamos 2 de golpe)
                         $carousel.attr('data-page', page + 2);
-                        console.log("✅ Cargadas 40 series nuevas. Próxima página: " + (page + 2));
+                        console.log("Cargadas 40 series nuevas. Próxima página: " + (page + 2));
 
                     } else {
-                        console.log("⛔ Se acabó. No hay más contenido en esta categoría.");
+                        console.log("No hay más contenido en esta categoría.");
                     }
                     $carousel.data('loading-more', false);
-                }, // Desbloqueamos
+                }, 
 
 
                 error: function () {
-                    console.log("❌ Error al cargar más series.");
+                    console.log("Error al cargar más series.");
                     $carousel.data('loading-more', false);
                 }
             });
         }
 
-        // --- CARGA INICIAL (SCROLL VERTICAL) ---
         setTimeout(function () {
             $('#loading-initial').fadeOut(500, function () {
                 $('.content').css('display', 'block').animate({ opacity: 1 }, 500);
@@ -201,7 +189,6 @@
             });
         }, 600);
 
-        // Detector de Scroll Vertical
         $(window).scroll(function () {
             if ($(window).scrollTop() + $(window).height() >= $(document).height() - 400) {
                 if (!cargandoBloque && hayMasBloques) cargarSiguienteBloque();
@@ -226,23 +213,18 @@
                         hayMasBloques = false; return;
                     }
 
-                    // Sincronizar saltos del servidor
                     let tempDiv = $('<div>').html(html);
                     let sync = tempDiv.find('.sync-data');
                     if (sync.length) bloqueActual += parseInt(sync.data('jump'));
 
-                    // Pegar HTML
                     $('#rows-container').append(html);
 
-                    // EFECTO VISUAL + INICIALIZACIÓN
                     $('.category-row').css('opacity', 1);
 
-                    // ¡¡AQUÍ ESTÁ LA CLAVE!! Inicializamos los nuevos carruseles
                     inicializarCarruseles();
 
                     bloqueActual++;
 
-                    // Auto-relleno si la pantalla es gigante
                     if ($(document).height() <= $(window).height() + 100) {
                         cargarSiguienteBloque();
                     }
@@ -255,30 +237,3 @@
         }
     });
 </script>
-<style>
-    .hero-static {
-        margin: 2rem 4% 3rem 4%;
-        border-radius: 24px;
-        overflow: hidden;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-        height: 65vh;
-        display: block;
-        position: relative;
-    }
-
-    .hero-static .hero-item {
-        height: 100% !important;
-        width: 100% !important;
-        background-size: cover;
-        background-position: center;
-        display: flex !important;
-        align-items: center;
-    }
-
-    @media (max-width: 768px) {
-        .hero-static {
-            margin: 1rem 2%;
-            height: 55vh;
-        }
-    }
-</style>

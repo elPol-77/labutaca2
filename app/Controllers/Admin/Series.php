@@ -1,10 +1,8 @@
 <?php
 namespace App\Controllers\Admin;
-// Heredamos de Peliculas para reutilizar la lógica de "store" y "procesarGeneros"
-// ¡Así no escribimos el código dos veces!
 class Series extends Peliculas 
 {
-    protected $tipoId = 2; // Esto cambia todo automáticamente a Series
+    protected $tipoId = 2; /
 
     public function index() {
         $data = [
@@ -16,10 +14,7 @@ class Series extends Peliculas
         return view('backend/peliculas/index', $data);
     }
     
-    // Al heredar, usa el 'create' y 'store' de Peliculas, 
-    // pero como cambiamos $this->tipoId a 2, guardará como serie.
     public function store() {
-        // Redirigimos a admin/series al terminar
         $res = parent::store(); 
         return redirect()->to('admin/series')->with('msg', 'Serie agregada.');
     }

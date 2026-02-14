@@ -40,19 +40,30 @@ class Filters extends BaseFilters
         ],
     ];
 
-    public array $globals = [
+public array $globals = [
         'before' => [
             // 'honeypot',
             'csrf' => [
                 'except' => [
-                    'admin/peliculas/store',      // Guardar nueva película
-                    'admin/peliculas/update/*',   // <--- ¡NUEVO! Actualizar película (cualquier ID)
-                    'admin/series/store',         // Guardar nueva serie
+                    // --- ZONA ADMIN ---
+                    'admin/peliculas/store',
+                    'admin/peliculas/update/*',
+                    'admin/series/store',
                     'admin/series/update/*',
-                    'admin/usuarios/update/*',      
-                    'api/*'                       // API y Buscador
+                    'admin/usuarios/update/*',
+                    
+                    // --- API GENERAL ---
+                    'api/*',
+
+                    // --- ZONA AJAX FRONTEND (Scroll Infinito) ---
+                    // Esto es lo que te faltaba para arreglar el Error 403:
+                    'serie/ajax-fila',
+                    'serie/ajax-expandir-fila',
+                    'peliculas/ajax-fila',
+                    'peliculas/ajax-expandir-fila',
+                    'home/ajax-fila',
+                    'home/ajax-expandir-fila'
                 ]
-            
             ],
             // 'invalidchars',
         ],

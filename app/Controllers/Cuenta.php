@@ -19,8 +19,8 @@ class Cuenta extends BaseController
         $data = [
             'usuario' => $usuario,
             'titulo'  => 'Cuenta y Configuración - La Butaca',
-            'tarjeta' => '•••• •••• •••• 4242', // Simulado
-            'proximo_cobro' => date('d/m/Y', strtotime('+1 month')) // Simulado
+            'tarjeta' => '•••• •••• •••• 4242', /
+            'proximo_cobro' => date('d/m/Y', strtotime('+1 month')) 
         ];
 
         return view('frontend/account', $data);
@@ -36,14 +36,13 @@ class Cuenta extends BaseController
         $model = new UsuarioModel();
         $usuario = $model->find($id);
 
-        // 1. Validar contraseña actual
         if (!password_verify($passActual, $usuario['password'])) {
             return redirect()->back()->with('error', 'La contraseña actual no es correcta.');
         }
 
-        // 2. Validar nueva contraseña (mínimo 4 caracteres, coincidencia)
-        if (strlen($passNueva) < 4) {
-            return redirect()->back()->with('error', 'La nueva contraseña debe tener al menos 4 caracteres.');
+        // 2. Validar nueva contraseña (mínimo 8 caracteres, coincidencia)
+        if (strlen($passNueva) < 8) {
+            return redirect()->back()->with('error', 'La nueva contraseña debe tener al menos 8 caracteres.');
         }
 
         if ($passNueva !== $passRepetir) {

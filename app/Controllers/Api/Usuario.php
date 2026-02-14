@@ -7,9 +7,9 @@ use CodeIgniter\RESTful\ResourceController;
 class Usuario extends ResourceController
 {
     protected $format = 'json';
-    
+
     // API KEY DE TMDB
-    private $tmdbApiKey = '6387e3c183c454304108333c56530988'; 
+    private $tmdbApiKey = '6387e3c183c454304108333c56530988';
 
     public function toggle()
     {
@@ -20,24 +20,24 @@ class Usuario extends ResourceController
 
         $userId = session()->get('user_id');
         $idRecibido = $this->request->getPost('id');
-        
-        if (!$idRecibido) return $this->fail('Falta el ID del contenido');
+
+        if (!$idRecibido)
+            return $this->fail('Falta el ID del contenido');
 
         $contenidoIdReal = null;
 
         try {
-            // A. LOGICA DE IMPORTACIÓN AUTOMÁTICA
             // Limpiamos el ID
             $idLimpio = $this->_limpiarId($idRecibido);
-            
+
             // Verificamos si existe en local
             $db = \Config\Database::connect();
-            
+
             $query = $db->table('contenidos')->groupStart()
-                        ->where('id', $idLimpio)
-                        ->orWhere('imdb_id', $idLimpio)
-                        ->groupEnd()
-                        ->get()->getRowArray();
+                ->where('id', $idLimpio)
+                ->orWhere('imdb_id', $idLimpio)
+                ->groupEnd()
+                ->get()->getRowArray();
 
             if ($query) {
                 // YA EXISTE EN LOCAL: Usamos el ID que ya tiene
@@ -45,7 +45,7 @@ class Usuario extends ResourceController
             } else {
                 // NO EXISTE: Importamos de TMDB
                 $contenidoIdReal = $this->_importarDesdeTMDB($idLimpio, $idRecibido);
-                
+
                 if (!$contenidoIdReal) {
                     return $this->fail('No se pudo importar. ID inválido.');
                 }
@@ -61,7 +61,7 @@ class Usuario extends ResourceController
                 $action = 'removed';
             } else {
                 $builder->insert([
-                    'usuario_id' => $userId, 
+                    'usuario_id' => $userId,
                     'contenido_id' => $contenidoIdReal,
                     'fecha_agregado' => date('Y-m-d H:i:s')
                 ]);
@@ -69,9 +69,9 @@ class Usuario extends ResourceController
             }
 
             return $this->respond([
-                'status' => 'success', 
-                'action' => $action, 
-                'token'  => csrf_hash()
+                'status' => 'success',
+                'action' => $action,
+                'token' => csrf_hash()
             ]);
 
         } catch (\Throwable $e) {
@@ -81,7 +81,8 @@ class Usuario extends ResourceController
 
     public function getLista()
     {
-        if (!session()->get('is_logged_in')) return $this->failUnauthorized();
+        if (!session()->get('is_logged_in'))
+            return $this->failUnauthorized();
         $userId = session()->get('user_id');
 
         $db = \Config\Database::connect();
@@ -90,7 +91,7 @@ class Usuario extends ResourceController
         $builder->join('contenidos c', 'c.id = ml.contenido_id');
         $builder->where('ml.usuario_id', $userId);
         $builder->orderBy('ml.fecha_agregado', 'DESC');
-        
+
         $lista = $builder->get()->getResultArray();
 
         foreach ($lista as &$item) {
@@ -102,43 +103,37 @@ class Usuario extends ResourceController
         return $this->respond(['data' => $lista]);
     }
 
-    // =========================================================
-    // HELPER: LIMPIAR ID
-    // =========================================================
-    private function _limpiarId($idSucio) {
-        if (strpos((string)$idSucio, 'tt') !== false) {
-            return $idSucio; 
+    // Limpiamos el id 
+    private function _limpiarId($idSucio)
+    {
+        if (strpos((string) $idSucio, 'tt') !== false) {
+            return $idSucio;
         }
-        return preg_replace('/[^0-9]/', '', (string)$idSucio);
+        return preg_replace('/[^0-9]/', '', (string) $idSucio);
     }
 
-    // =========================================================
-    // FUNCIÓN DE IMPORTACIÓN (SOLO NIVEL PREMIUM POR DEFECTO)
-    // =========================================================
+
     private function _importarDesdeTMDB($externalId, $originalString = '')
     {
         $db = \Config\Database::connect();
         $builder = $db->table('contenidos');
-
-        // 1. Preparar cliente HTTP
         $client = \Config\Services::curlrequest();
-        $options = ['http_errors' => false, 'verify' => false]; 
+        $options = ['http_errors' => false, 'verify' => false];
 
         $finalTmdbId = $externalId;
-        $tipoContenido = 'movie'; // Por defecto
+        $tipoContenido = 'movie';
 
-        // Detectar si es serie por el nombre del ID original
+        // 1. Detectar si es serie
         if (strpos($originalString, '_tv_') !== false || strpos($originalString, 'tv_') !== false) {
             $tipoContenido = 'tv';
         }
 
-        // --- CASO 1: ID DE IMDB (tt...) ---
+        // 2. Resolver ID si viene de IMDB
         if (strpos($externalId, 'tt') === 0) {
             $urlFind = "https://api.themoviedb.org/3/find/{$externalId}?api_key={$this->tmdbApiKey}&external_source=imdb_id";
             try {
                 $respFind = $client->request('GET', $urlFind, $options);
                 $dataFind = json_decode($respFind->getBody(), true);
-
                 if (!empty($dataFind['movie_results'])) {
                     $finalTmdbId = $dataFind['movie_results'][0]['id'];
                     $tipoContenido = 'movie';
@@ -146,42 +141,63 @@ class Usuario extends ResourceController
                     $finalTmdbId = $dataFind['tv_results'][0]['id'];
                     $tipoContenido = 'tv';
                 } else {
-                    return false; 
+                    return false;
                 }
-            } catch (\Exception $e) { return false; }
+            } catch (\Exception $e) {
+                return false;
+            }
         }
 
-        // --- CASO 2: ID NUMÉRICO ---
+        // 3. Obtener Datos Principales
         $url = "https://api.themoviedb.org/3/{$tipoContenido}/{$finalTmdbId}?api_key={$this->tmdbApiKey}&language=es-ES";
-        
         try {
             $response = $client->request('GET', $url, $options);
-            
             if ($response->getStatusCode() !== 200 && strpos($externalId, 'tt') === false) {
                 $tipoContenido = ($tipoContenido == 'movie') ? 'tv' : 'movie';
                 $url = "https://api.themoviedb.org/3/{$tipoContenido}/{$finalTmdbId}?api_key={$this->tmdbApiKey}&language=es-ES";
                 $response = $client->request('GET', $url, $options);
             }
-
-            if ($response->getStatusCode() !== 200) return false;
-
+            if ($response->getStatusCode() !== 200)
+                return false;
             $data = json_decode($response->getBody(), true);
-
         } catch (\Exception $e) {
             return false;
         }
 
-        // 3. Guardar en Base de Datos
+        // 4. GUARDAR EN BD
         if (!empty($data)) {
+
+            $trailerUrl = null; 
+            try {
+                $urlVideos = "https://api.themoviedb.org/3/{$tipoContenido}/{$finalTmdbId}/videos?api_key={$this->tmdbApiKey}&language=es-ES";
+                $respVideos = $client->request('GET', $urlVideos, $options);
+
+                if ($respVideos->getStatusCode() === 200) {
+                    $dataVideos = json_decode($respVideos->getBody(), true);
+                    if (!empty($dataVideos['results'])) {
+                        foreach ($dataVideos['results'] as $vid) {
+                            // Buscamos Trailer de YouTube
+                            if ($vid['site'] === 'YouTube' && $vid['type'] === 'Trailer') {
+                                $trailerUrl = "https://www.youtube.com/embed/" . $vid['key'];
+                                break;
+                            }
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+            }
+            // ------------------------------------------------------
+
             $esSerie = ($tipoContenido == 'tv');
-            
             $titulo = $esSerie ? ($data['name'] ?? 'Sin título') : ($data['title'] ?? 'Sin título');
             $fecha = $esSerie ? ($data['first_air_date'] ?? '') : ($data['release_date'] ?? '');
             $anio = (!empty($fecha)) ? intval(substr($fecha, 0, 4)) : 0;
-            
+
             $duracion = 0;
-            if (!$esSerie && isset($data['runtime'])) $duracion = intval($data['runtime']);
-            if ($esSerie && !empty($data['episode_run_time'])) $duracion = intval($data['episode_run_time'][0]);
+            if (!$esSerie && isset($data['runtime']))
+                $duracion = intval($data['runtime']);
+            if ($esSerie && !empty($data['episode_run_time']))
+                $duracion = intval($data['episode_run_time'][0]);
 
             $baseImgUrl = 'https://image.tmdb.org/t/p/w500';
             $bgImgUrl = 'https://image.tmdb.org/t/p/original';
@@ -189,27 +205,27 @@ class Usuario extends ResourceController
             $backdrop = isset($data['backdrop_path']) ? $bgImgUrl . $data['backdrop_path'] : $poster;
 
             $nuevoContenido = [
-                'titulo'           => substr($titulo, 0, 199),
-                'descripcion'      => $data['overview'] ?? '',
-                'imagen'           => $poster, 
-                'imagen_bg'        => $backdrop,
-                'tipo_id'          => $esSerie ? 2 : 1,
-                'anio'             => $anio,
-                'duracion'         => $duracion,
+
+                'id' => $originalString ?: $externalId,
+                'titulo' => substr($titulo, 0, 199),
+                'descripcion' => $data['overview'] ?? '',
+                'imagen' => $poster,
+                'imagen_bg' => $backdrop,
+                'tipo_id' => $esSerie ? 2 : 1,
+                'anio' => $anio,
+                'duracion' => $duracion,
                 'edad_recomendada' => ($data['adult'] ?? false) ? 18 : 12,
-                
-                // 🔥 AQUÍ ESTÁ EL TRUCO 🔥
-                'nivel_acceso'     => 2, // Se guarda como PREMIUM por defecto al importar desde Favs
-                
-                'imdb_id'          => (string)$finalTmdbId, 
-                'imdb_rating'      => isset($data['vote_average']) ? (float)$data['vote_average'] : 0.0,
-                'destacada'        => 0,
-                'vistas'           => 0
+                'nivel_acceso' => 2,
+                'url_video' => $trailerUrl,
+                'imdb_id' => (string) $finalTmdbId,
+                'imdb_rating' => isset($data['vote_average']) ? (float) $data['vote_average'] : 0.0,
+                'destacada' => 0,
+                'vistas' => 0
             ];
 
             try {
                 $builder->insert($nuevoContenido);
-                return $db->insertID();
+                return $nuevoContenido['id']; 
             } catch (\Exception $e) {
                 log_message('error', 'Error SQL Import: ' . $e->getMessage());
                 return false;

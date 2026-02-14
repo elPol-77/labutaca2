@@ -3,10 +3,9 @@
 
 <head>
     <meta charset="utf-8">
-    <title>La Butaca Global</title>
-    
-    <base href="/labutaca2/">
+    <title>La Butaca Global</title> 
 
+    <base href="/labutaca2/global/">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/x-icon" href="<?= base_url('favicon.ico') ?>">
 
