@@ -2,7 +2,7 @@
 namespace App\Controllers\Admin;
 class Series extends Peliculas 
 {
-    protected $tipoId = 2; /
+    protected $tipoId = 2; 
 
     public function index() {
         $data = [
