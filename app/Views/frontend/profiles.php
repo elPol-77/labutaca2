@@ -3,149 +3,24 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>¿Quién eres? - La Butaca</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="<?= base_url('assets/css/front.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/auth.css') ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="shortcut icon" type="image/png" href="<?= base_url('/labutaca2_logo.ico') ?>">
 
-    <style>
-        .profile-avatar {
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #333;
-        }
-
-        .profile-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .general-modal {
-            display: none;
-            position: fixed;
-            z-index: 3000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(5px);
-            align-items: center;
-            justify-content: center;
-        }
-
-        .general-modal-content {
-            background: rgba(20, 20, 20, 0.95);
-            padding: 40px;
-            border-radius: 10px;
-            width: 100%;
-            max-width: 400px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            text-align: center;
-            position: relative;
-            animation: fadeIn 0.3s;
-        }
-
-        .general-input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            background: #333;
-            border: none;
-            border-radius: 4px;
-            color: white;
-            font-family: 'Outfit', sans-serif;
-        }
-
-        .general-input:focus {
-            outline: 2px solid #e50914;
-            background: #444;
-        }
-
-        .btn-general {
-            width: 100%;
-            padding: 12px;
-            background: #e50914;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-            font-family: 'Outfit', sans-serif;
-        }
-
-        .btn-general:hover {
-            background: #f40612;
-        }
-
-        .close-general {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            color: #aaa;
-            font-size: 24px;
-            cursor: pointer;
-        }
-
-        .toggle-link {
-            color: #ccc;
-            font-size: 0.9rem;
-            margin-top: 15px;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-
-        .alert-error {
-            background: #e87c03;
-            color: white;
-            padding: 10px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-            display: none;
-            text-align: left;
-        }
-
-        /* Estilo para los nuevos mensajes de error JS */
-        .js-error-msg {
-            color: #ff4757;
-            background: rgba(255, 71, 87, 0.1);
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 15px;
-            font-size: 0.9rem;
-            display: none;
-            text-align: center;
-            border: 1px solid #ff4757;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.95);
-            }
-
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-    </style>
 </head>
 
 <body>
 
     <input type="hidden" class="txt_csrftoken" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
 
-    <section id="view-profiles" class="view-section active" style="display: flex;">
+    <section id="view-profiles" class="view-section active">
         <div class="glass-panel">
-            <h1 style="font-family: 'Outfit'; margin-bottom: 10px;">¿Quién eres?</h1>
+            <h1 style="font-family: 'Outfit'; margin-bottom: 20px; font-weight: 400;">¿Quién eres?</h1>
 
             <div class="profile-container">
 
@@ -163,8 +38,7 @@
                             onclick="attemptLogin(<?= $user['id'] ?>, '<?= esc($user['username']) ?>', <?= $user['plan_id'] ?>)">
                             <div class="profile-avatar"><img src="<?= $avatar ?>" alt="<?= esc($user['username']) ?>"></div>
                             <span><?= esc($user['username']) ?></span>
-                            <small
-                                style="color:#aaa; display:block; text-transform:uppercase; font-size:0.7rem; margin-top:5px;">
+                            <small style="color:#aaa; display:block; text-transform:uppercase; font-size:0.65rem; margin-top:4px; letter-spacing: 1px;">
                                 <?= match ($user['plan_id'] ?? '1') { '2' => 'Premium', '3' => 'Kids', default => 'Free'} ?>
                             </small>
                         </div>
@@ -173,18 +47,17 @@
 
                 <div class="profile-item" onclick="openGeneralModal()">
                     <div class="profile-avatar"
-                        style="border: 2px dashed #666; overflow: hidden; background: rgba(0,0,0,0.5);">
-                        <i class="fa fa-plus" style="font-size: 3rem; color: #888;"></i>
+                        style="border: 2px dashed #666; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+                        <i class="fa fa-plus" style="font-size: 2.5rem; color: #888;"></i>
                     </div>
                     <span>Añadir Perfil</span>
                 </div>
             </div>
 
-            <div
-                style="margin-top: 30px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+            <div style="margin-top: 40px; text-align: center;">
                 <a href="<?= base_url('admin/login') ?>"
-                    style="color: rgba(255,255,255,0.4); text-decoration: none; font-size: 0.85rem; font-family: 'Outfit'; transition: 0.3s;">
-                    <i class="fa fa-lock"></i> Acceso Administración
+                    style="display: inline-block; border: 1px solid rgba(255,255,255,0.3); padding: 8px 20px; border-radius: 4px; color: rgba(255,255,255,0.6); text-decoration: none; font-size: 0.85rem; font-family: 'Outfit'; transition: 0.3s;">
+                    <i class="fa fa-lock"></i> ADMINISTRAR
                 </a>
             </div>
         </div>
@@ -193,16 +66,15 @@
 
     <div class="password-modal" id="modalAuth">
         <div class="modal-content">
-            <h3 id="modalUser" style="margin-top:0; color: white;">Usuario</h3>
-            <p style="color:#aaa; margin-bottom:20px;">Introduce tu PIN</p>
+            <h3 id="modalUser" style="margin-top:0; color: white; font-size: 1.5rem;">Usuario</h3>
+            <p style="color:#aaa; margin-bottom:20px;">Introduce tu PIN para acceder</p>
 
             <input type="hidden" id="selectedUserId">
-            <input type="password" id="passwordInput" class="pin-input" placeholder="••••" autocomplete="off">
-            <p class="error-msg" id="errorMsg" style="display:none; color: #ff4757; margin-top: 10px;">Contraseña
-                incorrecta</p>
+            <input type="password" id="passwordInput" class="pin-input" placeholder="••••" autocomplete="off" inputmode="numeric" pattern="[0-9]*">
+            <p class="error-msg" id="errorMsg" style="display:none; color: #ff4757; margin-top: 10px;">Contraseña incorrecta</p>
 
-            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
-                <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px; width: 100%;">
+                <button class="btn-cancel" onclick="closeModal()">CANCELAR</button>
             </div>
         </div>
     </div>
@@ -216,7 +88,7 @@
                 <h2 style="font-family:'Outfit'; margin-bottom:20px;">Iniciar Sesión</h2>
 
                 <?php if (session('error_general')): ?>
-                    <div style="color:#e84118; margin-bottom:10px;"><?= session('error_general') ?></div>
+                    <div style="color:#e84118; margin-bottom:10px; background: rgba(232, 65, 24, 0.1); padding: 5px; border-radius: 4px;"><?= session('error_general') ?></div>
                 <?php endif; ?>
 
                 <div id="login-js-error" class="js-error-msg"></div>
@@ -226,18 +98,16 @@
                     <input type="text" name="email" class="general-input" placeholder="Email o Usuario">
                     <input type="password" name="password" class="general-input" placeholder="Contraseña">
 
-                    <div style="text-align: right; margin-bottom: 15px;">
+                    <div style="text-align: right; margin-bottom: 20px;">
                         <a href="#" onclick="cambiarAModalRecuperar(); return false;"
-                            style="color: #aaa; font-size: 0.85rem; text-decoration: none; font-family: 'Outfit';"
-                            onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#aaa'">
-                            ¿Has olvidado tu contraseña?
+                            style="color: #b3b3b3; font-size: 0.85rem; text-decoration: none; font-family: 'Outfit';">
+                            ¿Olvidaste tu contraseña?
                         </a>
                     </div>
                     <button type="submit" class="btn-general">Entrar</button>
                 </form>
                 <div class="toggle-link">
-                    ¿Nuevo aquí? <a href="<?= base_url('registro') ?>" style="color:white; font-weight:bold;">Suscríbete
-                        ahora.</a>
+                    ¿Nuevo en La Butaca? <a href="<?= base_url('registro') ?>" style="color:white; font-weight:bold;">Suscríbete ahora.</a>
                 </div>
 
             </div>
@@ -295,18 +165,13 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-        // =========================================================
-        // 1. LÓGICA DE PERFILES Y PIN
-        // =========================================================
-
         function attemptLogin(id, username, planId) {
             if (planId == 3) {
                 performAjaxLogin(id, ''); 
             } else {
-                // Abre modal de PIN
                 $('#selectedUserId').val(id);
                 $('#modalUser').text(username);
-                $('#modalAuth').css('display', 'flex');
+                $('#modalAuth').css('display', 'flex'); // Flex es importante para centrar
                 $('#passwordInput').val('').focus();
                 $('#errorMsg').hide();
             }
@@ -319,11 +184,6 @@
         function submitPin() {
             let id = $('#selectedUserId').val();
             let pass = $('#passwordInput').val();
-
-            // VALIDACIÓN MANUAL PARA EL PIN
-            if (!pass && $('#selectedUserId').val() != '') {
-            }
-
             performAjaxLogin(id, pass);
         }
 
@@ -340,9 +200,7 @@
                     [csrfName]: csrfHash
                 },
                 success: function (resp) {
-                    // Actualizar CSRF en todos los inputs de la página
                     $('.txt_csrftoken').val(resp.token);
-
                     if (resp.status === 'success') {
                         window.location.href = '<?= base_url("/") ?>';
                     } else {
@@ -360,10 +218,6 @@
             if (e.which == 13) submitPin();
         });
 
-        // =========================================================
-        // 2. LÓGICA DEL MODAL GENERAL (LOGIN / REGISTRO)
-        // =========================================================
-
         function openGeneralModal() {
             $('#generalModal').css('display', 'flex');
         }
@@ -373,7 +227,6 @@
         }
 
         function toggleForms(mode) {
-            // Limpiar errores al cambiar
             $('#login-js-error').hide();
             $('#register-js-error').hide();
 
@@ -385,10 +238,6 @@
                 $('#loginFormContainer').fadeIn();
             }
         }
-
-        // =========================================================
-        // 3. LÓGICA DE RECUPERACIÓN DE CONTRASEÑA
-        // =========================================================
 
         function cambiarAModalRecuperar() {
             closeGeneralModal();
@@ -405,13 +254,7 @@
             toggleForms('login');
         }
 
-        // =========================================================
-        // 4. NUEVA SECCIÓN: VALIDACIÓN MANUAL JS (SIN REQUIRED)
-        // =========================================================
-
         document.addEventListener('DOMContentLoaded', function () {
-
-            // --- A) VALIDACIÓN LOGIN ---
             const loginForm = document.getElementById('form-login-general');
             if (loginForm) {
                 loginForm.addEventListener('submit', function (e) {
@@ -420,7 +263,7 @@
                     const errorDiv = document.getElementById('login-js-error');
 
                     if (!email || !pass) {
-                        e.preventDefault(); // Detener envío
+                        e.preventDefault();
                         errorDiv.style.display = 'block';
                         errorDiv.innerText = 'Por favor, escribe tu usuario/email y contraseña.';
                     } else {
@@ -429,7 +272,6 @@
                 });
             }
 
-            // --- B) VALIDACIÓN REGISTRO ---
             const registerForm = document.getElementById('form-register-general');
             if (registerForm) {
                 registerForm.addEventListener('submit', function (e) {
@@ -439,27 +281,23 @@
                     const errorDiv = document.getElementById('register-js-error');
 
                     if (!user || !email || !pass) {
-                        e.preventDefault(); // Detener envío
+                        e.preventDefault();
                         errorDiv.style.display = 'block';
-                        errorDiv.innerText = 'Todos los campos son obligatorios (Usuario, Email y Contraseña).';
+                        errorDiv.innerText = 'Todos los campos son obligatorios.';
                     } else {
                         errorDiv.style.display = 'none';
                     }
                 });
             }
 
-            // --- C) VALIDACIÓN RECUPERAR CONTRASEÑA ---
             const formRecovery = document.getElementById('form-recovery');
             if (formRecovery) {
                 formRecovery.addEventListener('submit', function (e) {
-                    // Detenemos siempre para validar o procesar AJAX
                     e.preventDefault();
-
                     const btn = this.querySelector('button');
                     const msg = document.getElementById('msg-recovery');
                     const emailInput = this.querySelector('input[name="email"]');
 
-                    // 1. VALIDACIÓN MANUAL
                     if (!emailInput.value.trim()) {
                         msg.style.display = 'block';
                         msg.style.color = '#ff4757';
@@ -469,10 +307,7 @@
                         return; 
                     }
 
-                    // 2. Si pasa la validación, hacemos el AJAX
                     const formData = new FormData(this);
-
-                    // Estado de carga
                     btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Procesando...';
                     btn.disabled = true;
                     msg.style.display = 'none';
@@ -482,40 +317,35 @@
                         headers: { 'X-Requested-With': 'XMLHttpRequest' },
                         body: formData
                     })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.token) {
-                                $('.txt_csrftoken').val(data.token);
-                            }
-                            msg.innerHTML = data.msg;
-                            msg.style.display = 'block';
-
-                            if (data.status === 'success') {
-                                msg.style.background = 'rgba(70, 211, 105, 0.2)';
-                                msg.style.color = '#46d369';
-                                msg.style.border = '1px solid #46d369';
-                            } else {
-                                msg.style.background = 'rgba(229, 9, 20, 0.2)';
-                                msg.style.color = '#ff4757';
-                                msg.style.border = '1px solid #ff4757';
-                            }
-                        })
-                        .catch(err => {
-                            msg.innerText = "Error de conexión.";
-                            msg.style.display = 'block';
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.token) {
+                            $('.txt_csrftoken').val(data.token);
+                        }
+                        msg.innerHTML = data.msg;
+                        msg.style.display = 'block';
+                        if (data.status === 'success') {
+                            msg.style.background = 'rgba(70, 211, 105, 0.2)';
+                            msg.style.color = '#46d369';
+                            msg.style.border = '1px solid #46d369';
+                        } else {
+                            msg.style.background = 'rgba(229, 9, 20, 0.2)';
                             msg.style.color = '#ff4757';
-                        })
-                        .finally(() => {
-                            btn.innerHTML = 'Restablecer Contraseña';
-                            btn.disabled = false;
-                        });
+                            msg.style.border = '1px solid #ff4757';
+                        }
+                    })
+                    .catch(err => {
+                        msg.innerText = "Error de conexión.";
+                        msg.style.display = 'block';
+                        msg.style.color = '#ff4757';
+                    })
+                    .finally(() => {
+                        btn.innerHTML = 'Restablecer Contraseña';
+                        btn.disabled = false;
+                    });
                 });
             }
         });
-
-        // =========================================================
-        // 5. PHP SESSION FLASHDATA (Tu código original)
-        // =========================================================
 
         <?php if (session('show_register')): ?>
             openGeneralModal();
@@ -524,8 +354,6 @@
         <?php if (session('error_general')): ?>
             openGeneralModal();
         <?php endif; ?>
-
     </script>
 </body>
-
 </html>

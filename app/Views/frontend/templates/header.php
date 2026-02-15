@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title><?= esc($titulo ?? 'LaButaca TV') ?></title>
 
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
@@ -21,6 +21,139 @@
     <script>
         const BASE_URL = "<?= base_url() ?>";
     </script>
+
+    <style>
+        /* Botón móvil oculto en escritorio */
+        .mobile-menu-toggle { display: none; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; padding: 10px; }
+
+        /* Estilo base del buscador para que la transición funcione */
+        .search-input-neon {
+            transition: width 0.3s ease, opacity 0.3s ease;
+        }
+
+        /* --- MEDIA QUERIES PARA MÓVIL/TABLET --- */
+        @media (max-width: 992px) {
+            .neon-header {
+                flex-wrap: wrap; 
+                padding: 10px 15px;
+                justify-content: space-between;
+                position: relative;
+            }
+
+            /* 1. Botón hamburguesa */
+            .mobile-menu-toggle { display: block; order: 1; z-index: 1001; }
+
+            /* 2. Logo */
+            .logo-text { order: 2; font-size: 1.2rem; z-index: 1001; }
+            
+            /* 3. Iconos derecha (Buscador, Perfil, Grid) */
+            .header-right-icons { 
+                order: 3; 
+                gap: 15px !important; /* Espacio entre iconos */
+                position: relative; /* Necesario para posicionar el mega menú */
+            }
+
+            /* 4. Navegación Central (Menú desplegable) */
+            .nav-center {
+                display: none;
+                flex-direction: column;
+                width: 100%;
+                order: 4;
+                background: #080808; /* Fondo muy oscuro */
+                padding: 20px 0;
+                border-top: 1px solid #333;
+                position: absolute;
+                top: 100%; 
+                left: 0;
+                z-index: 999;
+                box-shadow: 0 10px 20px rgba(0,0,0,0.8);
+            }
+
+            .nav-center.active { display: flex; }
+
+            .nav-link {
+                padding: 15px 0;
+                border-bottom: 1px solid rgba(255,255,255,0.05);
+                text-align: center;
+                width: 100%;
+                font-size: 1.1rem;
+            }
+
+            /* --- CORRECCIÓN GLOBAL ICON CENTRADO --- */
+            /* Seleccionamos el enlace que contiene el icono global dentro del menú móvil */
+            .nav-center a[href*="global"] {
+                margin: 20px auto 10px auto !important; /* Auto márgenes laterales lo centran */
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 50px;
+                height: 50px;
+                background: rgba(255,255,255,0.1);
+                border-radius: 50%;
+            }
+
+            /* --- CORRECCIÓN BUSCADOR RESPONSIVE --- */
+            .search-wrapper {
+                position: relative; 
+            }
+            /* En móvil, el input está oculto hasta que se activa */
+            .search-input-neon {
+                display: none; 
+                position: absolute;
+                top: 45px; /* Debajo del icono */
+                right: 0; /* Alineado a la derecha para no salirse */
+                width: 220px;
+                background: #1a1a1a;
+                border: 1px solid #444;
+                z-index: 1050;
+                padding: 10px;
+            }
+            /* Al activar (clase active añadida con JS inline), se muestra */
+            .search-wrapper.active .search-input-neon {
+                display: block;
+            }
+
+            /* --- CORRECCIÓN MEGA MENU (GÉNEROS) --- */
+            .category-menu-wrapper {
+                position: static; /* Permite que el mega menú use el ancho del header si es necesario */
+            }
+
+            .mega-menu {
+                position: absolute;
+                top: 50px;
+                right: -60px; /* Ajuste manual para que no se salga por la derecha */
+                width: 300px; /* Ancho fijo seguro para móvil */
+                max-width: 90vw;
+                background: rgba(20, 20, 20, 0.95);
+                backdrop-filter: blur(10px);
+                flex-direction: column; /* Columnas una debajo de otra */
+                border: 1px solid #333;
+                border-radius: 8px;
+                overflow: hidden;
+            }
+
+            /* Quitar borde lateral y añadir inferior en móvil */
+            .mega-column.border-left {
+                border-left: none;
+                border-top: 1px solid #333;
+            }
+
+            .mega-column {
+                width: 100%;
+                padding: 15px;
+            }
+
+            .genre-grid {
+                grid-template-columns: repeat(2, 1fr); /* 2 columnas de géneros en móvil */
+                gap: 8px;
+            }
+            
+            .genre-link {
+                font-size: 0.9rem;
+                padding: 5px;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -28,28 +161,34 @@
     <div id="dynamic-bg"></div>
 
     <header class="neon-header">
+        
+        <button class="mobile-menu-toggle" onclick="toggleMenu()">
+            <i class="fa fa-bars"></i>
+        </button>
+
         <a href="<?= base_url() ?>" class="logo-text">
             <img src="<?= base_url('labutaca2_logo.ico') ?>" alt="LaButaca Logo"
                 style="width:30px; height:30px; vertical-align:middle; margin-right:8px;">
             LA BUTACA
         </a>
 
-        <nav class="nav-center">
+        <nav class="nav-center" id="mainNav">
             <?php $uri = uri_string(); ?>
             <a href="<?= base_url() ?>" class="nav-link <?= ($uri == '' || $uri == '/') ? 'active' : '' ?>">Inicio</a>
             <a href="<?= base_url('peliculas') ?>" class="nav-link <?= ($uri == 'peliculas') ? 'active' : '' ?>">Películas</a>
             <a href="<?= base_url('series') ?>" class="nav-link <?= ($uri == 'series') ? 'active' : '' ?>">Series</a>
+            
             <?php if (session()->get('plan_id') == 2): ?>
-                <a href="<?= base_url('global') ?>" class="header-icon-btn" title="Zona Global" style="margin-right: 15px;">
+                <a href="<?= base_url('global') ?>" class="header-icon-btn" title="Zona Global" style="margin-right: 0;">
                     <i class="bi bi-globe"></i>
                 </a>
             <?php endif; ?>
         </nav>
 
-        <div style="display:flex; align-items:center; gap: 10px;">
+        <div class="header-right-icons" style="display:flex; align-items:center; gap: 10px;">
 
             <div class="category-menu-wrapper">
-                <button class="btn-grid-menu">
+                <button class="btn-grid-menu" onclick="this.nextElementSibling.style.display = (this.nextElementSibling.style.display === 'flex' ? 'none' : 'flex')">
                     <i class="fa fa-th-large"></i>
                 </button>
 
@@ -80,9 +219,9 @@
                 </div>
             </div>
 
-            <div class="search-wrapper">
+            <div class="search-wrapper" onclick="toggleSearch(this)">
                 <i class="fa fa-search search-icon"></i>
-                <input type="text" id="global-search" class="search-input-neon" placeholder="Buscar...">
+                <input type="text" id="global-search" class="search-input-neon" placeholder="Buscar..." onclick="event.stopPropagation()">
             </div>
 
             <a href="<?= base_url('mi-lista') ?>"
@@ -178,25 +317,37 @@
     </div>
 
     <script>
+        // SCRIPT PARA MENÚ MÓVIL Y BUSCADOR
+        function toggleMenu() {
+            document.getElementById('mainNav').classList.toggle('active');
+        }
+
+        // Función específica para el buscador en móvil
+        function toggleSearch(element) {
+            // Solo activar toggle si estamos en móvil/pantalla pequeña
+            if (window.innerWidth <= 992) {
+                element.classList.toggle('active');
+                if(element.classList.contains('active')){
+                    setTimeout(() => document.getElementById('global-search').focus(), 100);
+                }
+            }
+        }
+
+        // --- Resto de tu lógica JS original ---
         let isSubmitting = false;
 
         function headerAttemptLogin(id, username, planId) {
-            // 1. Kids entra directo
             if(planId == 3) {
                 doHeaderLogin(id, '');
-            } 
-            // 2. Otros piden PIN
-            else {
+            } else {
                 document.getElementById('headerSelectedUserId').value = id;
                 document.getElementById('headerModalUser').innerText = 'Hola ' + username;
                 document.getElementById('headerPasswordInput').value = '';
                 document.getElementById('headerErrorMsg').style.display = 'none';
                 
-                // Mostrar modal con estilos de CSS (flex)
                 var modal = document.getElementById('modalHeaderAuth');
                 modal.style.display = 'flex';
                 
-                // Foco en el input
                 setTimeout(function() {
                     document.getElementById('headerPasswordInput').focus();
                 }, 100);
@@ -223,13 +374,10 @@
 
         function doHeaderLogin(id, pass) {
             isSubmitting = true;
-
-            // Obtenemos token CSRF actual
             let csrfInput = document.querySelector('.txt_csrftoken');
             let csrfName = csrfInput.getAttribute('name');
             let csrfHash = csrfInput.value;
 
-            // Usamos URLSearchParams para asegurar envío correcto
             let params = new URLSearchParams();
             params.append('id', id);
             params.append('password', pass);
@@ -244,7 +392,6 @@
                 }
             })
             .then(response => {
-                // Si el servidor da error 403 (Token inválido), recargamos
                 if (response.status === 403) {
                     window.location.reload();
                     throw new Error("Token Caducado");
@@ -253,8 +400,6 @@
             })
             .then(data => {
                 isSubmitting = false;
-
-                // Actualizar token CSRF globalmente
                 if(data.token) {
                     let tokenInputs = document.querySelectorAll('.txt_csrftoken');
                     tokenInputs.forEach(input => input.value = data.token);
@@ -272,8 +417,6 @@
             })
             .catch(error => {
                 isSubmitting = false;
-                console.error('Error:', error);
-                
                 if (error.message !== "Token Caducado") {
                     let errorMsg = document.getElementById('headerErrorMsg');
                     errorMsg.innerText = 'Error de conexión.';

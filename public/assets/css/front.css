@@ -2707,3 +2707,264 @@ button.slick-next::after {
     object-position: center top;
     z-index: 0; /* Detrás del texto */
 }
+
+/*Profiles*/
+ .view-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            width: 100%;
+            padding: 20px; 
+        }
+
+        .glass-panel {
+            background: rgba(0, 0, 0, 0.75); /* Fallback si no carga front.css */
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 800px;
+            width: 100%;
+            animation: fadeIn 0.5s;
+        }
+
+        .profile-container {
+            display: flex;
+            flex-wrap: wrap; /* CRUCIAL: Permite que los elementos bajen de línea */
+            justify-content: center;
+            gap: 25px; /* Espacio entre perfiles */
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        .profile-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 130px; /* Ancho base */
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .profile-item:hover {
+            transform: scale(1.05);
+        }
+
+        .profile-item:hover span {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .profile-item span {
+            margin-top: 10px;
+            color: #999;
+            font-size: 1.1rem;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            width: 100%;
+        }
+
+        .profile-avatar {
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #333;
+            width: 130px;
+            height: 130px;
+            border-radius: 8px; /* Borde redondeado estilo Netflix */
+            border: 2px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        .profile-item:hover .profile-avatar {
+            border-color: #e5e5e5;
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* --- MODALES RESPONSIVE --- */
+
+        .general-modal, .password-modal {
+            display: none;
+            position: fixed;
+            z-index: 3000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            align-items: center;
+            justify-content: center;
+            padding: 20px; /* Margen de seguridad en móviles */
+        }
+
+        .general-modal-content, .modal-content {
+            background: #141414; /* Fondo sólido oscuro */
+            padding: 40px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 400px; /* Ancho máximo en escritorio */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            position: relative;
+            animation: fadeIn 0.3s;
+        }
+        
+        /* Asegurar que el modal de password (auth.css) siga estas reglas si no están definidas */
+        .modal-content {
+             max-width: 400px;
+             width: 100%;
+             background: #181818;
+             display: flex;
+             flex-direction: column;
+             align-items: center;
+        }
+
+        .general-input, .pin-input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            background: #333;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px; /* Evita zoom en iOS al hacer focus */
+        }
+        
+        .pin-input {
+            text-align: center;
+            letter-spacing: 5px;
+            font-size: 1.5rem;
+        }
+
+        .general-input:focus {
+            outline: 2px solid #e50914;
+            background: #444;
+        }
+
+        .btn-general, .btn-cancel {
+            width: 100%;
+            padding: 12px;
+            background: #e50914;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+        }
+
+        .btn-cancel {
+            background: transparent;
+            border: 1px solid #666;
+            width: auto;
+            padding: 8px 20px;
+        }
+        
+        .btn-cancel:hover {
+            border-color: #fff;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .btn-general:hover {
+            background: #f40612;
+        }
+
+        .close-general {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            color: #aaa;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .toggle-link {
+            color: #ccc;
+            font-size: 0.9rem;
+            margin-top: 15px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .alert-error, .js-error-msg {
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            display: none;
+            text-align: left;
+        }
+        
+        .alert-error { background: #e87c03; color: white; }
+        .js-error-msg { color: #ff4757; background: rgba(255, 71, 87, 0.1); border: 1px solid #ff4757; text-align: center;}
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* --- MEDIA QUERIES (Móvil y Tablet) --- */
+        
+        @media (max-width: 768px) {
+            .glass-panel {
+                padding: 30px 20px;
+            }
+            
+            .profile-item {
+                width: 100px; /* Reducimos el tamaño en tablet/móvil */
+            }
+            
+            .profile-avatar {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .profile-item span {
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .view-section {
+                padding: 10px;
+            }
+
+            .glass-panel {
+                padding: 20px 15px;
+                background: transparent; /* En móviles muy pequeños, a veces queda mejor limpio */
+            }
+            
+            .profile-container {
+                gap: 15px;
+            }
+            
+            .profile-item {
+                width: 44%; /* Casi la mitad de la pantalla (2 columnas) */
+                max-width: 110px;
+            }
+            
+            .profile-avatar {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 1 / 1; /* Mantiene cuadrado perfecto */
+            }
+
+            .general-modal-content {
+                padding: 25px;
+            }
+            
+            h1 { font-size: 1.8rem; }
+        }

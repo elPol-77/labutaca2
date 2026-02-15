@@ -249,10 +249,10 @@ class Home extends BaseController
 
         // OPTIMIZACIÓN 3: Timeout corto (3s) para no colgar el servidor si la API tarda
         $ctx = stream_context_create([
-            "ssl" => ["verify_peer" => false], 
+            "ssl" => ["verify_peer" => false],
             "http" => ["ignore_errors" => true, "timeout" => 3.0]
         ]);
-        
+
         $url = "https://api.themoviedb.org/3/discover/{$tipo}?" . http_build_query($baseParams);
         $json = @file_get_contents($url, false, $ctx);
         $results = [];
@@ -263,7 +263,7 @@ class Home extends BaseController
                 foreach ($data['results'] as $item) {
                     if (empty($item['poster_path']))
                         continue;
-                    
+
                     if ($esKids && (in_array(27, $item['genre_ids'] ?? []) || in_array(80, $item['genre_ids'] ?? [])))
                         continue;
 
@@ -345,14 +345,33 @@ class Home extends BaseController
     private function renderCard(&$html, $item, $userId, $esKids)
     {
         $db = \Config\Database::connect();
-        $enLista = $db->table('mi_lista')->where('usuario_id', $userId)->where('contenido_id', $item['id'])->countAllResults() > 0;
+        // Usamos countAllResults que es más ligero que contar arrays
+        $enLista = $db->table('mi_lista')
+            ->where('usuario_id', $userId)
+            ->where('contenido_id', $item['id'])
+            ->countAllResults() > 0;
+
         $styleBtn = $enLista ? 'border-color: var(--accent); color: var(--accent);' : '';
         $iconClass = $enLista ? 'fa-check' : 'fa-heart';
-        $edadBadge = ($esKids || $item['edad'] == 'TP') ? 'TP' : '+' . $item['edad'];
+
+        // Pequeña corrección para evitar error si 'edad' no viene definida
+        $edadVal = $item['edad'] ?? '12';
+        $edadBadge = ($esKids || $edadVal == 'TP') ? 'TP' : '+' . $edadVal;
 
         $html .= '<div class="slick-slide-item" style="padding: 0 5px;">
           <div class="movie-card">
-            <div class="poster-visible"><img src="' . $item['imagen'] . '" alt="' . esc($item['titulo']) . '"></div>
+            
+            <div class="poster-visible">
+                <img src="' . $item['imagen'] . '" 
+                     alt="' . esc($item['titulo']) . '" 
+                     loading="lazy" 
+                     decoding="async" 
+                     width="200" 
+                     height="300"
+                     style="content-visibility: auto;" 
+                     onload="this.classList.add(\'loaded\')">
+            </div>
+            
             <div class="hover-details-card">
               <div class="hover-backdrop" style="background-image: url(\'' . $item['imagen_bg'] . '\');" onclick="window.location.href=\'' . $item['link_detalle'] . '\'"></div>
               <div class="hover-info">

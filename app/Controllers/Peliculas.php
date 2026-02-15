@@ -305,7 +305,16 @@ class Peliculas extends BaseController
                     $html .= '  <div class="movie-card">';
 
                     // --- AQUÍ ESTÁ EL LAZY LOAD Y EL SKELETON ---
-                    $html .= '  <div class="poster-visible"><img src="' . $img . '" loading="lazy" alt="' . $titulo . '" onload="this.classList.add(\'loaded\')"></div>';
+                    // Código OPTIMIZADO
+                    $html .= '  <div class="poster-visible">';
+                    $html .= '      <img src="' . $img . '" ';
+                    $html .= '           loading="lazy" ';        // Carga diferida
+                    $html .= '           decoding="async" ';      // <--- CLAVE: Decodifica en paralelo sin bloquear el scroll
+                    $html .= '           width="200" height="300" '; // <--- CLAVE: Reserva espacio antes de cargar (evita saltos)
+                    $html .= '           alt="' . $titulo . '" ';
+                    $html .= '           style="content-visibility: auto;" '; // Ayuda al renderizado
+                    $html .= '           onload="this.classList.add(\'loaded\')">';
+                    $html .= '  </div>';
                     // --------------------------------------------
 
                     $html .= '    <div class="hover-details-card">';
@@ -522,7 +531,16 @@ class Peliculas extends BaseController
             $html .= '<div class="slick-slide-item" style="padding: 0 5px;">';
             $html .= '  <div class="movie-card">';
             // Fíjate que hemos cambiado src="URL" por data-lazy="URL"
-            $html .= '  <div class="poster-visible"><img src="' . $img . '" loading="lazy" alt="' . $titulo . '" onload="this.classList.add(\'loaded\')"></div>';
+            // Código OPTIMIZADO
+            $html .= '  <div class="poster-visible">';
+            $html .= '      <img src="' . $img . '" ';
+            $html .= '           loading="lazy" ';        // Carga diferida
+            $html .= '           decoding="async" ';      // <--- CLAVE: Decodifica en paralelo sin bloquear el scroll
+            $html .= '           width="200" height="300" '; // <--- CLAVE: Reserva espacio antes de cargar (evita saltos)
+            $html .= '           alt="' . $titulo . '" ';
+            $html .= '           style="content-visibility: auto;" '; // Ayuda al renderizado
+            $html .= '           onload="this.classList.add(\'loaded\')">';
+            $html .= '  </div>';
             $html .= '    <div class="hover-details-card">';
             $html .= '      <div class="hover-backdrop" style="background-image: url(\'' . $bg . '\'); cursor: pointer;" onclick="window.location.href=\'' . $linkD . '\'"></div>';
             $html .= '      <div class="hover-info">';
