@@ -25,7 +25,6 @@
             object-fit: cover;
         }
 
-        /* ESTILOS DEL NUEVO MODAL (Solo para el botón +) */
         .general-modal {
             display: none;
             position: fixed;
@@ -111,6 +110,19 @@
             margin-bottom: 15px;
             display: none;
             text-align: left;
+        }
+
+        /* Estilo para los nuevos mensajes de error JS */
+        .js-error-msg {
+            color: #ff4757;
+            background: rgba(255, 71, 87, 0.1);
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            display: none;
+            text-align: center;
+            border: 1px solid #ff4757;
         }
 
         @keyframes fadeIn {
@@ -202,23 +214,37 @@
 
             <div id="loginFormContainer">
                 <h2 style="font-family:'Outfit'; margin-bottom:20px;">Iniciar Sesión</h2>
+
                 <?php if (session('error_general')): ?>
                     <div style="color:#e84118; margin-bottom:10px;"><?= session('error_general') ?></div>
                 <?php endif; ?>
-                <form action="<?= base_url('auth/login_general') ?>" method="post">
+
+                <div id="login-js-error" class="js-error-msg"></div>
+
+                <form id="form-login-general" action="<?= base_url('auth/login_general') ?>" method="post">
                     <?= csrf_field() ?>
-                    <input type="text" name="email" class="general-input" placeholder="Email o Usuario" required>
-                    <input type="password" name="password" class="general-input" placeholder="Contraseña" required>
+                    <input type="text" name="email" class="general-input" placeholder="Email o Usuario">
+                    <input type="password" name="password" class="general-input" placeholder="Contraseña">
+
+                    <div style="text-align: right; margin-bottom: 15px;">
+                        <a href="#" onclick="cambiarAModalRecuperar(); return false;"
+                            style="color: #aaa; font-size: 0.85rem; text-decoration: none; font-family: 'Outfit';"
+                            onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#aaa'">
+                            ¿Has olvidado tu contraseña?
+                        </a>
+                    </div>
                     <button type="submit" class="btn-general">Entrar</button>
                 </form>
                 <div class="toggle-link">
                     ¿Nuevo aquí? <a href="<?= base_url('registro') ?>" style="color:white; font-weight:bold;">Suscríbete
                         ahora.</a>
                 </div>
+
             </div>
 
             <div id="registerFormContainer" style="display:none;">
                 <h2 style="font-family:'Outfit'; margin-bottom:20px;">Crear Cuenta</h2>
+
                 <?php if (session('errors')): ?>
                     <div class="alert-error" style="display:block;">
                         <ul style="margin:0; padding-left:20px;">
@@ -227,7 +253,10 @@
                         </ul>
                     </div>
                 <?php endif; ?>
-                <form action="<?= base_url('auth/register') ?>" method="post">
+
+                <div id="register-js-error" class="js-error-msg"></div>
+
+                <form id="form-register-general" action="<?= base_url('auth/register') ?>" method="post">
                     <?= csrf_field() ?>
                     <input type="text" name="username" class="general-input" placeholder="Usuario"
                         value="<?= old('username') ?>">
@@ -241,18 +270,40 @@
         </div>
     </div>
 
+    <div id="view-recovery" class="general-modal" style="display: none;">
+        <div class="general-modal-content">
+            <span class="close-general" onclick="cerrarModalRecuperar()">&times;</span>
+
+            <h2 style="font-family:'Outfit'; margin-bottom:10px;">Recuperar Cuenta</h2>
+            <p style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">
+                Introduce tu email y te enviaremos una nueva contraseña.
+            </p>
+
+            <form id="form-recovery">
+                <?= csrf_field() ?>
+                <input type="email" name="email" class="general-input" placeholder="Tu correo electrónico">
+                <div id="msg-recovery" style="display:none; margin: 10px 0; padding: 10px; border-radius: 4px;"></div>
+                <button type="submit" class="btn-general">Restablecer Contraseña</button>
+            </form>
+
+            <div class="toggle-link" onclick="volverALogin()">
+                <i class="fa fa-arrow-left"></i> Volver a Iniciar Sesión
+            </div>
+        </div>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-        // --- 1. LÓGICA PARA MODAL ORIGINAL (Caritas) ---
+        // =========================================================
+        // 1. LÓGICA DE PERFILES Y PIN
+        // =========================================================
 
         function attemptLogin(id, username, planId) {
-            // SI ES KIDS (Plan ID 3), ENTRA DIRECTO
             if (planId == 3) {
-                performAjaxLogin(id, ''); // Llamada directa sin password
-            }
-            // SI NO, ABRE MODAL
-            else {
+                performAjaxLogin(id, ''); 
+            } else {
+                // Abre modal de PIN
                 $('#selectedUserId').val(id);
                 $('#modalUser').text(username);
                 $('#modalAuth').css('display', 'flex');
@@ -268,16 +319,20 @@
         function submitPin() {
             let id = $('#selectedUserId').val();
             let pass = $('#passwordInput').val();
+
+            // VALIDACIÓN MANUAL PARA EL PIN
+            if (!pass && $('#selectedUserId').val() != '') {
+            }
+
             performAjaxLogin(id, pass);
         }
 
-        // Nueva función separada para hacer la llamada AJAX
         function performAjaxLogin(id, pass) {
             let csrfName = $('.txt_csrftoken').attr('name');
             let csrfHash = $('.txt_csrftoken').val();
 
             $.ajax({
-                url: '<?= base_url("auth/ajax_login_perfil") ?>', // Esta ruta llama a Auth::login (tu antiguo código)
+                url: '<?= base_url("auth/ajax_login_perfil") ?>',
                 type: 'POST',
                 data: {
                     id: id,
@@ -285,7 +340,9 @@
                     [csrfName]: csrfHash
                 },
                 success: function (resp) {
+                    // Actualizar CSRF en todos los inputs de la página
                     $('.txt_csrftoken').val(resp.token);
+
                     if (resp.status === 'success') {
                         window.location.href = '<?= base_url("/") ?>';
                     } else {
@@ -299,13 +356,14 @@
             });
         }
 
-        // Detectar tecla ENTER en el modal
         $('#passwordInput').keypress(function (e) {
             if (e.which == 13) submitPin();
         });
 
+        // =========================================================
+        // 2. LÓGICA DEL MODAL GENERAL (LOGIN / REGISTRO)
+        // =========================================================
 
-        // --- 2. LÓGICA PARA EL NUEVO MODAL (Botón +) ---
         function openGeneralModal() {
             $('#generalModal').css('display', 'flex');
         }
@@ -315,6 +373,10 @@
         }
 
         function toggleForms(mode) {
+            // Limpiar errores al cambiar
+            $('#login-js-error').hide();
+            $('#register-js-error').hide();
+
             if (mode === 'register') {
                 $('#loginFormContainer').hide();
                 $('#registerFormContainer').fadeIn();
@@ -323,6 +385,137 @@
                 $('#loginFormContainer').fadeIn();
             }
         }
+
+        // =========================================================
+        // 3. LÓGICA DE RECUPERACIÓN DE CONTRASEÑA
+        // =========================================================
+
+        function cambiarAModalRecuperar() {
+            closeGeneralModal();
+            document.getElementById('view-recovery').style.display = 'flex';
+        }
+
+        function cerrarModalRecuperar() {
+            document.getElementById('view-recovery').style.display = 'none';
+        }
+
+        function volverALogin() {
+            cerrarModalRecuperar();
+            openGeneralModal();
+            toggleForms('login');
+        }
+
+        // =========================================================
+        // 4. NUEVA SECCIÓN: VALIDACIÓN MANUAL JS (SIN REQUIRED)
+        // =========================================================
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // --- A) VALIDACIÓN LOGIN ---
+            const loginForm = document.getElementById('form-login-general');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function (e) {
+                    const email = this.querySelector('input[name="email"]').value.trim();
+                    const pass = this.querySelector('input[name="password"]').value.trim();
+                    const errorDiv = document.getElementById('login-js-error');
+
+                    if (!email || !pass) {
+                        e.preventDefault(); // Detener envío
+                        errorDiv.style.display = 'block';
+                        errorDiv.innerText = 'Por favor, escribe tu usuario/email y contraseña.';
+                    } else {
+                        errorDiv.style.display = 'none';
+                    }
+                });
+            }
+
+            // --- B) VALIDACIÓN REGISTRO ---
+            const registerForm = document.getElementById('form-register-general');
+            if (registerForm) {
+                registerForm.addEventListener('submit', function (e) {
+                    const user = this.querySelector('input[name="username"]').value.trim();
+                    const email = this.querySelector('input[name="email"]').value.trim();
+                    const pass = this.querySelector('input[name="password"]').value.trim();
+                    const errorDiv = document.getElementById('register-js-error');
+
+                    if (!user || !email || !pass) {
+                        e.preventDefault(); // Detener envío
+                        errorDiv.style.display = 'block';
+                        errorDiv.innerText = 'Todos los campos son obligatorios (Usuario, Email y Contraseña).';
+                    } else {
+                        errorDiv.style.display = 'none';
+                    }
+                });
+            }
+
+            // --- C) VALIDACIÓN RECUPERAR CONTRASEÑA ---
+            const formRecovery = document.getElementById('form-recovery');
+            if (formRecovery) {
+                formRecovery.addEventListener('submit', function (e) {
+                    // Detenemos siempre para validar o procesar AJAX
+                    e.preventDefault();
+
+                    const btn = this.querySelector('button');
+                    const msg = document.getElementById('msg-recovery');
+                    const emailInput = this.querySelector('input[name="email"]');
+
+                    // 1. VALIDACIÓN MANUAL
+                    if (!emailInput.value.trim()) {
+                        msg.style.display = 'block';
+                        msg.style.color = '#ff4757';
+                        msg.style.border = '1px solid #ff4757';
+                        msg.style.background = 'rgba(229, 9, 20, 0.2)';
+                        msg.innerText = 'Debes escribir un email para recuperarlo.';
+                        return; 
+                    }
+
+                    // 2. Si pasa la validación, hacemos el AJAX
+                    const formData = new FormData(this);
+
+                    // Estado de carga
+                    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Procesando...';
+                    btn.disabled = true;
+                    msg.style.display = 'none';
+
+                    fetch('<?= base_url("auth/recuperar-password") ?>', {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: formData
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.token) {
+                                $('.txt_csrftoken').val(data.token);
+                            }
+                            msg.innerHTML = data.msg;
+                            msg.style.display = 'block';
+
+                            if (data.status === 'success') {
+                                msg.style.background = 'rgba(70, 211, 105, 0.2)';
+                                msg.style.color = '#46d369';
+                                msg.style.border = '1px solid #46d369';
+                            } else {
+                                msg.style.background = 'rgba(229, 9, 20, 0.2)';
+                                msg.style.color = '#ff4757';
+                                msg.style.border = '1px solid #ff4757';
+                            }
+                        })
+                        .catch(err => {
+                            msg.innerText = "Error de conexión.";
+                            msg.style.display = 'block';
+                            msg.style.color = '#ff4757';
+                        })
+                        .finally(() => {
+                            btn.innerHTML = 'Restablecer Contraseña';
+                            btn.disabled = false;
+                        });
+                });
+            }
+        });
+
+        // =========================================================
+        // 5. PHP SESSION FLASHDATA (Tu código original)
+        // =========================================================
 
         <?php if (session('show_register')): ?>
             openGeneralModal();

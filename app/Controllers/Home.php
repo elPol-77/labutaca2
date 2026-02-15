@@ -20,15 +20,12 @@ class Home extends BaseController
 
         $userId = session()->get('user_id');
 
-        // 2. OBTENER USUARIO Y VERIFICAR SUSCRIPCIÓN
-        // Es vital buscar al usuario fresco de la BD para ver su fecha
+       
         $userModel = new UsuarioModel();
         $usuario = $userModel->find($userId);
 
-        // --- PORTERO AUTOMÁTICO: Chequea si caducó ---
-        // Si su fecha venció, esta función lo bajará a Plan 1 (Free)
+      
         $this->_verificarSuscripcion($usuario);
-        // ---------------------------------------------
 
         // 3. REFRESCAR DATOS
         // Volvemos a leer el plan_id de la sesión, porque _verificarSuscripcion 
@@ -40,10 +37,10 @@ class Home extends BaseController
         $destacada = null;
         $model = new ContenidoModel();
 
-        // 4. LÓGICA DE HERO (Igual que tenías)
+        // 4. LÓGICA DE HERO 
         $tipoHero = (rand(0, 1) == 0) ? 'movie' : 'tv';
 
-        // --- CASO A: USUARIO FREE (Local) ---
+        // --- CASO A: USUARIO FREE (Local) 
         if ($esFree) {
             $localRandom = $model->where('nivel_acceso', 1)
                 ->where('imagen_bg !=', '')
@@ -73,14 +70,12 @@ class Home extends BaseController
             }
         }
 
-        // --- FALLBACK LOCAL ---
         if (empty($destacada)) {
             $backup = $model->where('imagen_bg !=', '')->orderBy('RAND()')->first();
             if ($backup)
                 $destacada = $this->formatearLocal($backup);
         }
 
-        // --- FALLBACK FINAL ---
         if (empty($destacada)) {
             $destacada = [
                 'id' => 0,
@@ -108,9 +103,7 @@ class Home extends BaseController
         echo view('frontend/templates/footer', $data);
     }
 
-    // =================================================================
-    // 🔄 CARGA AJAX (Igual que antes, pero usando los helpers corregidos)
-    // =================================================================
+    
     public function ajaxCargarFila()
     {
         $bloqueSolicitado = intval($this->request->getPost('bloque'));
@@ -241,9 +234,7 @@ class Home extends BaseController
         return $this->response->setBody($html);
     }
 
-    // =================================================================
-    // 🛠️ HELPERS (CORREGIDOS: Ahora incluyen 'backdrop' e 'imagen_bg')
-    // =================================================================
+
     private function fetchTmdbMixed($tipo, $params = [], $esKids = false)
     {
         $baseParams = array_merge([
@@ -376,51 +367,6 @@ class Home extends BaseController
         </div>';
     }
 
-    private function procesarMetadatos(&$contenidos, $userId)
-    {
-        if (empty($contenidos))
-            return;
-
-        // 1. Instanciamos el modelo de Mi Lista
-        // Asegúrate de tener: use App\Models\MiListaModel; arriba del todo
-        $miListaModel = new MiListaModel;
-
-        // 2. Obtenemos los IDs de los contenidos que vamos a procesar
-        $ids = array_column($contenidos, 'id');
-
-        // 3. Consultamos cuáles de estos IDs están en la lista del usuario
-        $favoritos = [];
-        if (!empty($ids) && $userId) {
-            $favoritos = $miListaModel->where('usuario_id', $userId)
-                ->whereIn('contenido_id', $ids)
-                ->findColumn('contenido_id');
-            // Esto devuelve un array simple: [5, 12, 40...]
-        }
-
-        if (!$favoritos)
-            $favoritos = [];
-
-        // 4. Recorremos y modificamos
-        foreach ($contenidos as &$item) {
-            // A. Arreglar Imágenes (URL absoluta)
-            if (isset($item['imagen']) && !str_starts_with($item['imagen'], 'http')) {
-                $item['imagen'] = base_url('assets/img/' . $item['imagen']);
-            }
-            if (isset($item['imagen_bg']) && !str_starts_with($item['imagen_bg'], 'http')) {
-                $item['imagen_bg'] = base_url('assets/img/' . $item['imagen_bg']);
-            }
-
-            // B. Marcar si está en Mi Lista
-            // Creamos el campo 'en_mi_lista' que el JS espera
-            $item['en_mi_lista'] = in_array($item['id'], $favoritos);
-        }
-    }
-
-    // =========================================================================
-    // 2. MI LISTA
-    // =========================================================================
-    // En app/Controllers/Home.php
-
     public function miLista()
     {
         // 1. Seguridad: Si no está logueado, fuera
@@ -471,13 +417,6 @@ class Home extends BaseController
         echo view('frontend/mi_lista', $data);
         echo view('frontend/templates/footer', $data);
     }
-
-    // =========================================================================
-    // 3. REPRODUCTOR (TU SEGURIDAD ESTÁ BIEN AQUÍ)
-    // =========================================================================
-    // =========================================================================
-    // 3. REPRODUCTOR UNIVERSAL (SOPORTA BASE DE DATOS + TMDB)
-    // =========================================================================
     public function ver($id)
     {
         if (!session()->get('is_logged_in'))
@@ -597,10 +536,7 @@ class Home extends BaseController
             'video_url' => $videoUrl
         ]);
     }
-
-    // =========================================================================
-    // 4. DETALLE HÍBRIDO (INTELIGENTE)
-    // =========================================================================
+    
     public function detalle($id)
     {
         if (!session()->get('is_logged_in'))
@@ -905,8 +841,6 @@ class Home extends BaseController
         ];
     }
 
-    // BUSCADOR
-
     public function autocompletar()
     {
         $request = service('request');
@@ -995,9 +929,6 @@ class Home extends BaseController
         return $this->response->setJSON($response);
     }
 
-    // =========================================================================
-    // 6. DIRECTOR
-    // =========================================================================
     public function director($id)
     {
         if (!session()->get('is_logged_in'))
@@ -1052,49 +983,8 @@ class Home extends BaseController
         echo view('frontend/catalogo', $data);
         echo view('frontend/templates/footer', $data);
     }
-    // En App/Controllers/Home.php
+    // VISTA ANGULAR (ZONA GLOBAL)
 
-
-    public function paginaPeliculas()
-    {
-        // 1. Datos básicos
-        $userId = session()->get('user_id');
-
-        // 2. Modelos
-        $userModel = new UsuarioModel();
-        $generoModel = new GeneroModel();
-
-        // 3. Perfiles (Lógica corregida por IDs)
-        $otrosPerfiles = $userModel->where('id >=', 2)
-            ->where('id <=', 4)
-            ->where('id !=', $userId)
-            ->findAll();
-
-        // 4. DATOS COMPLETOS (Para que no falle el Header)
-        $data = [
-            'titulo' => 'Películas - La Butaca',
-            'generos' => $generoModel->findAll(),
-            'otrosPerfiles' => $otrosPerfiles,
-
-            // --- VARIABLES DE SEGURIDAD (Para evitar errores en la vista) ---
-            'splash' => false,   // Evita error de variable indefinida en header
-            'mostrarHero' => false,   // Evita error si el header busca esta variable
-            'categoria' => 'Películas', // Evita error en títulos
-            'carrusel' => [],      // Por si acaso footer o header lo piden
-            'secciones' => []       // Por si acaso
-        ];
-
-        // 5. Renderizado (Importante: usas echo de header/footer en tu index, aquí deberías mantener la estructura)
-        // Si tu archivo 'frontend/peliculas' YA incluye el header, usa 'return view'. 
-        // Si NO incluye header, usa la estructura de abajo:
-
-        echo view('frontend/templates/header', $data);
-        echo view('frontend/peliculas', $data);
-        echo view('frontend/templates/footer', $data);
-    }
-    // =========================================================================
-    // 7. VISTA ANGULAR (ZONA GLOBAL)
-    // =========================================================================
     public function vistaGlobal()
     {
         if (!session()->get('is_logged_in'))
@@ -1112,7 +1002,8 @@ class Home extends BaseController
             'titulo' => 'Zona Global - La Butaca',
             'generos' => $generoModel->orderBy('nombre', 'ASC')->findAll(), // <--- ESTO ES LO QUE FALTA
             'user_token' => csrf_hash(),
-            'user_id' => session()->get('user_id')
+            'user_id' => session()->get('user_id'),
+            'otrosPerfiles' => (new UsuarioModel())->where('id !=', session()->get('user_id'))->where('id >=', 2)->where('id <=', 4)->findAll()
         ];
 
         // Ahora el Header ya tendrá la variable $generos para dibujar el menú
@@ -1120,45 +1011,10 @@ class Home extends BaseController
         echo view('frontend/global', $data);
         echo view('frontend/templates/footer', $data);
     }
-    // =========================================================
-    // PAGINA SERIES (Igual que Películas)
-    // =========================================================
-    public function series()
-    {
-        // 1. Datos básicos
-        $userId = session()->get('user_id');
 
-        $userModel = new UsuarioModel();
-        $generoModel = new GeneroModel();
 
-        // 2. Perfiles
-        $otrosPerfiles = $userModel->where('id >=', 2)
-            ->where('id <=', 4)
-            ->where('id !=', $userId)
-            ->findAll();
+    // PERFIL DE PERSONA (ACTOR/DIRECTOR)
 
-        // 3. Datos
-        $data = [
-            'titulo' => 'Series - La Butaca',
-            'generos' => $generoModel->findAll(),
-            'otrosPerfiles' => $otrosPerfiles,
-
-            // Variables de seguridad
-            'splash' => false,
-            'mostrarHero' => false,
-            'categoria' => 'Series',
-            'carrusel' => [],
-            'secciones' => []
-        ];
-
-        // 4. Vista
-        echo view('frontend/templates/header', $data);
-        echo view('frontend/series', $data); // <--- OJO: Llama a 'series.php'
-        echo view('frontend/templates/footer', $data);
-    }
-    // =========================================================
-    // 👤 PERFIL DE PERSONA (ACTOR/DIRECTOR)
-    // =========================================================
     public function persona($idRaw)
     {
         // 1. Limpieza de ID
@@ -1232,9 +1088,11 @@ class Home extends BaseController
 
         // Ordenar por popularidad (lo más famoso primero)
         usort($acting, function ($a, $b) {
-            return $b['popularidad'] <=> $a['popularidad']; });
+            return $b['popularidad'] <=> $a['popularidad'];
+        });
         usort($directing, function ($a, $b) {
-            return $b['popularidad'] <=> $a['popularidad']; });
+            return $b['popularidad'] <=> $a['popularidad'];
+        });
 
         // Eliminamos duplicados (a veces salen varias veces si tienen varios roles)
         // (Opcional, pero queda mejor limpio)
@@ -1253,53 +1111,12 @@ class Home extends BaseController
         echo view('frontend/templates/footer');
     }
 
-
-    // HELPER PRIVADO PARA TRAER LISTAS DE TMDB
-    private function fetchTmdbDiscover($type, $params = [])
-    {
-        $apiKey = '6387e3c183c454304108333c56530988';
-
-        // Base params
-        $queryParams = array_merge([
-            'api_key' => $apiKey,
-            'language' => 'es-ES',
-            'include_adult' => 'false', // Importante para seguridad
-            'page' => 1
-        ], $params);
-
-        $queryString = http_build_query($queryParams);
-        $url = "https://api.themoviedb.org/3/discover/{$type}?{$queryString}";
-
-        $arrContextOptions = ["ssl" => ["verify_peer" => false], "http" => ["ignore_errors" => true]];
-        $json = @file_get_contents($url, false, stream_context_create($arrContextOptions));
-
-        $results = [];
-        if ($json) {
-            $data = json_decode($json, true);
-            if (!empty($data['results'])) {
-                foreach ($data['results'] as $item) {
-                    $prefix = ($type == 'tv') ? 'tmdb_tv_' : 'tmdb_movie_';
-                    $img = $item['poster_path'] ? "https://image.tmdb.org/t/p/w300" . $item['poster_path'] : base_url('assets/img/no-poster.jpg');
-                    $titulo = ($type == 'tv') ? $item['name'] : $item['title'];
-
-                    $results[] = [
-                        'id' => $prefix . $item['id'],
-                        'titulo' => $titulo,
-                        'imagen' => $img
-                    ];
-                }
-            }
-        }
-        return $results;
-    }
     public function ayuda()
     {
         $data = ['titulo' => 'Centro de Ayuda - La Butaca'];
         return view('frontend/help', $data);
     }
-    // =========================================================
-    // 🎭 VISTA DE GÉNERO (HÍBRIDA: FILAS O GRID)
-    // =========================================================
+
     public function verGenero($idGenero, $tipoEspecifico = null)
     {
         if (!session()->get('is_logged_in'))
@@ -1367,14 +1184,15 @@ class Home extends BaseController
         $data['infoGenero'] = $infoGenero;
         $data['peliculas'] = $peliculas;
         $data['series'] = $series;
+        $data['otrosPerfiles'] = (new UsuarioModel())->where('id !=', session()->get('user_id'))->where('id >=', 2)->where('id <=', 4)->findAll();
+
 
         echo view('frontend/templates/header', $data);
         echo view('frontend/genero_filas', $data);
         echo view('frontend/templates/footer', $data);
     }
 
-    // --- HELPER PRIVADO PARA NO REPETIR CÓDIGO ---
-    // AÑADIDO: Parámetro $page
+
     private function _getContenidoCombinado($idGenero, $tipoId, $limit = 20, $page = 1)
     {
         $planId = session()->get('plan_id');
@@ -1469,10 +1287,6 @@ class Home extends BaseController
         return $contenido;
     }
 
-    // =========================================================
-    // 🔌 HELPER PRIVADO: CONEXIÓN CON TMDB
-    // =========================================================
-    // AÑADIDO: Parámetro $page = 1
     private function obtenerDeTmdbPorGenero($genreIdTmdb, $tipo = 'movie', $esKids = false, $page = 1)
     {
         $apiKey = '6387e3c183c454304108333c56530988';
@@ -1538,31 +1352,25 @@ class Home extends BaseController
     // FUNCIÓN PARA REVISAR CADUCIDAD
     private function _verificarSuscripcion($usuario)
     {
-        // Si es Free, no hay nada que caducar
         if ($usuario['plan_id'] == 1)
             return;
 
-        // Si no tiene fecha de fin (error de datos), no hacemos nada
         if (empty($usuario['fecha_fin_suscripcion']))
             return;
 
         $fechaFin = new \DateTime($usuario['fecha_fin_suscripcion']);
         $ahora = new \DateTime();
 
-        // SI YA PASÓ LA FECHA DE FIN...
         if ($ahora > $fechaFin) {
             $userModel = new UsuarioModel();
 
-            // 1. Lo bajamos a plan FREE (1)
             $userModel->update($usuario['id'], [
                 'plan_id' => 1,
                 'fecha_fin_suscripcion' => null
             ]);
 
-            // 2. Actualizamos la sesión para que el usuario se de cuenta
             session()->set('plan_id', 1);
 
-            // 3. (Opcional) Mensaje Flash
             session()->setFlashdata('error', 'Tu suscripción ha caducado. Has vuelto al plan Free.');
         }
     }

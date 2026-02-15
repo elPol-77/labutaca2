@@ -58,7 +58,7 @@ $routes->post('auth/ajax_login_perfil', 'Auth::login');
 
 $routes->post('auth/login_general', 'Auth::login_general');
 $routes->post('auth/register', 'Auth::register');
-
+$routes->post('auth/recuperar-password', 'Auth::recuperar_password');
 
 $routes->get('auth/confirmar_registro', 'Auth::confirmar_registro');
 $routes->get('auth/pago_cancelado', 'Auth::pago_cancelado');

@@ -278,7 +278,6 @@
     </div>
 
     <script>
-        // 1. LÓGICA DE ACORDEÓN
         const questions = document.querySelectorAll('.faq-question');
 
         questions.forEach(q => {
@@ -286,13 +285,11 @@
                 const item = q.parentElement;
                 const icon = q.querySelector('.faq-icon');
 
-                // Si ya está activo, lo cerramos
                 if (item.classList.contains('active')) {
                     item.classList.remove('active');
                     icon.classList.remove('fa-minus');
                     icon.classList.add('fa-plus');
                 } else {
-                    // (Opcional) Cerrar los otros al abrir uno
                     document.querySelectorAll('.faq-item').forEach(i => {
                         i.classList.remove('active');
                         const otherIcon = i.querySelector('.faq-icon');
@@ -302,7 +299,6 @@
                         }
                     });
 
-                    // Abrimos el actual
                     item.classList.add('active');
                     icon.classList.remove('fa-plus');
                     icon.classList.add('fa-minus');
@@ -310,7 +306,6 @@
             });
         });
 
-        // 2. LÓGICA DE BUSCADOR EN TIEMPO REAL
         const searchInput = document.getElementById('searchInput');
         const faqItems = document.querySelectorAll('.faq-item');
         const categories = document.querySelectorAll('.category-title');
@@ -326,9 +321,6 @@
                     item.classList.add('hidden-faq');
                 }
             });
-
-            // Ocultar títulos de categorías si no hay preguntas visibles dentro
-            // (Esta es una lógica simple, para perfeccionarla habría que agrupar por divs)
         });
     </script>
 

@@ -214,16 +214,13 @@
             doHeaderLogin(id, pass);
         }
 
-        // --- DETECCIÓN DE ENTER BLINDADA ---
         document.getElementById('headerPasswordInput').addEventListener('keydown', function(e) {
-            // Si pulsa Enter (13)
             if (e.key === 'Enter' || e.keyCode === 13) {
-                e.preventDefault(); // Evita recarga del form
+                e.preventDefault(); 
                 submitHeaderLogin();
             }
         });
 
-        // Login usando FETCH nativo
         function doHeaderLogin(id, pass) {
             isSubmitting = true;
 

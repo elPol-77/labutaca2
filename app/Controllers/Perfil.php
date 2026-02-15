@@ -145,15 +145,21 @@ class Perfil extends BaseController
     public function update()
     {
         $idUsuario = session()->get('user_id');
+
+        // Recogemos todos los datos
         $nuevoPlan = $this->request->getPost('plan_id');
         $nuevoUser = $this->request->getPost('username');
         $nuevoAvatar = $this->request->getPost('avatar');
+
+        // --- DATOS DE CONTRASEÑA ---
+        $nuevaPass = $this->request->getPost('new_password');
+        $confirmPass = $this->request->getPost('confirm_password'); // <--- RECOGEMOS LA CONFIRMACIÓN
 
         $model = new UsuarioModel();
         $usuarioActual = $model->find($idUsuario);
         $planActual = $usuarioActual['plan_id'];
 
-        // DETECTAR SI ES UPGRADE A PREMIUM
+        // 1. DETECTAR SI ES UPGRADE A PREMIUM
         if ($planActual == 1 && $nuevoPlan == 2) {
             session()->set('temp_upgrade_data', [
                 'id' => $idUsuario,
@@ -164,7 +170,7 @@ class Perfil extends BaseController
             return redirect()->to('/pasarela-upgrade');
         }
 
-        // SI NO ES UPGRADE, ACTUALIZACIÓN NORMAL
+        // 2. PREPARAR DATOS COMUNES
         $data = [
             'username' => $nuevoUser,
             'avatar' => $nuevoAvatar,
@@ -174,8 +180,27 @@ class Perfil extends BaseController
             $data['plan_id'] = $nuevoPlan;
         }
 
+        // 3. LÓGICA DE CONTRASEÑA (VERIFICACIÓN DOBLE)
+        if (!empty($nuevaPass)) {
+
+            // A. Verificamos que coincidan (Seguridad de servidor)
+            if ($nuevaPass !== $confirmPass) {
+                return redirect()->back()->withInput()->with('error', 'Error: Las contraseñas no coinciden.');
+            }
+
+            // B. Validación de complejidad (Regex)
+            // Min 8 chars, 1 Mayúscula, 1 Minúscula, 1 Número
+            if (preg_match('/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/', $nuevaPass)) {
+                $data['password'] = password_hash($nuevaPass, PASSWORD_DEFAULT);
+            } else {
+                return redirect()->back()->withInput()->with('error', 'La contraseña no cumple los requisitos de seguridad (Mínimo 8 caracteres, mayúscula y número).');
+            }
+        }
+
+        // 4. ACTUALIZAR BASE DE DATOS
         $model->update($idUsuario, $data);
 
+        // 5. ACTUALIZAR SESIÓN
         session()->set([
             'username' => $nuevoUser,
             'avatar' => $nuevoAvatar,

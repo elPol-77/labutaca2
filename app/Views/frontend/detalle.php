@@ -45,7 +45,7 @@
                 <?php endforeach; ?>
             </div>
 
-            <div class="actions" style="display:flex; gap:20px; margin-bottom:30px;">
+<div class="actions" style="display:flex; gap:20px; margin-bottom:30px;">
                 
                 <?php 
                     $btnStyle = "background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%); color: white; padding: 12px 40px; text-decoration:none; border-radius:30px; font-weight:bold; font-size:1.2rem; display:flex; align-items:center; gap:10px; box-shadow: 0 0 20px rgba(0, 210, 255, 0.4); transition: transform 0.2s;";
@@ -56,11 +56,9 @@
                         <i class="fa fa-play"></i> REPRODUCIR
                     </a>
 
-                    <?php if (!isset($es_externo) || !$es_externo): ?>
-                        <button onclick="toggleMiLista(<?= $peli['id'] ?>)" id="btn-milista" class="<?= $en_lista ? 'en-lista' : '' ?>" style="background:rgba(255,255,255,0.1); color:white; border:none; width:50px; height:50px; border-radius:50%; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-                            <i class="fa <?= $en_lista ? 'fa-check' : 'fa-plus' ?>" style="<?= $en_lista ? 'color:#00d2ff' : '' ?>"></i>
-                        </button>
-                    <?php endif; ?>
+                    <button onclick="toggleMiLista('<?= $peli['id'] ?>')" id="btn-milista" class="<?= $en_lista ? 'en-lista' : '' ?>" style="background:rgba(255,255,255,0.1); color:white; border:none; width:50px; height:50px; border-radius:50%; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; border: 1px solid rgba(255,255,255,0.2);">
+                        <i class="fa <?= $en_lista ? 'fa-check' : 'fa-plus' ?>" style="<?= $en_lista ? 'color:#00d2ff' : '' ?>"></i>
+                    </button>
 
                 <?php else: ?>
                     <button disabled style="background:#333; color:#777; padding:12px 40px; border-radius:30px; border:none; font-weight:bold;">

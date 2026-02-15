@@ -62,7 +62,8 @@ public array $globals = [
                     'peliculas/ajax-fila',
                     'peliculas/ajax-expandir-fila',
                     'home/ajax-fila',
-                    'home/ajax-expandir-fila'
+                    'home/ajax-expandir-fila',
+                    'auth/recuperar-password',
                 ]
             ],
             // 'invalidchars',

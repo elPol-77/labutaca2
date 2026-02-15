@@ -279,5 +279,44 @@ class Auth extends BaseController
         session()->setFlashdata('mostrar_intro', true);
         return redirect()->to('/');
     }
+    public function recuperar_password()
+    {
+        if (!$this->request->isAJAX()) return $this->response->setStatusCode(403);
+
+        $email = $this->request->getPost('email');
+        $model = new UsuarioModel();
+        
+        $usuario = $model->where('email', $email)->first();
+
+        if (!$usuario) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'msg' => 'No encontramos ninguna cuenta con este email.',
+                'token' => csrf_hash()
+            ]);
+        }
+
+        // 1. DEFINIR CONTRASEÑA POR DEFECTO
+        $passPorDefecto = 'LaButaca2026';
+        
+        $nuevoHash = password_hash($passPorDefecto, PASSWORD_DEFAULT);
+        
+        // Actualizamos el usuario (borramos token antiguo si hubiera)
+        $model->update($usuario['id'], [
+            'password' => $nuevoHash,
+            'reset_token' => null,
+            'reset_expires' => null
+        ]);
+
+        $mensajeHTML = 'Tu contraseña ha sido reseteada.<br>' .
+                       'Tu nueva contraseña es: <strong style="color:white; font-size:1.1rem; background:rgba(255,255,255,0.1); padding:2px 8px; border-radius:4px;">' . $passPorDefecto . '</strong><br>' .
+                       '<small style="color:#ccc;">Recuerda cambiarla en tu Perfil > Cuenta.</small>';
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'msg' => $mensajeHTML,
+            'token' => csrf_hash()
+        ]);
+    }
     
 }

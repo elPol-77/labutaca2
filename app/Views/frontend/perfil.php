@@ -63,6 +63,36 @@
                     <input type="text" name="username" value="<?= esc($usuario['username']) ?>"
                         style="width: 100%; padding: 15px; background: #333; border: 1px solid #333; color: white; font-size: 1.2rem; border-radius: 4px; font-family: 'Outfit', sans-serif;">
                 </div>
+                <div>
+                    <p style="font-size: 1rem; color: #aaa; margin-bottom: 20px; font-family: 'Outfit', sans-serif;">
+                        Deja estos campos vacíos si no quieres cambiar tu contraseña.
+                    </p>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="form-group">
+                            <label
+                                style="display:block; color:#aaa; margin-bottom:10px; font-family: 'Outfit', sans-serif;">Nueva
+                                Contraseña</label>
+                            <input type="password" id="new_password" name="new_password"
+                                placeholder="Mínimo 8 caracteres, 1 mayús, 1 número"
+                                style="width: 100%; padding: 15px; background: #333; border: 1px solid #333; color: white; font-size: 1.2rem; border-radius: 4px; font-family: 'Outfit', sans-serif;">
+                        </div>
+
+                        <div class="form-group">
+                            <label
+                                style="display:block; color:#aaa; margin-bottom:10px; font-family: 'Outfit', sans-serif;">Repetir
+                                Contraseña</label>
+                            <input type="password" id="confirm_password" name="confirm_password"
+                                placeholder="Repite la contraseña"
+                                style="width: 100%; padding: 15px; background: #333; border: 1px solid #333; color: white; font-size: 1.2rem; border-radius: 4px; font-family: 'Outfit', sans-serif;">
+                        </div>
+                    </div>
+
+                    <div id="password-error"
+                        style="color: #e50914; font-size: 1rem; margin-top: 15px; display: none; font-family: 'Outfit', sans-serif; font-weight: bold;">
+                    </div>
+                </div>
+                <br><br>
 
                 <div class="form-group" style="margin-bottom: 30px;">
                     <label
@@ -74,7 +104,8 @@
                                 <input type="radio" name="plan_id" value="<?= $id ?>" <?= ($usuario['plan_id'] == $id) ? 'checked' : '' ?> style="display:none;">
                                 <div class="card-content">
                                     <div style="font-weight: bold; margin-bottom: 5px; font-family: 'Outfit', sans-serif;">
-                                        <?= $nombre ?></div>
+                                        <?= $nombre ?>
+                                    </div>
                                     <?php if ($id == 2): ?>
                                         <span
                                             style="color: #e50914; font-size: 0.8rem; font-weight:bold; font-family: 'Outfit', sans-serif;">RECOMENDADO</span>
@@ -129,122 +160,59 @@
     </div>
 </div>
 
-<style>
-    /* GRID DE AVATARES */
-    .avatar-grid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-        justify-content: center;
-    }
-
-    .avatar-option {
-        cursor: pointer;
-        position: relative;
-    }
-
-    /* ESTILO BASE DE LAS FOTOS */
-    .avatar-option img {
-        width: 100px;
-        height: 100px;
-        object-fit: cover;
-        border-radius: 8px;
-        border: 4px solid transparent;
-        transition: all 0.2s ease-in-out;
-        opacity: 0.7;
-    }
-
-    /* EFECTO HOVER */
-    .avatar-option img:hover {
-        opacity: 1;
-        transform: scale(1.1);
-        border-color: #aaa;
-    }
-
-    /* SELECCIONADO (Input Checked) */
-    .avatar-option input:checked+img {
-        border-color: #e50914 !important;
-        /* ROJO NETFLIX */
-        opacity: 1;
-        transform: scale(1.15);
-        box-shadow: 0 0 20px rgba(229, 9, 20, 0.6);
-        z-index: 10;
-    }
-
-    /* TARJETAS DE PLANES */
-    .card-content {
-        background: #333;
-        padding: 20px;
-        border-radius: 8px;
-        border: 2px solid transparent;
-        text-align: center;
-        transition: 0.3s;
-    }
-
-    /* Plan Seleccionado */
-    .plan-card input:checked+.card-content {
-        border-color: white !important;
-        background: #444;
-        box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
-    }
-
-    .plan-card:hover .card-content {
-        background: #444;
-    }
-
-    /* BOTONES */
-    .btn-guardar {
-        background: white;
-        color: black;
-        border: none;
-        padding: 12px 30px;
-        font-weight: bold;
-        font-size: 1.1rem;
-        cursor: pointer;
-        border-radius: 4px;
-        font-family: 'Outfit', sans-serif;
-        transition: 0.3s;
-    }
-
-    .btn-guardar:hover {
-        background: #ddd;
-    }
-
-    .btn-cancelar {
-        background: transparent;
-        color: #aaa;
-        border: 1px solid #aaa;
-        padding: 12px 30px;
-        font-weight: bold;
-        font-size: 1.1rem;
-        text-decoration: none;
-        display: inline-block;
-        border-radius: 4px;
-        font-family: 'Outfit', sans-serif;
-        transition: 0.3s;
-    }
-
-    .btn-cancelar:hover {
-        border-color: white;
-        color: white;
-    }
-</style>
-
 <script>
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const pass = document.getElementById('new_password').value;
+        const confirm = document.getElementById('confirm_password').value;
+        const errorDiv = document.getElementById('password-error');
+        
+        // Limpiamos errores previos
+        errorDiv.style.display = 'none';
+        errorDiv.innerText = '';
+
+        // CASO 1: Campos vacíos -> No hacemos nada, el usuario no quiere cambiar la pass
+        if (pass === '' && confirm === '') {
+            return; // Dejamos que el formulario se envíe normal
+        }
+
+        // CASO 2: El usuario escribió algo, hay que validar
+        e.preventDefault(); // Detenemos el envío momentáneamente para validar
+
+        // A. Coincidencia
+        if (pass !== confirm) {
+            errorDiv.innerText = "❌ Las contraseñas no coinciden.";
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        // B. Reglas de Seguridad (Regex)
+        // (?=.*\d) -> Al menos un número
+        // (?=.*[a-z]) -> Al menos una minúscula
+        // (?=.*[A-Z]) -> Al menos una mayúscula
+        // .{8,} -> Mínimo 8 caracteres
+        const reglas = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
+
+        if (!reglas.test(pass)) {
+            errorDiv.innerText = "⚠️ La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.";
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        // Si todo está bien, enviamos el formulario manualmente
+        this.submit();
+    
     // Detectar si el usuario cambia a Plan Premium (ID 2) para cambiar el texto del botón
     const radios = document.querySelectorAll('input[name="plan_id"]');
     const submitBtn = document.querySelector('.btn-guardar');
 
-    // El plan actual viene de PHP
     const currentPlan = <?= $usuario['plan_id'] ?>;
 
     if (radios) {
         radios.forEach(radio => {
             radio.addEventListener('change', function () {
-                // Si selecciona Premium (2) y actualmente es Free (1)
                 if (this.value == 2 && currentPlan == 1) {
                     submitBtn.innerText = "Ir al Pago (9.99€)";
-                    submitBtn.style.background = "#e50914"; // Rojo
+                    submitBtn.style.background = "#e50914";
                     submitBtn.style.color = "white";
                 } else {
                     submitBtn.innerText = "Guardar Cambios";
