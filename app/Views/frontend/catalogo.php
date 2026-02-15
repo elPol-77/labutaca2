@@ -36,43 +36,47 @@
 
         <?php if (!empty($destacada)): ?>
             <div class="hero-static">
-                <div class="hero-item" style="background-image: url('<?= $destacada['backdrop'] ?>');">
+                <div class="hero-item">
+                    <img src="<?= $destacada['backdrop'] ?>" alt="<?= esc($destacada['titulo']) ?>"
+                        class="hero-img-absoluta" fetchpriority="high" decoding="async">
+
                     <div class="hero-content-wrapper">
-                        <div class="hero-info" style="padding-left: 5%;">
-                            <h1><?= esc($destacada['titulo']) ?></h1>
 
-                            <div class="hero-badges">
-                                <?php if (isset($destacada['tipo_id']) && $destacada['tipo_id'] == 1): ?>
-                                    <span class="badge badge-premium">PELÍCULA</span>
+                    <div class="hero-info" style="padding-left: 5%;">
+                        <h1><?= esc($destacada['titulo']) ?></h1>
 
-                                <?php elseif (isset($destacada['tipo_id']) && $destacada['tipo_id'] == 2): ?>
-                                    <span class="badge badge-premium">SERIE</span>
+                        <div class="hero-badges">
+                            <?php if (isset($destacada['tipo_id']) && $destacada['tipo_id'] == 1): ?>
+                                <span class="badge badge-premium">PELÍCULA</span>
 
-                                <?php else: ?>
-                                    <span class="badge badge-premium">DESTACADO</span>
-                                <?php endif; ?>
+                            <?php elseif (isset($destacada['tipo_id']) && $destacada['tipo_id'] == 2): ?>
+                                <span class="badge badge-premium">SERIE</span>
 
-                                <span class="badge badge-hd">HD</span>
-                            </div>
+                            <?php else: ?>
+                                <span class="badge badge-premium">DESTACADO</span>
+                            <?php endif; ?>
 
-                            <p
-                                style="color:#ddd; margin-bottom:2rem; font-size:1.1rem; line-height:1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
-                                <?= esc($destacada['descripcion']) ?>
-                            </p>
+                            <span class="badge badge-hd">HD</span>
+                        </div>
 
-                            <div style="display: flex; gap: 15px;">
-                                <button class="btn-primary" onclick="playCinematic('<?= $destacada['link_ver'] ?>')">
-                                    <i class="fa fa-play"></i> Reproducir
-                                </button>
+                        <p
+                            style="color:#ddd; margin-bottom:2rem; font-size:1.1rem; line-height:1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                            <?= esc($destacada['descripcion']) ?>
+                        </p>
 
-                                <a href="<?= $destacada['link_detalle'] ?>" class="btn-secondary"
-                                    style="background:rgba(255,255,255,0.2); border:none; color:white; padding:12px 25px; border-radius:50px; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:8px; text-decoration:none;">
-                                    <i class="fa fa-info-circle"></i> Más Info
-                                </a>
-                            </div>
+                        <div style="display: flex; gap: 15px;">
+                            <button class="btn-primary" onclick="playCinematic('<?= $destacada['link_ver'] ?>')">
+                                <i class="fa fa-play"></i> Reproducir
+                            </button>
+
+                            <a href="<?= $destacada['link_detalle'] ?>" class="btn-secondary"
+                                style="background:rgba(255,255,255,0.2); border:none; color:white; padding:12px 25px; border-radius:50px; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:8px; text-decoration:none;">
+                                <i class="fa fa-info-circle"></i> Más Info
+                            </a>
                         </div>
                     </div>
                 </div>
+            </div>
             </div>
         <?php endif; ?>
         <div id="rows-container" class="netflix-container" style="position: relative; z-index: 10; min-height: 500px;">

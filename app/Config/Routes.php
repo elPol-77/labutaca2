@@ -15,7 +15,6 @@ $routes->post('home/ajax-expandir-fila', 'Home::ajaxExpandirFila');
 $routes->get('detalle/(:segment)', 'Home::detalle/$1');
 $routes->get('ver/(:segment)', 'Home::ver/$1');
 $routes->get('mi-lista', 'Home::miLista');
-// $routes->get('peliculas', 'Home::paginaPeliculas');
 $routes->get('series', 'Serie::index');
 $routes->get('ayuda', 'Home::ayuda');
 $routes->get('genero/(:num)', 'Home::verGenero/$1');

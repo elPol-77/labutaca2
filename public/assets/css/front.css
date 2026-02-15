@@ -2663,3 +2663,47 @@ button.slick-next::after {
         transform: none;
     }
 }
+/* --- OPTIMIZACIÓN DE RENDIMIENTO (SCROLL) --- */
+
+.movie-card-grid, .film-card, .poster-card {
+    /* Esto evita que el navegador renderice elementos fuera de pantalla */
+    content-visibility: auto; 
+    
+    /* Reserva el espacio aproximado (Ancho Altura) para que la barra de scroll no salte */
+    contain-intrinsic-size: 200px 300px; 
+}
+
+/* Acelerar composición por hardware para las imágenes */
+.movie-poster img, 
+.poster-wrapper img,
+.film-poster {
+    /* Pasa el trabajo a la tarjeta gráfica (GPU) en lugar de la CPU */
+    will-change: transform, opacity;
+    transform: translateZ(0); 
+    backface-visibility: hidden;
+}
+
+/* Reducir calidad de sombras en scroll para ganar velocidad */
+.glass-panel, .hero-static, .movie-card-grid:hover {
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5); /* Sombra más simple */
+}
+.hero-img-absoluta {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Clave: hace lo mismo que background-size: cover */
+    object-position: center top;
+    z-index: 0; /* Detrás del texto */
+}
+.hero-img-absoluta {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Clave: hace lo mismo que background-size: cover */
+    object-position: center top;
+    z-index: 0; /* Detrás del texto */
+}

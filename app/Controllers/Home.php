@@ -19,17 +19,12 @@ class Home extends BaseController
             return redirect()->to('/auth');
 
         $userId = session()->get('user_id');
-
-       
         $userModel = new UsuarioModel();
         $usuario = $userModel->find($userId);
 
-      
         $this->_verificarSuscripcion($usuario);
 
         // 3. REFRESCAR DATOS
-        // Volvemos a leer el plan_id de la sesión, porque _verificarSuscripcion 
-        // pudo haberlo cambiado hace un milisegundo.
         $planId = session()->get('plan_id');
         $esFree = ($planId == 1);
         $esKids = ($planId == 3);
@@ -38,7 +33,8 @@ class Home extends BaseController
         $model = new ContenidoModel();
 
         // 4. LÓGICA DE HERO 
-        $tipoHero = (rand(0, 1) == 0) ? 'movie' : 'tv';
+        // Si es Kids, forzamos 'movie' porque suelen tener mejores imágenes. Si no, aleatorio.
+        $tipoHero = ($esKids) ? 'movie' : ((rand(0, 1) == 0) ? 'movie' : 'tv');
 
         // --- CASO A: USUARIO FREE (Local) 
         if ($esFree) {
@@ -54,13 +50,14 @@ class Home extends BaseController
 
         // --- CASO B: PREMIUM/KIDS (API TMDB) ---
         else {
-            $pagina = rand(1, 3);
-            $params = ['sort_by' => 'popularity.desc', 'page' => $pagina];
+            // OPTIMIZACIÓN 1: Pedimos SIEMPRE la página 1.
+            // Es mucho más rápido (respuesta < 100ms). La variedad la da el shuffle() de abajo.
+            $params = ['sort_by' => 'popularity.desc', 'page' => 1];
 
             $resultados = $this->fetchTmdbMixed($tipoHero, $params, $esKids);
 
             if (!empty($resultados)) {
-                shuffle($resultados);
+                shuffle($resultados); // <--- Aquí mezclamos para que no salga siempre la #1
                 foreach ($resultados as $item) {
                     if (!empty($item['imagen_bg'])) {
                         $destacada = $item;
@@ -70,6 +67,7 @@ class Home extends BaseController
             }
         }
 
+        // FALLBACKS
         if (empty($destacada)) {
             $backup = $model->where('imagen_bg !=', '')->orderBy('RAND()')->first();
             if ($backup)
@@ -81,8 +79,8 @@ class Home extends BaseController
                 'id' => 0,
                 'titulo' => 'Bienvenido',
                 'descripcion' => 'Explora nuestro contenido.',
-                'imagen_bg' => 'https://image.tmdb.org/t/p/original/mBaXZ95R2OxueZhvQbcEWy2DqyO.jpg',
-                'backdrop' => 'https://image.tmdb.org/t/p/original/mBaXZ95R2OxueZhvQbcEWy2DqyO.jpg',
+                'imagen_bg' => 'https://image.tmdb.org/t/p/w1280/mBaXZ95R2OxueZhvQbcEWy2DqyO.jpg',
+                'backdrop' => 'https://image.tmdb.org/t/p/w1280/mBaXZ95R2OxueZhvQbcEWy2DqyO.jpg',
                 'link_ver' => '#',
                 'link_detalle' => '#'
             ];
@@ -103,7 +101,7 @@ class Home extends BaseController
         echo view('frontend/templates/footer', $data);
     }
 
-    
+
     public function ajaxCargarFila()
     {
         $bloqueSolicitado = intval($this->request->getPost('bloque'));
@@ -249,8 +247,13 @@ class Home extends BaseController
             $baseParams['without_genres'] = '27,80,18,10752,53';
         }
 
+        // OPTIMIZACIÓN 3: Timeout corto (3s) para no colgar el servidor si la API tarda
+        $ctx = stream_context_create([
+            "ssl" => ["verify_peer" => false], 
+            "http" => ["ignore_errors" => true, "timeout" => 3.0]
+        ]);
+        
         $url = "https://api.themoviedb.org/3/discover/{$tipo}?" . http_build_query($baseParams);
-        $ctx = stream_context_create(["ssl" => ["verify_peer" => false], "http" => ["ignore_errors" => true]]);
         $json = @file_get_contents($url, false, $ctx);
         $results = [];
 
@@ -260,6 +263,7 @@ class Home extends BaseController
                 foreach ($data['results'] as $item) {
                     if (empty($item['poster_path']))
                         continue;
+                    
                     if ($esKids && (in_array(27, $item['genre_ids'] ?? []) || in_array(80, $item['genre_ids'] ?? [])))
                         continue;
 
@@ -268,7 +272,8 @@ class Home extends BaseController
                     $fecha = ($tipo == 'tv') ? ($item['first_air_date'] ?? '') : ($item['release_date'] ?? '');
                     $prefix = ($tipo == 'tv') ? 'tmdb_tv_' : 'tmdb_movie_';
 
-                    $fullBg = "https://image.tmdb.org/t/p/original" . $bg;
+                    // CAMBIO CLAVE: Usamos w1280 (aprox 200KB) en lugar de original (aprox 5MB)
+                    $fullBg = "https://image.tmdb.org/t/p/w1280" . $bg;
 
                     $results[] = [
                         'id' => $prefix . $item['id'],
@@ -536,7 +541,7 @@ class Home extends BaseController
             'video_url' => $videoUrl
         ]);
     }
-    
+
     public function detalle($id)
     {
         if (!session()->get('is_logged_in'))
@@ -844,82 +849,103 @@ class Home extends BaseController
     public function autocompletar()
     {
         $request = service('request');
-        $postData = $request->getPost();
+        $search = $request->getPost('search'); // O 'term' si usas jQuery UI por defecto
 
-        $response = [];
+        // Si no llega nada, devuelve vacío
+        if (!$search || strlen($search) < 2) {
+            return $this->response->setJSON(['token' => csrf_hash(), 'data' => []]);
+        }
+
+        $planId = session()->get('plan_id') ?? 1;
+        $response = ['token' => csrf_hash()];
         $data = [];
-        $response['token'] = csrf_hash();
 
-        if (isset($postData['search']) && strlen($postData['search']) > 2) {
-            $search = $postData['search'];
-            $planId = session()->get('plan_id') ?? 1;
+        $titulosRegistrados = [];
 
-            // 1. BÚSQUEDA LOCAL
-            $model = new ContenidoModel();
-            $builder = $model->select('id, titulo, imagen, edad_recomendada')->like('titulo', $search);
+        // ---------------------------------------------------------
+        // 1. BÚSQUEDA LOCAL
+        // ---------------------------------------------------------
+        $model = new ContenidoModel(); // Asegúrate del namespace correcto
+        $builder = $model->select('id, titulo, imagen, edad_recomendada, nivel_acceso')
+            ->like('titulo', $search);
 
-            if ($planId == 3) {
-                $builder->where('edad_recomendada <=', 11);
-            } elseif ($planId == 1) {
-                $builder->where('nivel_acceso', 1);
-            }
+        if ($planId == 3) { // Kids
+            $builder->where('edad_recomendada <=', 11);
+        } elseif ($planId == 1) { // Free
+            $builder->where('nivel_acceso', 1);
+        }
 
-            $locales = $builder->orderBy('titulo')->findAll(5);
-            $idsLocales = [];
+        $locales = $builder->orderBy('titulo', 'ASC')->findAll(5);
 
-            foreach ($locales as $peli) {
-                $idsLocales[] = $peli['id'];
-                $imgUrl = str_starts_with($peli['imagen'], 'http') ? $peli['imagen'] : base_url('assets/img/' . $peli['imagen']);
+        foreach ($locales as $peli) {
+            // Guardamos el título en minúsculas para comparar luego
+            $titulosRegistrados[] = mb_strtolower(trim($peli['titulo']));
 
-                $data[] = [
-                    "id" => $peli['id'],
-                    "value" => $peli['titulo'],
-                    "label" => $peli['titulo'],
-                    "img" => $imgUrl,
-                    "type" => "local"
-                ];
-            }
+            $imgUrl = str_starts_with($peli['imagen'], 'http') ? $peli['imagen'] : base_url('assets/img/' . $peli['imagen']);
 
-            // 2. BÚSQUEDA EXTERNA (TMDB)
-            if (count($data) < 10 && $planId != 1) {
-                $apiKey = '6387e3c183c454304108333c56530988';
-                $query = urlencode($search);
-                $url = "https://api.themoviedb.org/3/search/multi?api_key={$apiKey}&language=es-ES&query={$query}&include_adult=false";
+            $data[] = [
+                "id" => $peli['id'],
+                "value" => $peli['titulo'],
+                "label" => $peli['titulo'], // Etiqueta limpia para local
+                "img" => $imgUrl,
+                "type" => "local"
+            ];
+        }
 
-                $ctx = stream_context_create(["ssl" => ["verify_peer" => false], "http" => ["ignore_errors" => true]]);
-                $json = @file_get_contents($url, false, $ctx);
+        // ---------------------------------------------------------
+        // 2. BÚSQUEDA EXTERNA (TMDB)
+        // ---------------------------------------------------------
+        // Solo buscamos fuera si no somos usuario Free y tenemos hueco en la lista
+        if (count($data) < 10 && $planId != 1) {
 
-                if ($json) {
-                    $tmdbResults = json_decode($json, true);
+            $apiKey = '6387e3c183c454304108333c56530988'; // Tu API Key
+            $query = urlencode($search);
+            $url = "https://api.themoviedb.org/3/search/multi?api_key={$apiKey}&language=es-ES&query={$query}&include_adult=false";
 
-                    if (!empty($tmdbResults['results'])) {
-                        foreach ($tmdbResults['results'] as $item) {
-                            if (count($data) >= 10)
-                                break;
-                            if (($item['media_type'] ?? '') != 'movie' && ($item['media_type'] ?? '') != 'tv')
-                                continue;
+            // Contexto para evitar errores de SSL en local
+            $ctx = stream_context_create(["ssl" => ["verify_peer" => false], "http" => ["ignore_errors" => true]]);
+            $json = @file_get_contents($url, false, $ctx);
 
-                            $prefix = ($item['media_type'] == 'tv') ? "tmdb_tv_" : "tmdb_movie_";
-                            if (in_array($prefix . $item['id'], $idsLocales))
-                                continue;
+            if ($json) {
+                $tmdbResults = json_decode($json, true);
 
-                            $titulo = ($item['media_type'] == 'tv') ? $item['name'] : $item['title'];
-                            $fecha = ($item['media_type'] == 'tv') ? ($item['first_air_date'] ?? '') : ($item['release_date'] ?? '');
-                            $anio = substr($fecha, 0, 4);
-                            $tipoLabel = ($item['media_type'] == 'tv') ? " (Serie)" : "";
+                if (!empty($tmdbResults['results'])) {
+                    foreach ($tmdbResults['results'] as $item) {
+                        // Límite total de resultados
+                        if (count($data) >= 10)
+                            break;
 
-                            $poster = !empty($item['poster_path'])
-                                ? "https://image.tmdb.org/t/p/w92" . $item['poster_path']
-                                : base_url('assets/img/no-poster.jpg');
+                        // Solo Pelis y Series
+                        $mediaType = $item['media_type'] ?? '';
+                        if ($mediaType != 'movie' && $mediaType != 'tv')
+                            continue;
 
-                            $data[] = [
-                                "id" => $prefix . $item['id'],
-                                "value" => $titulo,
-                                "label" => $titulo . ($anio ? " ($anio)" : "") . $tipoLabel,
-                                "img" => $poster,
-                                "type" => "tmdb"
-                            ];
+                        // Obtener Título según sea Peli o Serie
+                        $tituloTmdb = ($mediaType == 'tv') ? ($item['name'] ?? '') : ($item['title'] ?? '');
+
+                        // --- FILTRO ANTI-DUPLICADOS ---
+                        // Si el título de TMDB ya está en nuestro array de locales, LO SALTAMOS
+                        if (in_array(mb_strtolower(trim($tituloTmdb)), $titulosRegistrados)) {
+                            continue;
                         }
+
+                        // Preparar datos visuales
+                        $prefix = ($mediaType == 'tv') ? "tmdb_tv_" : "tmdb_movie_";
+                        $fecha = ($mediaType == 'tv') ? ($item['first_air_date'] ?? '') : ($item['release_date'] ?? '');
+                        $anio = substr($fecha, 0, 4);
+                        $tipoLabel = ($mediaType == 'tv') ? " (Serie)" : "";
+
+                        $poster = !empty($item['poster_path'])
+                            ? "https://image.tmdb.org/t/p/w92" . $item['poster_path']
+                            : base_url('assets/img/no-poster.jpg');
+
+                        $data[] = [
+                            "id" => $prefix . $item['id'],
+                            "value" => $tituloTmdb,
+                            "label" => $tituloTmdb . ($anio ? " ($anio)" : "") . $tipoLabel,
+                            "img" => $poster,
+                            "type" => "tmdb"
+                        ];
                     }
                 }
             }
@@ -1297,7 +1323,6 @@ class Home extends BaseController
             "http" => ["ignore_errors" => true]
         ]);
 
-        // AQUÍ ESTÁ LA MAGIA: Inyectamos dinámicamente el número de página en la URL
         $url = "https://api.themoviedb.org/3/discover/{$tipo}?api_key={$apiKey}&language={$lang}&sort_by=popularity.desc&include_adult=false&page={$page}";
 
         // --- GESTIÓN DE GÉNEROS ---

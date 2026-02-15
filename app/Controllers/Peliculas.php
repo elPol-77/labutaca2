@@ -49,7 +49,7 @@ class Peliculas extends BaseController
 
             $params = [
                 'sort_by' => 'popularity.desc',
-                'page' => $paginaAleatoria
+                'page' => 1
             ];
 
             // La función fetchTmdbDiscover ya filtra si $esKids es true
@@ -410,11 +410,9 @@ class Peliculas extends BaseController
         ], $params);
 
         if ($esKids) {
-            // Si Kids -> Forzamos Animación o Familia
             if (!isset($baseParams['with_genres'])) {
                 $baseParams['with_genres'] = '16,10751';
             }
-            // Excluir géneros adultos (Terror, Crimen, Guerra)
             $generosProhibidos = '27,80,18,10752,53';
             if (isset($baseParams['without_genres'])) {
                 $baseParams['without_genres'] .= ',' . $generosProhibidos;
@@ -423,49 +421,53 @@ class Peliculas extends BaseController
             }
         }
 
-        $startPage = $baseParams['page'];
+        // OPTIMIZACIÓN 2: Timeout corto (3s) para no colgar el servidor si la API falla
+        $arrContextOptions = [
+            "ssl" => ["verify_peer" => false, "verify_peer_name" => false],
+            "http" => ["ignore_errors" => true, "timeout" => 3.0]
+        ];
+
+        // OPTIMIZACIÓN 3: Quitamos el bucle FOR. Solo pedimos una página.
+        $url = "https://api.themoviedb.org/3/discover/movie?" . http_build_query($baseParams);
+        $json = @file_get_contents($url, false, stream_context_create($arrContextOptions));
+
         $finalResults = [];
 
-        for ($i = 0; $i < 2; $i++) {
-            $baseParams['page'] = $startPage + $i;
-            $url = "https://api.themoviedb.org/3/discover/movie?" . http_build_query($baseParams);
+        if ($json) {
+            $data = json_decode($json, true);
+            if (!empty($data['results'])) {
+                foreach ($data['results'] as $item) {
+                    if (empty($item['poster_path']))
+                        continue;
 
-            $arrContextOptions = ["ssl" => ["verify_peer" => false, "verify_peer_name" => false], "http" => ["ignore_errors" => true]];
-            $json = @file_get_contents($url, false, stream_context_create($arrContextOptions));
-
-            if ($json) {
-                $data = json_decode($json, true);
-                if (!empty($data['results'])) {
-                    foreach ($data['results'] as $item) {
-                        if (empty($item['poster_path']))
+                    if ($esKids) {
+                        $g = $item['genre_ids'] ?? [];
+                        if (in_array(27, $g) || in_array(80, $g))
                             continue;
-
-                        if ($esKids) {
-                            $g = $item['genre_ids'] ?? [];
-                            if (in_array(27, $g) || in_array(80, $g))
-                                continue;
-                        }
-
-                        $bg = !empty($item['backdrop_path']) ? $item['backdrop_path'] : $item['poster_path'];
-
-                        $edadCalculada = '11';
-                        // Si es Animación(16) o Familia(10751) -> TP
-                        if (isset($item['genre_ids']) && (in_array(16, $item['genre_ids']) || in_array(10751, $item['genre_ids']))) {
-                            $edadCalculada = 'TP';
-                        }
-
-                        $finalResults[] = [
-                            'id' => 'tmdb_movie_' . $item['id'],
-                            'titulo' => $item['title'],
-                            'imagen' => "https://image.tmdb.org/t/p/w300" . $item['poster_path'],
-                            'imagen_bg' => "https://image.tmdb.org/t/p/w780" . $bg,
-                            'descripcion' => $item['overview'],
-                            'anio' => substr($item['release_date'] ?? '', 0, 4),
-                            'edad' => $edadCalculada,
-                            'link_ver' => base_url('ver/tmdb_movie_' . $item['id']),
-                            'link_detalle' => base_url('detalle/tmdb_movie_' . $item['id'])
-                        ];
                     }
+
+                    $bg = !empty($item['backdrop_path']) ? $item['backdrop_path'] : $item['poster_path'];
+
+                    // OPTIMIZACIÓN 4: Usamos w1280 (Full HD ligero) en vez de w780
+                    $fullBg = "https://image.tmdb.org/t/p/w1280" . $bg;
+
+                    $edadCalculada = '11';
+                    if (isset($item['genre_ids']) && (in_array(16, $item['genre_ids']) || in_array(10751, $item['genre_ids']))) {
+                        $edadCalculada = 'TP';
+                    }
+
+                    $finalResults[] = [
+                        'id' => 'tmdb_movie_' . $item['id'],
+                        'titulo' => $item['title'],
+                        'imagen' => "https://image.tmdb.org/t/p/w300" . $item['poster_path'], // w342 para grid
+                        'imagen_bg' => $fullBg, // Para el hover
+                        'backdrop' => $fullBg,  // CLAVE: Para el Hero
+                        'descripcion' => $item['overview'],
+                        'anio' => substr($item['release_date'] ?? '', 0, 4),
+                        'edad' => $edadCalculada,
+                        'link_ver' => base_url('ver/tmdb_movie_' . $item['id']),
+                        'link_detalle' => base_url('detalle/tmdb_movie_' . $item['id'])
+                    ];
                 }
             }
         }
