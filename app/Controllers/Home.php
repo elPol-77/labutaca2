@@ -52,7 +52,7 @@ class Home extends BaseController
             $resultados = $this->fetchTmdbMixed($tipoHero, $params, $esKids);
 
             if (!empty($resultados)) {
-                shuffle($resultados); 
+                shuffle($resultados);
                 foreach ($resultados as $item) {
                     if (!empty($item['imagen_bg'])) {
                         $destacada = $item;
@@ -126,7 +126,7 @@ class Home extends BaseController
                 $mapa = [
                     0 => ['tipo' => 'local', 'titulo' => 'Tus Favoritos'],
                     1 => ['tipo' => 'tmdb', 'api_type' => 'movie', 'titulo' => 'Películas Disney', 'params' => ['with_companies' => '2', 'sort_by' => 'popularity.desc']],
-                    2 => ['tipo' => 'tmdb', 'api_type' => 'tv', 'titulo' => 'Series de Dibujos', 'params' => ['with_genres' => '16', 'sort_by' => 'popularity.desc']],
+                    2 => ['tipo' => 'tmdb', 'api_type' => 'tv', 'titulo' => 'Series de Dibujos', 'params' => ['with_genres' => '10762', 'sort_by' => 'popularity.desc']],
                     3 => ['tipo' => 'tmdb', 'api_type' => 'movie', 'titulo' => 'Pixar', 'params' => ['with_companies' => '3']],
                     4 => ['tipo' => 'tmdb', 'api_type' => 'tv', 'titulo' => 'Nick Jr.', 'params' => ['with_networks' => '13']],
                 ];
@@ -237,9 +237,33 @@ class Home extends BaseController
             'page' => 1
         ], $params);
 
+        // --- FILTROS DE SEGURIDAD KIDS ---
         if ($esKids) {
-            $baseParams['with_genres'] = isset($baseParams['with_genres']) ? $baseParams['with_genres'] . ',16' : '16,10751';
-            $baseParams['without_genres'] = '27,80,18,10752,53';
+            // A. PARA PELÍCULAS: Usamos Certificación de Edad (Lo más seguro)
+            if ($tipo == 'movie') {
+                $baseParams['certification_country'] = 'ES';
+                $baseParams['certification.lte'] = '7'; // Máximo recomendado para 7 años (TP, 7)
+            } 
+            
+            // B. PARA SERIES: Forzamos el género Kids (10762)
+            // Si pedimos solo "Animación" (16), sale Padre de Familia.
+            // Forzamos que si es TV, tenga la etiqueta "Kids" sí o sí.
+            else {
+                if (isset($baseParams['with_genres'])) {
+                    // Si pedía animación genérica (16), la cambiamos a Kids (10762)
+                    if (strpos($baseParams['with_genres'], '16') !== false) {
+                        $baseParams['with_genres'] = str_replace('16', '10762', $baseParams['with_genres']);
+                    } else {
+                        // Si pedía otra cosa, le añadimos restricción Kids
+                        $baseParams['with_genres'] .= ',10762'; // La coma actúa como AND
+                    }
+                } else {
+                    $baseParams['with_genres'] = '10762';
+                }
+            }
+
+            // Excluir géneros peligrosos explícitamente
+            $baseParams['without_genres'] = '27,80,18,10752,53,99'; // Terror, Crimen, Drama, Guerra, Thriller, Documental
         }
 
         $ctx = stream_context_create([
@@ -247,6 +271,7 @@ class Home extends BaseController
             "http" => ["ignore_errors" => true, "timeout" => 3.0]
         ]);
 
+        // Construir URL
         $url = "https://api.themoviedb.org/3/discover/{$tipo}?" . http_build_query($baseParams);
         $json = @file_get_contents($url, false, $ctx);
         $results = [];
@@ -255,9 +280,9 @@ class Home extends BaseController
             $data = json_decode($json, true);
             if (!empty($data['results'])) {
                 foreach ($data['results'] as $item) {
-                    if (empty($item['poster_path']))
-                        continue;
+                    if (empty($item['poster_path'])) continue;
 
+                    // Doble verificación: Si por algún motivo la API devuelve Terror, lo saltamos
                     if ($esKids && (in_array(27, $item['genre_ids'] ?? []) || in_array(80, $item['genre_ids'] ?? [])))
                         continue;
 
@@ -430,6 +455,8 @@ class Home extends BaseController
     {
         if (!session()->get('is_logged_in'))
             return redirect()->to('/auth');
+
+        $planUsuario = session()->get('plan_id');
         $model = new ContenidoModel();
 
         // 1. DETECCIÓN EXACTA (CINE vs TV)
@@ -497,9 +524,16 @@ class Home extends BaseController
 
         $puedeVer = true;
 
+        // REGLA: Seguridad para KIDS (Aplica tanto a TMDB como Local)
+        if ($planUsuario == 3) {
+            // Si la edad recomendada es mayor a 11 (ej: 12, 16, 18), se bloquea.
+            if (isset($contenido['edad_recomendada']) && $contenido['edad_recomendada'] > 11) {
+                return redirect()->to('/')->with('error_general', 'Este contenido no es adecuado para tu edad.');
+            }
+        }
+
         if (!$esTmdb) {
             $puedeVer = false;
-            $planUsuario = session()->get('plan_id');
             $nivelAcceso = $contenido['nivel_acceso'];
             if ($planUsuario == 2)
                 $puedeVer = true;
@@ -510,7 +544,8 @@ class Home extends BaseController
         }
 
         if (!$puedeVer) {
-            session()->setFlashdata('error', 'Contenido restringido.');
+            // CORREGIDO: Usamos error_general
+            session()->setFlashdata('error_general', 'Contenido restringido.');
             return redirect()->to('/');
         }
 
@@ -621,7 +656,7 @@ class Home extends BaseController
 
         if ($planUsuario == 3) {
             if ($contenido['edad_recomendada'] > 11) {
-                return redirect()->to('/')->with('error', 'Este contenido no es adecuado para tu edad.');
+                return redirect()->to('/')->with('error_general', 'Este contenido no es adecuado para tu edad.');
             }
         }
 
@@ -632,7 +667,7 @@ class Home extends BaseController
 
         // REGLA D: Usuario KIDS intentando ver contenido LOCAL DE ADULTOS
         if ($planUsuario == 3 && $esLocal && $contenido['edad_recomendada'] > 11) {
-            return redirect()->to('/')->with('error', 'Este contenido no es adecuado para tu edad.');
+            return redirect()->to('/')->with('error_general', 'Este contenido no es adecuado para tu edad.');
         }
 
         // MI LISTA
@@ -966,7 +1001,7 @@ class Home extends BaseController
             return redirect()->to('/auth');
 
         if (session()->get('plan_id') != 2) {
-            return redirect()->to('/')->with('error', 'Necesitas ser Premium para acceder a la Zona Global.');
+            return redirect()->to('/')->with('error_general', 'Necesitas ser Premium para acceder a la Zona Global.');
         }
 
         $generoModel = new GeneroModel();
@@ -1304,7 +1339,7 @@ class Home extends BaseController
 
         return $resultados;
     }
-    // FUNCIÓN PARA REVISAR CADUCIDAD
+
     private function _verificarSuscripcion($usuario)
     {
         if ($usuario['plan_id'] == 1)
@@ -1318,15 +1353,21 @@ class Home extends BaseController
 
         if ($ahora > $fechaFin) {
             $userModel = new UsuarioModel();
+            if ($usuario['plan_id'] == 3) {
 
-            $userModel->update($usuario['id'], [
-                'plan_id' => 1,
-                'fecha_fin_suscripcion' => null
-            ]);
+                session()->destroy();
 
-            session()->set('plan_id', 1);
+                header("Location: " . base_url('auth?error=kids_expired'));
+                exit;
+            } else {
+                $userModel->update($usuario['id'], [
+                    'plan_id' => 1,
+                    'fecha_fin_suscripcion' => null
+                ]);
 
-            session()->setFlashdata('error', 'Tu suscripción ha caducado. Has vuelto al plan Free.');
+                session()->set('plan_id', 1);
+                session()->setFlashdata('error_general', 'Tu suscripción ha caducado. Has pasado al plan Gratuito.');
+            }
         }
     }
 }

@@ -1,3 +1,4 @@
+
 <div id="view-splash" class="active">
 
     <div class="camera-loader">
@@ -24,6 +25,25 @@
 
 <section id="view-home-full" class="view-section active" style="padding-top: 100px;">
     <input type="hidden" class="txt_csrftoken" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
+    <?php if (session()->getFlashdata('error_general')): ?>
+        <div id="alerta-flotante"
+            style="position: fixed; top: 500px; left: 50%; transform: translateX(-50%); z-index: 99999; background: #e50914; color: white; padding: 15px 30px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-family: 'Outfit', sans-serif; font-weight: bold; text-align: center; min-width: 300px;">
+            <i class="fa fa-exclamation-circle" style="margin-right: 10px;"></i>
+            <?= session()->getFlashdata('error_general') ?>
+        </div>
+
+        <script>
+            // Usamos Javascript nativo para que funcione aunque jQuery cargue después
+            setTimeout(function() {
+                var alerta = document.getElementById('alerta-flotante');
+                if (alerta) {
+                    alerta.style.transition = "opacity 0.5s ease";
+                    alerta.style.opacity = "0";
+                    setTimeout(function() { alerta.style.display = "none"; }, 500);
+                }
+            }, 4000);
+        </script>
+    <?php endif; ?>
 
     <div id="loading-initial" class="active"
         style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #0f0c29; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;">
@@ -42,41 +62,41 @@
 
                     <div class="hero-content-wrapper">
 
-                    <div class="hero-info" style="padding-left: 5%;">
-                        <h1><?= esc($destacada['titulo']) ?></h1>
+                        <div class="hero-info" style="padding-left: 5%;">
+                            <h1><?= esc($destacada['titulo']) ?></h1>
 
-                        <div class="hero-badges">
-                            <?php if (isset($destacada['tipo_id']) && $destacada['tipo_id'] == 1): ?>
-                                <span class="badge badge-premium">PELÍCULA</span>
+                            <div class="hero-badges">
+                                <?php if (isset($destacada['tipo_id']) && $destacada['tipo_id'] == 1): ?>
+                                    <span class="badge badge-premium">PELÍCULA</span>
 
-                            <?php elseif (isset($destacada['tipo_id']) && $destacada['tipo_id'] == 2): ?>
-                                <span class="badge badge-premium">SERIE</span>
+                                <?php elseif (isset($destacada['tipo_id']) && $destacada['tipo_id'] == 2): ?>
+                                    <span class="badge badge-premium">SERIE</span>
 
-                            <?php else: ?>
-                                <span class="badge badge-premium">DESTACADO</span>
-                            <?php endif; ?>
+                                <?php else: ?>
+                                    <span class="badge badge-premium">DESTACADO</span>
+                                <?php endif; ?>
 
-                            <span class="badge badge-hd">HD</span>
-                        </div>
+                                <span class="badge badge-hd">HD</span>
+                            </div>
 
-                        <p
-                            style="color:#ddd; margin-bottom:2rem; font-size:1.1rem; line-height:1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
-                            <?= esc($destacada['descripcion']) ?>
-                        </p>
+                            <p
+                                style="color:#ddd; margin-bottom:2rem; font-size:1.1rem; line-height:1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                                <?= esc($destacada['descripcion']) ?>
+                            </p>
 
-                        <div style="display: flex; gap: 15px;">
-                            <button class="btn-primary" onclick="playCinematic('<?= $destacada['link_ver'] ?>')">
-                                <i class="fa fa-play"></i> Reproducir
-                            </button>
+                            <div style="display: flex; gap: 15px;">
+                                <button class="btn-primary" onclick="playCinematic('<?= $destacada['link_ver'] ?>')">
+                                    <i class="fa fa-play"></i> Reproducir
+                                </button>
 
-                            <a href="<?= $destacada['link_detalle'] ?>" class="btn-secondary"
-                                style="background:rgba(255,255,255,0.2); border:none; color:white; padding:12px 25px; border-radius:50px; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:8px; text-decoration:none;">
-                                <i class="fa fa-info-circle"></i> Más Info
-                            </a>
+                                <a href="<?= $destacada['link_detalle'] ?>" class="btn-secondary"
+                                    style="background:rgba(255,255,255,0.2); border:none; color:white; padding:12px 25px; border-radius:50px; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:8px; text-decoration:none;">
+                                    <i class="fa fa-info-circle"></i> Más Info
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
             </div>
         <?php endif; ?>
         <div id="rows-container" class="netflix-container" style="position: relative; z-index: 10; min-height: 500px;">
