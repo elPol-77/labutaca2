@@ -26,7 +26,7 @@ class Auth extends BaseController
                         ->where('email', $usuarioOEmail)
                         ->orWhere('username', $usuarioOEmail)
                       ->groupEnd()
-                      ->where('rol', 'admin') // IMPORTANTE: Solo admins
+                      ->where('rol', 'admin') 
                       ->first();
 
         // Verificamos contraseña

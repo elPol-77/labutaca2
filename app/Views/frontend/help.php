@@ -11,7 +11,6 @@
     <link rel="shortcut icon" type="image/png" href="<?= base_url('/labutaca2_logo.ico') ?>">
 
     <style>
-        /* Regla universal para evitar desbordamientos laterales en móvil */
         * {
             box-sizing: border-box;
         }
@@ -26,7 +25,6 @@
             flex-direction: column;
         }
 
-        /* HEADER SIMPLE PARA AYUDA */
         .help-header {
             background: rgba(0, 0, 0, 0.5);
             padding: 20px 40px;
@@ -54,7 +52,7 @@
             border-radius: 4px;
             font-size: 0.9rem;
             transition: 0.3s;
-            white-space: nowrap; /* Evita que el texto se rompa */
+            white-space: nowrap;
         }
 
         .back-link:hover {
@@ -62,7 +60,6 @@
             color: black;
         }
 
-        /* HERO SECTION */
         .help-hero {
             background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(20, 20, 20, 1)), url('https://assets.nflxext.com/ffe/siteui/vlv3/f841d4c7-10e1-40af-bcae-07a3f8dc141a/f6d7434e-d6de-4185-a6d4-c77a2d08737b/US-en-20220502-popsignuptwoweeks-perspective_alpha_website_medium.jpg');
             background-size: cover;
@@ -95,9 +92,6 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
         }
 
-
-
-        /* FAQ CONTAINER */
         .faq-container {
             max-width: 900px;
             margin: 40px auto;
@@ -194,7 +188,6 @@
             display: none;
         }
 
-        /* --- MEDIA QUERIES (RESPONSIVE) --- */
         @media (max-width: 768px) {
             .help-header {
                 flex-direction: column;

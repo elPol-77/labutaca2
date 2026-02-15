@@ -12,15 +12,14 @@
 
     <style>
         body {
-            background-color: #f3f3f3; /* Fondo gris claro para contraste estilo panel */
+            background-color: #f3f3f3; 
             color: #333;
             font-family: 'Outfit', sans-serif;
             margin: 0;
         }
 
-        /* HEADER SIMPLE (Igual que en Ayuda) */
         .account-header {
-            background: #141414; /* Negro Netflix */
+            background: #141414;
             padding: 20px 40px;
             display: flex; justify-content: space-between; align-items: center;
             color: white;
@@ -35,7 +34,6 @@
         }
         .back-link:hover { background: white; color: black; }
 
-        /* CONTENEDOR PRINCIPAL */
         .account-container {
             max-width: 1000px; margin: 40px auto; padding: 0 20px;
         }
@@ -45,13 +43,10 @@
             color: #333; font-weight: 700;
         }
 
-        /* ALERTAS */
         .alert { padding: 15px; border-radius: 4px; margin-bottom: 20px; color: white; }
         .alert-success { background: #2ecc71; }
         .alert-error { background: #e74c3c; }
         .alert-info { background: #3498db; }
-
-        /* GRID DEL PANEL */
         .account-grid {
             display: grid; grid-template-columns: 250px 1fr; gap: 30px;
             border-top: 1px solid #ddd; padding-top: 20px; margin-bottom: 20px;
@@ -63,7 +58,6 @@
 
         .data-col { color: #333; }
 
-        /* EMAIL Y PASSWORD */
         .user-row {
             display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
         }
@@ -72,7 +66,6 @@
         }
         .btn-link:hover { text-decoration: underline; }
 
-        /* FORMULARIO PASSWORD (OCULTO POR DEFECTO) */
         #formPassword {
             background: #e6e6e6; padding: 20px; border-radius: 5px; margin-top: 10px; display: none;
         }
@@ -83,7 +76,6 @@
             background: #0073e6; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;
         }
 
-        /* SECCIÓN PLAN */
         .plan-box {
             background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #ddd;
             display: flex; justify-content: space-between; align-items: center;

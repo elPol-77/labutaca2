@@ -52,7 +52,7 @@
                         
                         <div class="film-grid">
                             <?php foreach ($acting as $credito): ?>
-                                <?php if($credito['poster']): // Solo mostrar si tiene poster ?>
+                                <?php if($credito['poster']): ?>
                                 <a href="<?= base_url('detalle/' . $credito['id']) ?>" class="film-card">
                                     <div class="film-poster-container">
                                         <div class="skeleton-bg"></div>

@@ -29,19 +29,13 @@
 
             <script>
                 document.addEventListener("DOMContentLoaded", function() {
-                    // 1. Recibimos los datos de PHP en formato JSON
                     const misPelis = <?= json_encode($peliculas) ?>;
                     const container = document.getElementById('grid-mi-lista');
                     
                     let html = '';
-                    
-                    // 2. Usamos tu función maestra 'generarHtmlTarjeta' (definida en front.js)
-                    // para que el diseño sea consistente en toda la web
                     misPelis.forEach(item => {
                         html += generarHtmlTarjeta(item);
                     });
-                    
-                    // 3. Insertamos el HTML
                     container.innerHTML = html;
                 });
             </script>

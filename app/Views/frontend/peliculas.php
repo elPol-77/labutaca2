@@ -92,11 +92,9 @@
         let bloqueActual = 0;
         let cargandoBloque = false;
         let hayMasBloques = true;
-
-        // CONFIGURACIÓN SLICK (Igual que series)
         const slickSettings = {
             dots: false,
-            infinite: false, // Importante false para detectar final
+            infinite: false, 
             speed: 500,
             slidesToShow: 6,
             slidesToScroll: 3,
@@ -111,27 +109,23 @@
             ]
         };
 
-        // --- INICIALIZADOR DE CARRUSELES ---
         function inicializarCarruseles() {
             $('.slick-carousel-ajax:not(.slick-initialized)').each(function () {
                 let $carousel = $(this);
                 $carousel.slick(slickSettings);
-
-                // Evento para cargar más en horizontal
                 $carousel.on('afterChange', function (event, slick, currentSlide) {
                     if (slick.currentSlide + slick.options.slidesToShow >= slick.slideCount) {
                         if ($carousel.data('loading-more') === true) return;
 
                         let endpoint = $carousel.attr('data-endpoint');
                         if (endpoint === 'tmdb') {
-                            cargarMasPelisEnHorizontal($carousel); // <--- OJO: Llama a función de PELIS
+                            cargarMasPelisEnHorizontal($carousel);
                         }
                     }
                 });
             });
         }
 
-        // --- FUNCIÓN HORIZONTAL (PELIS) ---
         function cargarMasPelisEnHorizontal($carousel) {
             let params = $carousel.attr('data-params');
             let page = parseInt($carousel.attr('data-page'));
@@ -139,7 +133,6 @@
 
             $carousel.data('loading-more', true);
 
-            // CAMBIO CLAVE: URL apunta a 'peliculas/ajax-expandir-fila'
             $.ajax({
                 url: '<?= base_url("peliculas/ajax-expandir-fila") ?>',
                 method: 'POST',
@@ -188,13 +181,12 @@
             $.ajax({
                 url: '<?= base_url("peliculas/ajax-fila") ?>',
                 method: 'POST',
-                dataType: 'json', // <--- FUNDAMENTAL: Le decimos que esperamos JSON
+                dataType: 'json',
                 data: { bloque: bloqueActual, '<?= csrf_token() ?>': '<?= csrf_hash() ?>' },
                 success: function (res) {
                     cargandoBloque = false;
                     $('#spinner-scroll').hide();
 
-                    // Comprobamos si nos devolvió un html vacío (fin de resultados)
                     if (!res.html || res.html.trim() === "") {
                         hayMasBloques = false;
                         return;

@@ -7,10 +7,9 @@ class Series extends Peliculas
     public function index() {
         $data = [
             'titulo' => 'Gestión de Series',
-            'peliculas' => $this->model->where('tipo_id', 2)->orderBy('id', 'DESC')->paginate(10), // Filtro 2
+            'peliculas' => $this->model->where('tipo_id', 2)->orderBy('id', 'DESC')->paginate(10), 
             'pager' => $this->model->pager
         ];
-        // Reutilizamos la misma vista index, es compatible
         return view('backend/peliculas/index', $data);
     }
     

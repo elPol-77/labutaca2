@@ -221,12 +221,10 @@ class Peliculas extends BaseController
         // 1. PÓSTER
         $imgPoster = $this->request->getFile('imagen');
         if ($imgPoster && $imgPoster->isValid() && !$imgPoster->hasMoved()) {
-            // A. Si suben archivo
             $newName = $imgPoster->getRandomName();
             $imgPoster->move(FCPATH . 'assets/img', $newName);
             $data['imagen'] = $newName;
         } elseif ($this->request->getPost('url_imagen_externa')) {
-            // B. Si hay URL externa (TMDB)
             $data['imagen'] = $this->request->getPost('url_imagen_externa');
         }
 
@@ -325,12 +323,10 @@ class Peliculas extends BaseController
             if (empty($nombre))
                 continue;
 
-            // Buscar si existe
             $actorRow = $db->table('actores')->where('nombre', $nombre)->get()->getRow();
 
             if ($actorRow) {
                 $aid = $actorRow->id;
-                // Si no tenía foto y ahora traemos una, actualizamos
                 if (empty($actorRow->foto) && !empty($actorData['photo'])) {
                     $db->table('actores')->where('id', $aid)->update(['foto' => $actorData['photo']]);
                 }

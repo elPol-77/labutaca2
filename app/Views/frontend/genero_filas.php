@@ -150,8 +150,6 @@
             }
         }
     });
-
-    // 4. Botón Volver
     function cerrarGrid() {
         document.getElementById('vista-grid').style.display = 'none';
         document.getElementById('vista-filas').style.display = 'block';
@@ -161,8 +159,6 @@
     function desplazarFila(boton, direccion) {
 
         const contenedor = boton.parentElement.querySelector('.horizontal-scroll');
-
-        // 2. Calcular cuánto desplazar
         const anchoDesplazamiento = contenedor.clientWidth * 0.8;
 
         contenedor.scrollBy({

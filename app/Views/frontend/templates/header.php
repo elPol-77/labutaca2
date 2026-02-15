@@ -23,15 +23,12 @@
     </script>
 
     <style>
-        /* Botón móvil oculto en escritorio */
         .mobile-menu-toggle { display: none; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; padding: 10px; }
 
-        /* Estilo base del buscador para que la transición funcione */
         .search-input-neon {
             transition: width 0.3s ease, opacity 0.3s ease;
         }
 
-        /* --- MEDIA QUERIES PARA MÓVIL/TABLET --- */
         @media (max-width: 992px) {
             .neon-header {
                 flex-wrap: wrap; 
@@ -40,26 +37,21 @@
                 position: relative;
             }
 
-            /* 1. Botón hamburguesa */
             .mobile-menu-toggle { display: block; order: 1; z-index: 1001; }
 
-            /* 2. Logo */
             .logo-text { order: 2; font-size: 1.2rem; z-index: 1001; }
             
-            /* 3. Iconos derecha (Buscador, Perfil, Grid) */
             .header-right-icons { 
                 order: 3; 
-                gap: 15px !important; /* Espacio entre iconos */
-                position: relative; /* Necesario para posicionar el mega menú */
+                gap: 15px !important; 
+                position: relative; 
             }
-
-            /* 4. Navegación Central (Menú desplegable) */
             .nav-center {
                 display: none;
                 flex-direction: column;
                 width: 100%;
                 order: 4;
-                background: #080808; /* Fondo muy oscuro */
+                background: #080808; 
                 padding: 20px 0;
                 border-top: 1px solid #333;
                 position: absolute;
@@ -78,11 +70,8 @@
                 width: 100%;
                 font-size: 1.1rem;
             }
-
-            /* --- CORRECCIÓN GLOBAL ICON CENTRADO --- */
-            /* Seleccionamos el enlace que contiene el icono global dentro del menú móvil */
             .nav-center a[href*="global"] {
-                margin: 20px auto 10px auto !important; /* Auto márgenes laterales lo centran */
+                margin: 20px auto 10px auto !important; 
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -92,47 +81,41 @@
                 border-radius: 50%;
             }
 
-            /* --- CORRECCIÓN BUSCADOR RESPONSIVE --- */
             .search-wrapper {
                 position: relative; 
             }
-            /* En móvil, el input está oculto hasta que se activa */
             .search-input-neon {
                 display: none; 
                 position: absolute;
-                top: 45px; /* Debajo del icono */
-                right: 0; /* Alineado a la derecha para no salirse */
+                top: 45px; 
+                right: 0; 
                 width: 220px;
                 background: #1a1a1a;
                 border: 1px solid #444;
                 z-index: 1050;
                 padding: 10px;
             }
-            /* Al activar (clase active añadida con JS inline), se muestra */
             .search-wrapper.active .search-input-neon {
                 display: block;
             }
-
-            /* --- CORRECCIÓN MEGA MENU (GÉNEROS) --- */
             .category-menu-wrapper {
-                position: static; /* Permite que el mega menú use el ancho del header si es necesario */
+                position: static; 
             }
 
             .mega-menu {
                 position: absolute;
                 top: 50px;
-                right: -60px; /* Ajuste manual para que no se salga por la derecha */
-                width: 300px; /* Ancho fijo seguro para móvil */
+                right: -60px;
+                width: 300px; 
                 max-width: 90vw;
                 background: rgba(20, 20, 20, 0.95);
                 backdrop-filter: blur(10px);
-                flex-direction: column; /* Columnas una debajo de otra */
+                flex-direction: column; 
                 border: 1px solid #333;
                 border-radius: 8px;
                 overflow: hidden;
             }
 
-            /* Quitar borde lateral y añadir inferior en móvil */
             .mega-column.border-left {
                 border-left: none;
                 border-top: 1px solid #333;
@@ -144,7 +127,7 @@
             }
 
             .genre-grid {
-                grid-template-columns: repeat(2, 1fr); /* 2 columnas de géneros en móvil */
+                grid-template-columns: repeat(2, 1fr); 
                 gap: 8px;
             }
             
@@ -317,14 +300,11 @@
     </div>
 
     <script>
-        // SCRIPT PARA MENÚ MÓVIL Y BUSCADOR
         function toggleMenu() {
             document.getElementById('mainNav').classList.toggle('active');
         }
 
-        // Función específica para el buscador en móvil
         function toggleSearch(element) {
-            // Solo activar toggle si estamos en móvil/pantalla pequeña
             if (window.innerWidth <= 992) {
                 element.classList.toggle('active');
                 if(element.classList.contains('active')){
@@ -332,8 +312,6 @@
                 }
             }
         }
-
-        // --- Resto de tu lógica JS original ---
         let isSubmitting = false;
 
         function headerAttemptLogin(id, username, planId) {

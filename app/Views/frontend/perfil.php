@@ -161,24 +161,18 @@
 </div>
 
 <script>
-    document.querySelector('form').addEventListener('submit', function(e) {
+    document.querySelector('form').addEventListener('submit', function (e) {
         const pass = document.getElementById('new_password').value;
         const confirm = document.getElementById('confirm_password').value;
         const errorDiv = document.getElementById('password-error');
-        
-        // Limpiamos errores previos
+
         errorDiv.style.display = 'none';
         errorDiv.innerText = '';
 
-        // CASO 1: Campos vacíos -> No hacemos nada, el usuario no quiere cambiar la pass
-        if (pass === '' && confirm === '') {
-            return; // Dejamos que el formulario se envíe normal
+¡        if (pass === '' && confirm === '') {
+            return;
         }
-
-        // CASO 2: El usuario escribió algo, hay que validar
-        e.preventDefault(); // Detenemos el envío momentáneamente para validar
-
-        // A. Coincidencia
+        e.preventDefault();
         if (pass !== confirm) {
             errorDiv.innerText = "❌ Las contraseñas no coinciden.";
             errorDiv.style.display = 'block';
@@ -193,33 +187,32 @@
         const reglas = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
 
         if (!reglas.test(pass)) {
-            errorDiv.innerText = "⚠️ La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.";
+            errorDiv.innerText = "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.";
             errorDiv.style.display = 'block';
             return;
         }
-
-        // Si todo está bien, enviamos el formulario manualmente
         this.submit();
-    
-    // Detectar si el usuario cambia a Plan Premium (ID 2) para cambiar el texto del botón
-    const radios = document.querySelectorAll('input[name="plan_id"]');
-    const submitBtn = document.querySelector('.btn-guardar');
 
-    const currentPlan = <?= $usuario['plan_id'] ?>;
+        // Detectar si el usuario cambia a Plan Premium (ID 2) para cambiar el texto del botón
+        const radios = document.querySelectorAll('input[name="plan_id"]');
+        const submitBtn = document.querySelector('.btn-guardar');
 
-    if (radios) {
-        radios.forEach(radio => {
-            radio.addEventListener('change', function () {
-                if (this.value == 2 && currentPlan == 1) {
-                    submitBtn.innerText = "Ir al Pago (9.99€)";
-                    submitBtn.style.background = "#e50914";
-                    submitBtn.style.color = "white";
-                } else {
-                    submitBtn.innerText = "Guardar Cambios";
-                    submitBtn.style.background = "white";
-                    submitBtn.style.color = "black";
-                }
+        const currentPlan = <?= $usuario['plan_id'] ?>;
+
+        if (radios) {
+            radios.forEach(radio => {
+                radio.addEventListener('change', function () {
+                    if (this.value == 2 && currentPlan == 1) {
+                        submitBtn.innerText = "Ir al Pago (9.99€)";
+                        submitBtn.style.background = "#e50914";
+                        submitBtn.style.color = "white";
+                    } else {
+                        submitBtn.innerText = "Guardar Cambios";
+                        submitBtn.style.background = "white";
+                        submitBtn.style.color = "black";
+                    }
+                });
             });
-        });
-    }
+        }
+    });
 </script>

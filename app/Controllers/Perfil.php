@@ -45,10 +45,7 @@ class Perfil extends BaseController
 
         $planId = $usuario['plan_id'];
 
-        // =========================================================
-        // 📅 CÁLCULO DE SUSCRIPCIÓN (LÓGICA REAL: FECHA FIN)
-        // =========================================================
-
+        // CÁLCULO DE SUSCRIPCIÓN
         $nombrePlan = 'Free';
         $precio = '0.00€';
         if ($planId == 2) {
@@ -69,7 +66,6 @@ class Perfil extends BaseController
         if ($planId > 1) {
             try {
                 if (!empty($usuario['fecha_fin_suscripcion'])) {
-                    // Usamos la FECHA REAL DE CADUCIDAD de la BD
                     $fechaFin = new \DateTime($usuario['fecha_fin_suscripcion']);
                     $hoy = new \DateTime();
 
@@ -85,14 +81,12 @@ class Perfil extends BaseController
                         if ($porcentajeBarra > 100)
                             $porcentajeBarra = 100;
                     } else {
-                        // Ya ha caducado (pero el usuario aún no ha sido degradado por el sistema)
                         $diasRestantes = 0;
                         $fechaRenovacion = "Caducada";
                         $estadoSuscripcion = 'Pendiente de Pago';
                         $porcentajeBarra = 0;
                     }
                 } else {
-                    // Fallback: Es Premium pero no tiene fecha (error de datos antiguos)
                     $diasRestantes = 30;
                     $fechaRenovacion = "Indefinida";
                 }
@@ -101,9 +95,6 @@ class Perfil extends BaseController
                 $fechaRenovacion = "Error";
             }
         }
-
-        // =========================================================
-
         $otrosPerfiles = $userModel->where('id !=', $userId)
             ->where('id >=', 2)
             ->where('id <=', 4)
@@ -126,7 +117,6 @@ class Perfil extends BaseController
                 2 => 'Plan Premium (Todo incluido)',
                 3 => 'Perfil Kids (Contenido Infantil)'
             ],
-            // 🟢 DATOS REALES ENVIADOS A LA VISTA
             'suscripcion' => [
                 'nombre_plan' => $nombrePlan,
                 'precio' => $precio,
@@ -153,7 +143,7 @@ class Perfil extends BaseController
 
         // --- DATOS DE CONTRASEÑA ---
         $nuevaPass = $this->request->getPost('new_password');
-        $confirmPass = $this->request->getPost('confirm_password'); // <--- RECOGEMOS LA CONFIRMACIÓN
+        $confirmPass = $this->request->getPost('confirm_password');
 
         $model = new UsuarioModel();
         $usuarioActual = $model->find($idUsuario);
@@ -180,15 +170,12 @@ class Perfil extends BaseController
             $data['plan_id'] = $nuevoPlan;
         }
 
-        // 3. LÓGICA DE CONTRASEÑA (VERIFICACIÓN DOBLE)
+        // 3. LÓGICA DE CONTRASEÑA
         if (!empty($nuevaPass)) {
-
-            // A. Verificamos que coincidan (Seguridad de servidor)
             if ($nuevaPass !== $confirmPass) {
                 return redirect()->back()->withInput()->with('error', 'Error: Las contraseñas no coinciden.');
             }
 
-            // B. Validación de complejidad (Regex)
             // Min 8 chars, 1 Mayúscula, 1 Minúscula, 1 Número
             if (preg_match('/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/', $nuevaPass)) {
                 $data['password'] = password_hash($nuevaPass, PASSWORD_DEFAULT);
@@ -210,17 +197,12 @@ class Perfil extends BaseController
         return redirect()->to('/perfil')->with('success', 'Perfil actualizado correctamente.');
     }
 
-    // =========================================================================
-    // 🟡 INTEGRACIÓN DE STRIPE (UPGRADE)
-    // =========================================================================
-
     public function pasarela_upgrade()
     {
         if (!session()->has('temp_upgrade_data'))
             return redirect()->to('/perfil');
 
         $user = session()->get('temp_upgrade_data');
-        // Pasamos 'is_upgrade' para que la vista sepa que debe cambiar el texto del botón y el enlace de cancelar
         return view('auth/payment_gateway', ['user' => $user, 'is_upgrade' => true]);
     }
 
@@ -249,9 +231,8 @@ class Perfil extends BaseController
                     ]
                 ],
                 'mode' => 'payment',
-                // Rutas de retorno específicas para el perfil
                 'success_url' => base_url('perfil/confirmar_upgrade?session_id={CHECKOUT_SESSION_ID}'),
-                'cancel_url' => base_url('perfil'), // Si cancela, vuelve a su perfil
+                'cancel_url' => base_url('perfil'),
             ]);
 
             return redirect()->to($session->url);
@@ -271,8 +252,6 @@ class Perfil extends BaseController
 
         $datos = session()->get('temp_upgrade_data');
         $model = new UsuarioModel();
-
-        // 1. Actualizamos la Base de Datos
         $model->update($datos['id'], [
             'username' => $datos['username'],
             'plan_id' => $datos['plan_id'],
@@ -287,7 +266,6 @@ class Perfil extends BaseController
             'avatar' => $datos['avatar']
         ]);
 
-        // 3. Limpiamos datos temporales
         session()->remove('temp_upgrade_data');
 
         return redirect()->to('/perfil')->with('success', '¡Pago realizado con éxito! Ahora eres Premium.');

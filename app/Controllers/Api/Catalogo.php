@@ -9,56 +9,44 @@ use App\Models\MiListaModel;
 
 class Catalogo extends ResourceController
 {
-    protected $format = 'json'; // Siempre devuelve JSON
+    protected $format = 'json';
     private $tmdbApiKey = '6387e3c183c454304108333c56530988';
 
-    // =================================================================
     // 1. HOME PRINCIPAL (Datos para la portada híbrida/API)
-    // =================================================================
     public function getHome()
     {
-        $planId = session()->get('plan_id') ?? 1; // 1 = Free, 2 = Premium, 3 = Kids
+        $planId = session()->get('plan_id') ?? 1;
         $userId = session()->get('user_id');
         $esKids = ($planId == 3);
 
         $model = new ContenidoModel();
 
-        // A. CARRUSEL
         $builder = $model->orderBy('id', 'DESC');
 
-        // --- FILTROS DE SEGURIDAD ---
         if ($esKids)
             $builder->where('edad_recomendada <=', 11);
 
-        // Si es FREE, solo mostramos contenido nivel 1
         if ($planId == 1)
             $builder->where('nivel_acceso', 1);
-        // ----------------------------
 
         $carrusel = $builder->limit(5)->find();
         $this->procesarImagenes($carrusel);
         $carrusel = $this->marcarEnMiLista($carrusel, $userId);
 
-        // B. SECCIONES
         $secciones = [];
 
-        // Fila 1: Tendencias
-        // NOTA: getTendencias suele ser una query personalizada en el Modelo.
-        // Si tu modelo no filtra por plan dentro de esa función, las Premium podrían colarse.
-        // Asumo que getTendencias($limit, $planId) ya recibe el planId y filtra dentro.
+
         $tendencias = $model->getTendencias(10, $planId);
         $this->procesarImagenes($tendencias);
         $tendencias = $this->marcarEnMiLista($tendencias, $userId);
 
         $secciones[] = [
-            'titulo' => $esKids ? 'Favoritos Kids 🎈' : 'Tendencias 🔥',
+            'titulo' => $esKids ? 'Favoritos Kids ' : 'Tendencias ',
             'data' => $tendencias
         ];
 
-        // Fila 2: Recomendados por Género
         $generoFav = $userId ? $model->getGeneroFavoritoUsuario($userId, 1) : null;
         if ($generoFav) {
-            // Pasamos planId para que el modelo filtre
             $rec = $model->getPorGenero($generoFav['id'], 1, 10, [], $planId);
             $titulo = 'Porque viste ' . $generoFav['nombre'];
         } else {
@@ -78,9 +66,7 @@ class Catalogo extends ResourceController
         ]);
     }
 
-    // =================================================================
-    // 2. PELÍCULA DESTACADA ALEATORIA
-    // =================================================================
+    // PELÍCULA DESTACADA ALEATORIA
     public function getDestacadaRandom()
     {
         $userId = session()->get('user_id');
@@ -116,9 +102,7 @@ class Catalogo extends ResourceController
         return $this->respond($peli);
     }
 
-    // =================================================================
-    // 3. LISTADO GENERAL / GRID (Index)
-    // =================================================================
+    // LISTADO GENERAL / GRID 
     public function index()
     {
         $planId = session()->get('plan_id') ?? 1;
@@ -129,11 +113,9 @@ class Catalogo extends ResourceController
         $model = new ContenidoModel();
         $generoModel = new GeneroModel();
 
-        // A. SI HAY GÉNERO -> Estructura Landing
         if (!empty($generoId)) {
             $nombreGenero = $generoModel->find($generoId)['nombre'] ?? 'Contenido';
 
-            // 1. Películas (Filtradas por Plan dentro de getPorGenero)
             $pelis = $model->getPorGenero($generoId, 1, 24, [], $planId);
             $this->procesarImagenes($pelis);
             $pelis = $this->marcarEnMiLista($pelis, $userId);
@@ -182,9 +164,7 @@ class Catalogo extends ResourceController
         }
     }
 
-    // =================================================================
-    // 4. DETALLE DE CONTENIDO
-    // =================================================================
+    // DETALLE DE CONTENIDO
     public function show($id = null)
     {
         $planId = session()->get('plan_id') ?? 1;
@@ -194,7 +174,6 @@ class Catalogo extends ResourceController
         if (!$data)
             return $this->failNotFound('Contenido no encontrado');
 
-        // SEGURIDAD: Si es usuario Free y el contenido es Premium (2), bloqueamos
         if ($planId == 1 && $data['nivel_acceso'] == 2) {
             return $this->failForbidden('Este contenido es exclusivo para usuarios Premium.');
         }
@@ -207,9 +186,8 @@ class Catalogo extends ResourceController
         return $this->respond($data);
     }
 
-    // =================================================================
-    // 5. BUSCADOR (Autocomplete)
-    // =================================================================
+    // BUSCADOR (Autocomplete)
+
     public function autocompletar()
     {
         $search = $this->request->getPost('search');
@@ -217,7 +195,6 @@ class Catalogo extends ResourceController
         $esKids = ($planId == 3);
         $esFree = ($planId == 1);
 
-        // Añadimos 'debug' para que veas si se está ejecutando este código nuevo
         $response = ['token' => csrf_hash(), 'data' => [], 'debug' => 'VERSIÓN NUEVA ACTIVA'];
 
         if ($search) {
@@ -239,18 +216,16 @@ class Catalogo extends ResourceController
             $titulosLocales = [];
 
             foreach ($localResults as $peli) {
-                // Guardamos ID TMDB si existe
                 if (!empty($peli['imdb_id'])) {
                     $idsLocales[] = (string) $peli['imdb_id'];
                 }
-                // Guardamos Título Normalizado
                 $titulosLocales[] = $this->normalizarTexto($peli['titulo']);
 
                 $imgUrl = str_starts_with($peli['imagen'], 'http') ? $peli['imagen'] : base_url('assets/img/' . $peli['imagen']);
 
                 $response['data'][] = [
                     "value" => $peli['id'],
-                    "label" => $peli['titulo'], // Label limpio
+                    "label" => $peli['titulo'],
                     "img" => $imgUrl,
                     "type" => "local"
                 ];
@@ -273,7 +248,7 @@ class Catalogo extends ResourceController
                             if ($item['media_type'] != 'movie' && $item['media_type'] != 'tv')
                                 continue;
 
-                            // 🛑 FILTRO ANTI-DUPLICADOS 🛑
+                            // FILTRO ANTI-DUPLICADOS 
                             $tmdbId = (string) $item['id'];
                             $tituloRaw = ($item['media_type'] == 'movie') ? $item['title'] : $item['name'];
                             $tituloNorm = $this->normalizarTexto($tituloRaw);
@@ -319,9 +294,7 @@ class Catalogo extends ResourceController
         return preg_replace('/[^a-z0-9]/', '', $str);
     }
 
-    // =================================================================
-    // 6. LANDING PELÍCULAS (CARRUSEL + FILAS)
-    // =================================================================
+
     public function getPeliculasLanding()
     {
         $planId = session()->get('plan_id') ?? 1;
@@ -350,28 +323,28 @@ class Catalogo extends ResourceController
         $this->procesarImagenes($accion);
         $accion = $this->marcarEnMiLista($accion, $userId);
         if ($accion)
-            $secciones[] = ['titulo' => 'Pura Adrenalina 💥', 'data' => $accion];
+            $secciones[] = ['titulo' => 'Pura Adrenalina ', 'data' => $accion];
 
         // Fila 2: Comedia
         $comedia = $model->getPorGenero(2, 1, 12, [], $planId);
         $this->procesarImagenes($comedia);
         $comedia = $this->marcarEnMiLista($comedia, $userId);
         if ($comedia)
-            $secciones[] = ['titulo' => 'Risas aseguradas 😂', 'data' => $comedia];
+            $secciones[] = ['titulo' => 'Risas aseguradas ', 'data' => $comedia];
 
         // Fila 3: Terror
         $terror = $model->getPorGenero(4, 1, 12, [], $planId);
         $this->procesarImagenes($terror);
         $terror = $this->marcarEnMiLista($terror, $userId);
         if ($terror)
-            $secciones[] = ['titulo' => 'No apagues la luz 🕯️', 'data' => $terror];
+            $secciones[] = ['titulo' => 'No apagues la luz ', 'data' => $terror];
 
         // Fila 4: Drama
         $drama = $model->getPorGenero(3, 1, 12, [], $planId);
         $this->procesarImagenes($drama);
         $drama = $this->marcarEnMiLista($drama, $userId);
         if ($drama)
-            $secciones[] = ['titulo' => 'Historias profundas 🎭', 'data' => $drama];
+            $secciones[] = ['titulo' => 'Historias profundas ', 'data' => $drama];
 
         return $this->respond([
             'carrusel' => $carrusel,
@@ -385,10 +358,6 @@ class Catalogo extends ResourceController
             return $this->failUnauthorized();
         return $this->getHome();
     }
-
-    // =================================================================
-    // FUNCIONES AUXILIARES PRIVADAS
-    // =================================================================
 
     private function procesarImagenes(&$lista)
     {
@@ -409,7 +378,7 @@ class Catalogo extends ResourceController
         if (empty($contenidos) || !$userId)
             return $contenidos;
 
-        $miListaModel = new \App\Models\MiListaModel();
+        $miListaModel = new MiListaModel();
 
         $ids = array_column($contenidos, 'id');
         if (empty($ids))

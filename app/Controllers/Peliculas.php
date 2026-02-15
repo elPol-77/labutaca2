@@ -12,7 +12,6 @@ class Peliculas extends BaseController
 
     public function index()
     {
-        // 1. CHEQUEO DE SESIÓN
         if (!session()->get('is_logged_in'))
             return redirect()->to('/auth');
 
@@ -23,43 +22,29 @@ class Peliculas extends BaseController
 
         $destacada = null;
         $model = new ContenidoModel();
-
-        // =========================================================
-        // 🎲 LÓGICA ALEATORIA (HERO)
-        // =========================================================
-
-        // --- CASO A: USUARIO FREE (Aleatorio Local) ---
         if ($esFree) {
-            // Buscamos una película aleatoria en la BD que sea Gratis
-            $localRandom = $model->where('tipo_id', 1)       // Es Película
-                ->where('nivel_acceso', 1)  // Es Gratis
-                ->where('imagen_bg !=', '') // Tiene fondo
-                ->orderBy('RAND()')         // <--- ¡MAGIA! Aleatorio puro
+            $localRandom = $model->where('tipo_id', 1)
+                ->where('nivel_acceso', 1)
+                ->where('imagen_bg !=', '')
+                ->orderBy('RAND()')
                 ->first();
 
             if ($localRandom) {
                 $destacada = $this->formatearLocal($localRandom);
             }
         }
-
-        // --- CASO B: PREMIUM O KIDS (Aleatorio API TMDB) ---
         else {
-            // Pedimos una página al azar (1-5) para variar contenido
             $paginaAleatoria = rand(1, 5);
 
             $params = [
                 'sort_by' => 'popularity.desc',
                 'page' => 1
             ];
-
-            // La función fetchTmdbDiscover ya filtra si $esKids es true
             $resultados = $this->fetchTmdbDiscover($params, $esKids);
 
             if (!empty($resultados)) {
-                // Mezclamos para coger una cualquiera de esa página
                 shuffle($resultados);
 
-                // Buscamos la primera con imagen de fondo válida
                 foreach ($resultados as $peli) {
                     if (!empty($peli['imagen_bg'])) {
                         $s = $peli;
@@ -76,12 +61,7 @@ class Peliculas extends BaseController
                 }
             }
         }
-
-        // =========================================================
-        // 🛡️ FALLBACK (Por si falla la API o no hay pelis gratis)
-        // =========================================================
         if (empty($destacada)) {
-            // Cogemos CUALQUIER película local aleatoria para salvar el diseño
             $backup = $model->where('tipo_id', 1)
                 ->where('imagen_bg !=', '')
                 ->orderBy('RAND()')
@@ -92,7 +72,6 @@ class Peliculas extends BaseController
             }
         }
 
-        // ULTIMÍSIMO RECURSO (Base de datos vacía)
         if (empty($destacada)) {
             $destacada = [
                 'id' => 0,
@@ -120,7 +99,6 @@ class Peliculas extends BaseController
         echo view('frontend/templates/footer', $data);
     }
 
-    // --- AÑADE ESTA FUNCIÓN HELPER PRIVADA (Necesaria para el index) ---
     private function formatearLocal($r)
     {
         $bg = str_starts_with($r['imagen_bg'], 'http') ? $r['imagen_bg'] : base_url('assets/img/' . $r['imagen_bg']);
@@ -139,9 +117,7 @@ class Peliculas extends BaseController
             'link_detalle' => base_url('detalle/' . $r['id'])
         ];
     }
-    // =================================================================
     // CARGA AJAX A PRUEBA DE FALLOS (Retry Loop)
-    // =================================================================
     public function ajaxCargarFila()
     {
         $bloqueSolicitado = intval($this->request->getPost('bloque'));
@@ -152,18 +128,15 @@ class Peliculas extends BaseController
 
         $html = "";
         $filasGeneradas = 0;
-        $filasDeseadas = 4; // QUEREMOS 4 FILAS POR PETICIÓN
+        $filasDeseadas = 4;
         $bloqueActual = $bloqueSolicitado;
         $intentos = 0;
-        $maxIntentos = 15; // Aumentado por si falla la API en algún bloque
+        $maxIntentos = 15;
 
-        // BUCLE: Seguimos hasta tener 4 filas o hasta llegar al límite de intentos
         do {
             $items = [];
 
-            // ---------------------------------------------------------
             // 1. EL MAPA DE CATEGORÍAS (PELÍCULAS)
-            // ---------------------------------------------------------
             if ($esFree) {
                 $mapa = [
                     0 => ['tipo' => 'local', 'titulo' => 'Películas Gratis'],
@@ -205,13 +178,10 @@ class Peliculas extends BaseController
                     15 => ['tipo' => 'tmdb', 'titulo' => 'Christopher Nolan', 'params' => ['with_crew' => '525', 'sort_by' => 'popularity.desc']],
                 ];
             }
-
-            // ---------------------------------------------------------
             // 2. GENERADOR INFINITO
-            // ---------------------------------------------------------
             if (!isset($mapa[$bloqueActual])) {
                 if ($esFree)
-                    break; // Si es Free y se acaba el mapa, paramos del todo.
+                    break;
 
                 if ($esKids) {
                     $pool = [
@@ -249,17 +219,13 @@ class Peliculas extends BaseController
 
             $config = $mapa[$bloqueActual];
             $saltarBloque = false;
-
-            // Filtros de seguridad extra para Kids
             if ($esKids && isset($config['params']['with_genres'])) {
                 $g = (string) $config['params']['with_genres'];
                 if (strpos($g, '27') !== false || strpos($g, '80') !== false)
                     $saltarBloque = true;
             }
 
-            // ---------------------------------------------------------
-            // 4. OBTENCIÓN DE DATOS
-            // ---------------------------------------------------------
+            // FILTRO DE DATOS
             if (!$saltarBloque) {
                 if ($config['tipo'] === 'local') {
                     $items = $this->obtenerLocal($esKids, $esFree, $config['params'] ?? []);
@@ -268,9 +234,7 @@ class Peliculas extends BaseController
                 }
             }
 
-            // ---------------------------------------------------------
-            // 5. GENERACIÓN HTML (ACUMULANDO FILAS)
-            // ---------------------------------------------------------
+            // GENERACIÓN HTML (ACUMULANDO FILAS)
             if (!empty($items)) {
                 $paramsEncoded = base64_encode(json_encode($config['params'] ?? []));
                 $startPage = $config['params']['page'] ?? 1;
@@ -303,19 +267,15 @@ class Peliculas extends BaseController
 
                     $html .= '<div class="slick-slide-item" style="padding: 0 5px;">';
                     $html .= '  <div class="movie-card">';
-
-                    // --- AQUÍ ESTÁ EL LAZY LOAD Y EL SKELETON ---
-                    // Código OPTIMIZADO
                     $html .= '  <div class="poster-visible">';
                     $html .= '      <img src="' . $img . '" ';
-                    $html .= '           loading="lazy" ';        // Carga diferida
-                    $html .= '           decoding="async" ';      // <--- CLAVE: Decodifica en paralelo sin bloquear el scroll
-                    $html .= '           width="200" height="300" '; // <--- CLAVE: Reserva espacio antes de cargar (evita saltos)
+                    $html .= '           loading="lazy" ';
+                    $html .= '           decoding="async" ';
+                    $html .= '           width="200" height="300" ';
                     $html .= '           alt="' . $titulo . '" ';
-                    $html .= '           style="content-visibility: auto;" '; // Ayuda al renderizado
+                    $html .= '           style="content-visibility: auto;" ';
                     $html .= '           onload="this.classList.add(\'loaded\')">';
                     $html .= '  </div>';
-                    // --------------------------------------------
 
                     $html .= '    <div class="hover-details-card">';
                     $html .= '      <div class="hover-backdrop" style="background-image: url(\'' . $bg . '\'); cursor: pointer;" onclick="window.location.href=\'' . $linkD . '\'"></div>';
@@ -335,26 +295,22 @@ class Peliculas extends BaseController
                     $html .= '  </div>';
                     $html .= '</div>';
                 }
-                $html .= '  </div>'; // Fin slick
-                $html .= '</div>'; // Fin row
+                $html .= '  </div>';
+                $html .= '</div>';
 
-                $filasGeneradas++; // Contabilizamos una fila generada con éxito
+                $filasGeneradas++;
             }
 
             $bloqueActual++;
             $intentos++;
-
-            // YA NO HACEMOS 'break' AQUÍ. El bucle seguirá hasta que $filasGeneradas llegue a 4.
         } while ($filasGeneradas < $filasDeseadas && $intentos < $maxIntentos);
 
-        // RESPONDEMOS CON JSON
         return $this->response->setJSON([
             'html' => $html,
             'next_bloque' => $bloqueActual
         ]);
     }
 
-    // --- HELPER LOCAL (Tipo ID = 1 para Pelis) ---
     private function obtenerLocal($esKids, $esFree, $params = [])
     {
         $model = new ContenidoModel();
@@ -408,7 +364,6 @@ class Peliculas extends BaseController
         return $items;
     }
 
-    // --- HELPER TMDB PARA PELÍCULAS ---
     private function fetchTmdbDiscover($params = [], $esKids = false)
     {
         $baseParams = array_merge([
@@ -429,14 +384,10 @@ class Peliculas extends BaseController
                 $baseParams['without_genres'] = $generosProhibidos;
             }
         }
-
-        // OPTIMIZACIÓN 2: Timeout corto (3s) para no colgar el servidor si la API falla
         $arrContextOptions = [
             "ssl" => ["verify_peer" => false, "verify_peer_name" => false],
             "http" => ["ignore_errors" => true, "timeout" => 3.0]
         ];
-
-        // OPTIMIZACIÓN 3: Quitamos el bucle FOR. Solo pedimos una página.
         $url = "https://api.themoviedb.org/3/discover/movie?" . http_build_query($baseParams);
         $json = @file_get_contents($url, false, stream_context_create($arrContextOptions));
 
@@ -456,10 +407,7 @@ class Peliculas extends BaseController
                     }
 
                     $bg = !empty($item['backdrop_path']) ? $item['backdrop_path'] : $item['poster_path'];
-
-                    // OPTIMIZACIÓN 4: Usamos w1280 (Full HD ligero) en vez de w780
                     $fullBg = "https://image.tmdb.org/t/p/w1280" . $bg;
-
                     $edadCalculada = '11';
                     if (isset($item['genre_ids']) && (in_array(16, $item['genre_ids']) || in_array(10751, $item['genre_ids']))) {
                         $edadCalculada = 'TP';
@@ -468,9 +416,9 @@ class Peliculas extends BaseController
                     $finalResults[] = [
                         'id' => 'tmdb_movie_' . $item['id'],
                         'titulo' => $item['title'],
-                        'imagen' => "https://image.tmdb.org/t/p/w300" . $item['poster_path'], // w342 para grid
-                        'imagen_bg' => $fullBg, // Para el hover
-                        'backdrop' => $fullBg,  // CLAVE: Para el Hero
+                        'imagen' => "https://image.tmdb.org/t/p/w300" . $item['poster_path'],
+                        'imagen_bg' => $fullBg,
+                        'backdrop' => $fullBg,
                         'descripcion' => $item['overview'],
                         'anio' => substr($item['release_date'] ?? '', 0, 4),
                         'edad' => $edadCalculada,
@@ -483,9 +431,7 @@ class Peliculas extends BaseController
         return $finalResults;
     }
 
-    // =================================================================
     // CARGAR MÁS PELIS EN HORIZONTAL
-    // =================================================================
     public function ajaxExpandirFila()
     {
         $paramsEncoded = $this->request->getPost('params');
@@ -530,15 +476,13 @@ class Peliculas extends BaseController
 
             $html .= '<div class="slick-slide-item" style="padding: 0 5px;">';
             $html .= '  <div class="movie-card">';
-            // Fíjate que hemos cambiado src="URL" por data-lazy="URL"
-            // Código OPTIMIZADO
             $html .= '  <div class="poster-visible">';
             $html .= '      <img src="' . $img . '" ';
-            $html .= '           loading="lazy" ';        // Carga diferida
-            $html .= '           decoding="async" ';      // <--- CLAVE: Decodifica en paralelo sin bloquear el scroll
-            $html .= '           width="200" height="300" '; // <--- CLAVE: Reserva espacio antes de cargar (evita saltos)
+            $html .= '           loading="lazy" ';
+            $html .= '           decoding="async" ';
+            $html .= '           width="200" height="300" ';
             $html .= '           alt="' . $titulo . '" ';
-            $html .= '           style="content-visibility: auto;" '; // Ayuda al renderizado
+            $html .= '           style="content-visibility: auto;" ';
             $html .= '           onload="this.classList.add(\'loaded\')">';
             $html .= '  </div>';
             $html .= '    <div class="hover-details-card">';

@@ -15,11 +15,10 @@ class Cuenta extends BaseController
         $model = new UsuarioModel();
         $usuario = $model->find(session()->get('user_id'));
 
-        // Simulamos datos de facturación para la vista
         $data = [
             'usuario' => $usuario,
             'titulo'  => 'Cuenta y Configuración - La Butaca',
-            'tarjeta' => '•••• •••• •••• 4242', /
+            'tarjeta' => '•••• •••• •••• 4242', 
             'proximo_cobro' => date('d/m/Y', strtotime('+1 month')) 
         ];
 

@@ -7,11 +7,10 @@ use CodeIgniter\Model;
 class MiListaModel extends Model
 {
     protected $table            = 'mi_lista';
-    protected $primaryKey       = 'usuario_id'; // Clave compuesta, usamos esta por convención
+    protected $primaryKey       = 'usuario_id'; 
     protected $allowedFields    = ['usuario_id', 'contenido_id', 'fecha_agregado'];
     protected $useTimestamps    = false;
 
-    // Función para obtener la lista completa con los detalles de la película
     public function getListaUsuario($userId)
     {
         return $this->select('contenidos.*, mi_lista.fecha_agregado')

@@ -21,18 +21,14 @@ class Serie extends BaseController
         $esFree = ($planId == 1);
         $esKids = ($planId == 3);
 
-        $destacada = null; // Variable única, no array
+        $destacada = null;
 
-        // ---------------------------------------------------------
-        // CASO A: USUARIO FREE (1 Serie Local Aleatoria)
-        // ---------------------------------------------------------
         if ($esFree) {
             $model = new ContenidoModel();
-            // Seleccionamos 1 serie aleatoria de la base de datos
             $r = $model->where('tipo_id', 2)
-                ->where('nivel_acceso', 1) // Solo series
-                ->orderBy('RAND()')   // Aleatorio
-                ->first();            // SOLO UNA
+                ->where('nivel_acceso', 1) 
+                ->orderBy('RAND()')  
+                ->first();  
 
             if ($r) {
                 // Arreglar rutas de imagen
@@ -52,19 +48,14 @@ class Serie extends BaseController
             }
         }
 
-        // ---------------------------------------------------------
-        // CASO B: USUARIO KIDS O PREMIUM (1 Serie Top de TMDB)
-        // ---------------------------------------------------------
         else {
             $params = ['sort_by' => 'popularity.desc', 'page' => 1];
 
-            // Llamamos a la API (el filtro Kids ya lo hace tu función fetchTmdbDiscover)
             $resultados = $this->fetchTmdbDiscover($params, $esKids);
 
             if (!empty($resultados)) {
-                // Mezclamos y cogemos la primera
                 shuffle($resultados);
-                $s = $resultados[0]; // SOLO LA PRIMERA
+                $s = $resultados[0];
 
                 $destacada = [
                     'id' => $s['id'],
@@ -77,9 +68,6 @@ class Serie extends BaseController
             }
         }
 
-        // ---------------------------------------------------------
-        // VISTA
-        // ---------------------------------------------------------
         $data = [
             'titulo' => 'Series - La Butaca',
             'destacada' => $destacada,
@@ -94,13 +82,6 @@ class Serie extends BaseController
         echo view('frontend/series', $data);
         echo view('frontend/templates/footer', $data);
     }
-
-    // =================================================================
-    // CARGA AJAX A PRUEBA DE FALLOS (Retry Loop)
-    // =================================================================
-// =================================================================
-    // CARGA AJAX A PRUEBA DE FALLOS (Retry Loop)
-    // =================================================================
     public function ajaxCargarFila()
     {
         $bloqueSolicitado = intval($this->request->getPost('bloque'));
@@ -113,20 +94,15 @@ class Serie extends BaseController
         $intentos = 0;
         $maxIntentos = 5;
         $encontrado = false;
-
-        // BUCLE DE SEGURIDAD
         do {
             $bloqueActual = $bloqueSolicitado + $intentos;
             $items = [];
             if ($esFree) {
-                // =====================================================
-                // MAPA PLAN FREE (SOLO LOCAL - IDS REALES DE TU BD)
-                // =====================================================
-                // IDs sacados de tu tabla 'generos':
+                // MAPA PLAN FREE (SOLO LOCAL)
                 // 1=Acción, 3=Sci-Fi, 4=Drama, 5=Animación, 6=Crimen, 7=Comedia, 10=Fantasía
 
                 $mapa = [
-                    0 => ['tipo' => 'local', 'titulo' => 'Tendencias (Gratis)'], // Sin filtro
+                    0 => ['tipo' => 'local', 'titulo' => 'Tendencias (Gratis)'],
                     1 => ['tipo' => 'local', 'titulo' => 'Acción Local', 'params' => ['with_genres' => 1]],
                     2 => ['tipo' => 'local', 'titulo' => 'Comedias de la Casa', 'params' => ['with_genres' => 7]],
                     3 => ['tipo' => 'local', 'titulo' => 'Dramas Intensos', 'params' => ['with_genres' => 4]],
@@ -187,14 +163,9 @@ class Serie extends BaseController
                 ];
             }
 
-            // ---------------------------------------------------------
-            // 2. GENERADOR INFINITO (Si se acaba el mapa manual)
-            // ---------------------------------------------------------
+            // GENERADOR INFINITO (Si se acaba el mapa manual)
             if (!isset($mapa[$bloqueActual])) {
 
-                // --- FRENO PARA USUARIOS FREE ---
-                // Si es Free y se acabó el mapa manual, CORTAMOS AQUÍ.
-                // Esto hará que el scroll deje de pedir cosas a la API externa.
                 if ($esFree) {
                     break;
                 }
@@ -235,9 +206,7 @@ class Serie extends BaseController
                 ];
             }
 
-            // ---------------------------------------------------------
-            // 3. RESTRICCIONES & CONFIGURACIÓN
-            // ---------------------------------------------------------
+            // RESTRICCIONES & CONFIGURACIÓN
             // if ($esFree && $bloqueActual > 2)
             //     break;
 
@@ -251,21 +220,16 @@ class Serie extends BaseController
                     $saltarBloque = true;
             }
 
-            // ---------------------------------------------------------
             // 4. OBTENCIÓN DE DATOS
-            // ---------------------------------------------------------
             if (!$saltarBloque) {
                 if ($config['tipo'] === 'local') {
                     $items = $this->obtenerLocal($esKids, $esFree, $config['params'] ?? []);
                 } else {
-                    // AQUÍ ESTÁ EL CAMBIO CLAVE: Pasamos $esKids para filtrar
                     $items = $this->fetchTmdbDiscover($config['params'], $esKids);
                 }
             }
 
-            // ---------------------------------------------------------
             // 5. GENERACIÓN HTML
-            // ---------------------------------------------------------
             if (!empty($items)) {
                 $encontrado = true;
 
@@ -305,14 +269,13 @@ class Serie extends BaseController
 
                     $html .= '<div class="slick-slide-item" style="padding: 0 5px;">';
                     $html .= '  <div class="movie-card">';
-                    // Código OPTIMIZADO
                     $html .= '  <div class="poster-visible">';
                     $html .= '      <img src="' . $img . '" ';
-                    $html .= '           loading="lazy" ';        // Carga diferida
-                    $html .= '           decoding="async" ';      // <--- CLAVE: Decodifica en paralelo sin bloquear el scroll
-                    $html .= '           width="200" height="300" '; // <--- CLAVE: Reserva espacio antes de cargar (evita saltos)
+                    $html .= '           loading="lazy" ';
+                    $html .= '           decoding="async" ';
+                    $html .= '           width="200" height="300" ';
                     $html .= '           alt="' . $titulo . '" ';
-                    $html .= '           style="content-visibility: auto;" '; // Ayuda al renderizado
+                    $html .= '           style="content-visibility: auto;" ';
                     $html .= '           onload="this.classList.add(\'loaded\')">';
                     $html .= '  </div>';
                     $html .= '    <div class="hover-details-card">';
@@ -333,13 +296,12 @@ class Serie extends BaseController
                     $html .= '  </div>';
                     $html .= '</div>';
                 }
-                $html .= '  </div>'; // Fin slick
-                $html .= '</div>'; // Fin row
+                $html .= '  </div>';
+                $html .= '</div>';
 
-                break; // FIN DEL BUCLE (Éxito)
+                break;
             }
 
-            // Si llegamos aquí, falló o estaba vacío -> Probamos siguiente bloque
             $intentos++;
 
         } while ($intentos < $maxIntentos);
@@ -397,16 +359,11 @@ class Serie extends BaseController
         ];
 
     }
-
-    // --- HELPER LOCAL MEJORADO (Soporta filtro por género) ---
-    // --- HELPER LOCAL CORREGIDO (CON JOIN) ---
     private function obtenerLocal($esKids, $esFree, $params = [])
     {
         $model = new ContenidoModel();
-
-        // Seleccionamos la tabla contenidos
-        $q = $model->select('contenidos.*'); // Asegura traer campos de contenidos
-        $q->where('contenidos.tipo_id', 2); // 2 = Series
+        $q = $model->select('contenidos.*');
+        $q->where('contenidos.tipo_id', 2);
         if ($esFree) {
             $q->where('contenidos.nivel_acceso', 1);
         }
@@ -414,21 +371,14 @@ class Serie extends BaseController
         if ($esKids) {
             $q->where('contenidos.edad_recomendada <=', 11);
         }
-
-        // --- CORRECCIÓN: FILTRO POR GÉNERO CON JOIN ---
         if (isset($params['with_genres'])) {
             // Hacemos JOIN con la tabla intermedia 'contenido_genero'
             $q->join('contenido_genero', 'contenido_genero.contenido_id = contenidos.id');
             // Filtramos por el ID del género en la tabla intermedia
             $q->where('contenido_genero.genero_id', $params['with_genres']);
-            // Agrupamos para no repetir series si tienen varios géneros (por seguridad)
             $q->groupBy('contenidos.id');
         }
-
-        // Orden
         $orden = isset($params['with_genres']) ? 'contenidos.id' : 'contenidos.vistas';
-
-        // Ejecutar consulta
         $local = $q->orderBy($orden, 'DESC')->findAll(limit: 50);
 
         $items = [];
@@ -459,9 +409,6 @@ class Serie extends BaseController
         }
         return $items;
     }
-
-    // AÑADIMOS EL PARÁMETRO $esKids = false POR DEFECTO
-    // --- FUNCIÓN DE BÚSQUEDA BLINDADA PARA KIDS ---
     private function fetchTmdbDiscover($params = [], $esKids = false)
     {
         $baseParams = array_merge([
@@ -472,25 +419,17 @@ class Serie extends BaseController
         ], $params);
 
         if ($esKids) {
-            // 1. OBLIGATORIO: Solo Animación (ID 16)
-            // Si ya venían géneros, le pegamos el 16. Si no, lo ponemos.
             if (isset($baseParams['with_genres'])) {
                 $baseParams['with_genres'] .= ',16';
             } else {
                 $baseParams['with_genres'] = '16';
             }
-
-            // 2. SEGURIDAD: Excluir géneros adultos
-            // 80:Crimen, 18:Drama, 10768:Guerra, 37:Western, 99:Docu, 10764:Reality
             $generosProhibidos = '80,18,10768,37,99,10763,10764,10767';
             if (isset($baseParams['without_genres'])) {
                 $baseParams['without_genres'] .= ',' . $generosProhibidos;
             } else {
                 $baseParams['without_genres'] = $generosProhibidos;
             }
-
-            // 3. ANTI-SOUTH PARK / PADRE DE FAMILIA
-            // Excluimos keywords: adult animation (207318), sitcom (3945), black comedy (9714), adult humor (2620)
             $keywordsProhibidas = '207318,3945,9714,2620';
             if (isset($baseParams['without_keywords'])) {
                 $baseParams['without_keywords'] .= ',' . $keywordsProhibidas;
@@ -516,16 +455,12 @@ class Serie extends BaseController
                         if (empty($item['poster_path']))
                             continue;
 
-                        // --- FILTRO FINAL DE SEGURIDAD (PHP) ---
                         if ($esKids) {
                             $g = $item['genre_ids'] ?? [];
 
                             // A. Si tiene género Crimen o Guerra -> FUERA
                             if (in_array(80, $g) || in_array(10768, $g))
                                 continue;
-
-                            // B. REGLA DE ORO: Debe tener "Kids" (10762) O "Family" (10751)
-                            // South Park es [16, 35] (Animación, Comedia). Al no tener 10762 ni 10751, lo echamos.
                             $esSeguro = in_array(10762, $g) || in_array(10751, $g);
                             if (!$esSeguro)
                                 continue;
@@ -556,9 +491,7 @@ class Serie extends BaseController
         }
         return $finalResults;
     }
-    // =================================================================
-    // CARGAR MÁS SERIES EN HORIZONTAL (INFINITE CAROUSEL)
-    // =================================================================
+    // CARGAR MÁS SERIES EN HORIZONTAL
     public function ajaxExpandirFila()
     {
         $paramsEncoded = $this->request->getPost('params');
@@ -582,16 +515,13 @@ class Serie extends BaseController
 
         // Si es Local y pide más, quizás no haya más, pero dejamos la lógica por si acaso
         if ($tipo === 'local') {
-            return ""; // Normalmente local cargamos todo de golpe (50), no paginamos por AJAX aquí para no complicar
+            return "";
         } else {
-            // TMDB: Pedimos la siguiente página exacta
             $items = $this->fetchTmdbDiscover($params, $esKids);
         }
 
         if (empty($items))
             return "";
-
-        // Generar SOLO el HTML de las tarjetas nuevas
         $html = "";
         foreach ($items as $serie) {
             $titulo = esc($serie['titulo']);
@@ -602,15 +532,13 @@ class Serie extends BaseController
             $linkD = $serie['link_detalle'];
             $linkV = $serie['link_ver'];
             $match = rand(85, 99);
-            $edadBadge = $esKids ? 'TP' : '12+'; // Simplificado
+            $edadBadge = $esKids ? 'TP' : '12+';
 
-            // Check Lista
             $db = \Config\Database::connect();
             $enLista = $db->table('mi_lista')->where('usuario_id', $userId)->where('contenido_id', $serie['id'])->countAllResults() > 0;
             $styleBtnLista = $enLista ? 'border-color: var(--accent); color: var(--accent);' : '';
             $iconClass = $enLista ? 'fa-check' : 'fa-heart';
 
-            // HTML V3 (Exacto al anterior)
             $html .= '<div class="slick-slide-item" style="padding: 0 5px;">';
             $html .= '  <div class="movie-card">';
             $html .= '    <div class="poster-visible"><img src="' . $img . '" alt="' . $titulo . '"></div>';

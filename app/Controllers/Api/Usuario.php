@@ -8,7 +8,6 @@ class Usuario extends ResourceController
 {
     protected $format = 'json';
 
-    // API KEY DE TMDB
     private $tmdbApiKey = '6387e3c183c454304108333c56530988';
 
     public function toggle()
@@ -123,12 +122,11 @@ class Usuario extends ResourceController
         $finalTmdbId = $externalId;
         $tipoContenido = 'movie';
 
-        // 1. Detectar si es serie
         if (strpos($originalString, '_tv_') !== false || strpos($originalString, 'tv_') !== false) {
             $tipoContenido = 'tv';
         }
 
-        // 2. Resolver ID si viene de IMDB
+
         if (strpos($externalId, 'tt') === 0) {
             $urlFind = "https://api.themoviedb.org/3/find/{$externalId}?api_key={$this->tmdbApiKey}&external_source=imdb_id";
             try {
@@ -167,7 +165,7 @@ class Usuario extends ResourceController
         // 4. GUARDAR EN BD
         if (!empty($data)) {
 
-            $trailerUrl = null; 
+            $trailerUrl = null;
             try {
                 $urlVideos = "https://api.themoviedb.org/3/{$tipoContenido}/{$finalTmdbId}/videos?api_key={$this->tmdbApiKey}&language=es-ES";
                 $respVideos = $client->request('GET', $urlVideos, $options);
@@ -176,7 +174,6 @@ class Usuario extends ResourceController
                     $dataVideos = json_decode($respVideos->getBody(), true);
                     if (!empty($dataVideos['results'])) {
                         foreach ($dataVideos['results'] as $vid) {
-                            // Buscamos Trailer de YouTube
                             if ($vid['site'] === 'YouTube' && $vid['type'] === 'Trailer') {
                                 $trailerUrl = "https://www.youtube.com/embed/" . $vid['key'];
                                 break;
@@ -225,7 +222,7 @@ class Usuario extends ResourceController
 
             try {
                 $builder->insert($nuevoContenido);
-                return $nuevoContenido['id']; 
+                return $nuevoContenido['id'];
             } catch (\Exception $e) {
                 log_message('error', 'Error SQL Import: ' . $e->getMessage());
                 return false;
